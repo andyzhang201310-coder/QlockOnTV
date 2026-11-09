@@ -41,9 +41,11 @@
 
 因此 1.7.5 可以直接覆盖安装 1.7.4（versionCode 14 > 13）：管理密码、题库、出题年级、间隔、卸载码、设备管理员授权全部保留，二维码地址也不变。历史产物统一为 `dist/QlockOnTV-*.apk`（`dist/archive/` 内旧包同步改了文件名前缀，内容未变）。
 
-> 磁盘上的文件夹名不属于产品标识，项目内也没有任何绝对路径依赖（只有 `local.properties` 里的 SDK 路径）。会话内**无法**重命名它：WorkBuddy 的会话服务进程（`WorkBuddy.exe --serve --session-id ...`）把项目根目录作为工作目录持有句柄，`Rename-Item` / `os.rename` 都返回 `WinError 32`；当前会话也不是管理员，无法注册「重启后自动改名」。
+> 磁盘文件夹已于 2026-11-09 改名为 `D:\VS Code\QlockOnTV`，与项目名一致。项目内没有绝对路径依赖（只有 `local.properties` 里的 SDK 路径，已忽略不入库），改完 IDE 重新打开新路径、Gradle 自动重建缓存即可。
 >
-> 已备好一键脚本 `D:\VS Code\rename-to-QlockOnTV.bat`：**先完全关闭 WorkBuddy / VS Code / 相关终端**，再双击运行即可改名为 `QlockOnTV`（也可直接在资源管理器里 F2）。脚本带源/目标存在性检查与结果提示，失败会提示仍被占用。改完在 IDE 里重新打开新路径，Gradle 会自行重建缓存；代码、`dist/` 产物名与已装设备都不受影响。
+> 备注：WorkBuddy 会话服务进程会持有项目根目录句柄，会话内重命名会返回 `WinError 32`；遇到这种情况先关闭 IDE / 终端，再在资源管理器里 F2 手动改名即可。
+>
+> 源码仓库：https://github.com/andyzhang201310-coder/QlockOnTV
 
 ## 入口怎么走
 
