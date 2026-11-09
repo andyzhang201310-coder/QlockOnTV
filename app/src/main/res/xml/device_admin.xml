@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 防卸载 / 禁止恢复出厂 都不需要额外策略权限 -->
+    <uses-policies />
+</device-admin>

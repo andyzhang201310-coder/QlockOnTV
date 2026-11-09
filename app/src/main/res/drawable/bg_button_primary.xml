@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 底部操作条的主按钮（首次页是「开始答题」，家长页是「关闭」） -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:endColor="#4CC2FF"
+                android:startColor="#8BDDFF" />
+            <corners android:radius="14dp" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/white" />
+        </shape>
+    </item>
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:endColor="#2F8FD8"
+                android:startColor="#6FD0FF" />
+            <corners android:radius="14dp" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/white" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:endColor="#4CC2FF"
+                android:startColor="#2F8FD8" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+</selector>

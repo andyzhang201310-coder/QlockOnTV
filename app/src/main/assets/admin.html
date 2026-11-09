@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title>题锁 · 管理后台</title>
+<link rel="icon" type="image/png" href="/logo.png">
+<style>
+  :root{
+    --bg:#0b1220; --card:#151e2e; --line:#27374f; --txt:#eef4fb;
+    --sub:#9fb0c7; --accent:#4cc2ff; --green:#4ade80; --red:#ff6b6b; --amber:#ffc857;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:15px;line-height:1.6;padding:16px 14px 60px}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .brand img{width:54px;height:54px;border-radius:15px;flex:0 0 auto;
+    box-shadow:0 6px 20px rgba(0,0,0,.35)}
+  .brand .who{flex:1;min-width:0}
+  .brand .sub{margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  h1{font-size:17.5px;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sub{color:var(--sub);font-size:12.5px;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+  .card h2{font-size:15px;margin:0 0 10px;color:var(--accent);font-weight:600}
+  .row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px dashed rgba(255,255,255,.07)}
+  .row:last-child{border-bottom:none}
+  .row span{color:var(--sub);font-size:13.5px}
+  .row b{font-weight:600;font-size:14px}
+  .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px}
+  .on{background:rgba(74,222,128,.16);color:var(--green)}
+  .off{background:rgba(255,107,107,.16);color:var(--red)}
+  label.fl{display:block;color:var(--sub);font-size:13px;margin:12px 0 6px}
+  input[type=text],input[type=number],input[type=password],textarea{
+    width:100%;background:#0e1726;border:1px solid var(--line);border-radius:10px;
+    color:var(--txt);padding:11px 12px;font-size:15px;font-family:inherit;outline:none}
+  input:focus,textarea:focus{border-color:var(--accent)}
+  textarea{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.5;height:260px;resize:vertical}
+  .btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  button{flex:1;min-width:110px;padding:12px 10px;border-radius:11px;border:1px solid var(--line);
+    background:#1b2740;color:var(--txt);font-size:14.5px;font-family:inherit;font-weight:500}
+  button:active{background:#25344f}
+  button.primary{background:linear-gradient(135deg,#2f8fd8,#4cc2ff);border-color:transparent;color:#04121f;font-weight:700}
+  button.warn{background:#3a2a1a;border-color:#6b4c22;color:#ffc857}
+  button.unlock{background:rgba(74,222,128,.14);border-color:#2f7d5a;color:var(--green);font-weight:600}
+  button.unlock:active{background:rgba(74,222,128,.24)}
+  button.logout{flex:0 0 auto;min-width:0;padding:8px 13px;border-radius:10px;
+    font-size:13px;font-weight:500;background:#1b2740;color:var(--sub)}
+  button.logout:active{background:#25344f;color:var(--txt)}
+  .switch{position:relative;width:52px;height:29px;border-radius:20px;background:#2a3b55;transition:.2s}
+  .switch.on{background:var(--green)}
+  .switch i{position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;background:#fff;transition:.2s}
+  .switch.on i{left:26px}
+  .tip{color:var(--sub);font-size:12.5px;line-height:1.7;margin-top:10px}
+  .tip code{background:#0e1726;padding:1px 5px;border-radius:4px;color:var(--accent)}
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:#1f2f47;border:1px solid var(--line);color:var(--txt);padding:11px 20px;border-radius:24px;
+    font-size:14px;opacity:0;transition:.25s;pointer-events:none;max-width:88%;text-align:center;z-index:99}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .stat{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .chip{background:#0e1726;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--sub)}
+  .chip b{color:var(--txt)}
+  .grades{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .grades button{flex:0 0 auto;min-width:0;padding:9px 13px;border-radius:10px;font-size:13.5px;line-height:1.25}
+  .grades button .gn{display:block;font-size:11px;color:var(--sub);font-weight:400}
+  .grades button.on{background:rgba(74,222,128,.16);border-color:#2f7d5a;color:var(--green)}
+  .grades button.on .gn{color:#7ef0b0}
+</style>
+</head>
+<body>
+
+<div class="brand">
+  <img src="/logo.png" alt="题锁">
+  <div class="who">
+    <h1>题锁 · 管理后台</h1>
+    <div class="sub" id="subline">正在连接电视…</div>
+  </div>
+  <button class="logout" id="btnLogout">退出登录</button>
+</div>
+
+<div class="card" id="pinWarn" style="display:none;border-color:#6b4c22;background:#3a2a1a">
+  <div style="color:#ffc857;font-size:14px;font-weight:600">管理密码仍是默认的 1234</div>
+  <div class="tip" style="margin-top:6px;color:#e2cba6">
+    知道这个密码的人都能改题库、关掉拦截。请立刻到下方「参数设置 → 管理密码」改成只有你知道的密码。
+  </div>
+</div>
+
+<div class="card">
+  <h2>运行状态</h2>
+  <div class="row"><span>拦截状态</span><b id="stEnabled">—</b></div>
+  <div class="row"><span>当前弹窗</span><b id="stQuiz">—</b></div>
+  <div class="row"><span>弹题间隔</span><b id="stInterval">—</b></div>
+  <div class="row"><span>每次题量</span><b id="stCount">—</b></div>
+  <div class="row"><span>下次弹题</span><b id="stDue">—</b></div>
+  <div class="row"><span>题库总数</span><b id="stBank">—</b></div>
+  <div class="stat" id="stSubjects"></div>
+  <div id="stErr" class="tip" style="color:#ff6b6b"></div>
+</div>
+
+<div class="card">
+  <h2>参数设置</h2>
+  <div class="row">
+    <span>启用拦截</span>
+    <div class="switch" id="swEnabled"><i></i></div>
+  </div>
+  <label class="fl">弹题间隔（分钟，1–720）</label>
+  <input type="number" id="inInterval" min="1" max="720" value="30">
+  <label class="fl">每次需要连续答对的题数</label>
+  <input type="number" id="inQuizCount" min="1" max="20" value="5">
+  <div class="row" style="margin-top:12px">
+    <span>开机立即弹一次题（防关机逃避）</span>
+    <div class="switch on" id="swBoot"><i></i></div>
+  </div>
+  <label class="fl">启用的学科（用逗号分隔，需与题库 subject 一致）</label>
+  <input type="text" id="inSubjects" value="语文,数学,英语">
+  <label class="fl">出题年级（可多选；只出所选年级的语文 / 数学 / 英语题）</label>
+  <div class="grades" id="gradeBox"></div>
+  <div class="btns" style="margin-top:8px">
+    <button id="btnGradeAll">全选 1-6 年级</button>
+  </div>
+  <div class="tip" id="gradeStat">—</div>
+  <label class="fl">管理密码（至少 4 位，留空表示不修改）</label>
+  <input type="password" id="inPinNew" placeholder="留空则不修改">
+  <label class="fl">后台端口（改完需重新扫码，1–65500）</label>
+  <input type="number" id="inPort" min="1024" max="65500" value="8899">
+  <div class="btns">
+    <button class="primary" id="btnSaveSettings">保存设置</button>
+    <button id="btnTest">立即弹一次题</button>
+  </div>
+  <div class="btns" style="margin-top:10px">
+    <button id="btnReschedule">从现在重新计时</button>
+    <button class="unlock" id="btnUnlock">立即解锁</button>
+  </div>
+  <div class="tip" style="margin-top:6px">
+    「立即解锁」= 家长远程放行：关掉电视上正在显示的答题弹窗，孩子可以正常看电视；下一轮从现在重新计时。
+  </div>
+</div>
+
+<div class="card">
+  <h2>防卸载保护</h2>
+  <div class="row"><span>保护状态</span><b id="stGuard">—</b></div>
+  <div class="row"><span>设备管理员</span><b id="stAdmin">—</b></div>
+  <div class="row"><span>设备所有者</span><b id="stOwner">—</b></div>
+  <div class="row"><span>系统卸载锁</span><b id="stBlock">—</b></div>
+  <div class="row"><span>卸载码</span><b id="stCode">—</b></div>
+  <div class="row" style="margin-top:6px">
+    <span>开启防卸载保护</span>
+    <div class="switch on" id="swGuard"><i></i></div>
+  </div>
+  <div class="row">
+    <span>同时禁止「恢复出厂设置」</span>
+    <div class="switch" id="swFactory"><i></i></div>
+  </div>
+  <label class="fl">当前卸载码（出厂默认 246810）</label>
+  <input type="password" id="inOldCode" placeholder="验证身份用">
+  <label class="fl">新卸载码（4–12 位数字或字母，留空表示不修改）</label>
+  <input type="text" id="inNewCode" placeholder="例如 839201">
+  <div class="btns">
+    <button class="primary" id="btnSaveCode">修改卸载码</button>
+  </div>
+  <div class="tip">
+    保护分两级：<br>
+    · <b>设备管理员</b>（应用内一键激活）：孩子从系统设置卸载时，会先被要求「停用设备管理员」，普通小孩走不完。<br>
+    · <b>设备所有者</b>（电脑 adb 执行一次）：系统卸载按钮直接置灰，必须回到电视输入卸载码才能卸载。<br>
+    当前设备的所有者命令：
+  </div>
+  <div class="tip" id="ownerCmd" style="word-break:break-all;color:#4cc2ff"></div>
+  <div class="btns">
+    <button id="btnCopyCmd">复制命令</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>题库编辑</h2>
+  <div class="tip" style="margin-top:0">
+    格式：<code>{"questions":[{"subject":"语文","grade":3,"q":"题干","options":["正确","干扰1","干扰2","干扰3"],"answer":0}]}</code><br>
+    <code>grade</code> 是年级（1–6），不写则任何年级都可能出到；<code>answer</code> 是正确选项下标（从 0 开始），程序每次出题会自动打乱选项顺序。
+  </div>
+  <div class="btns">
+    <button id="btnReloadBank">载入当前题库</button>
+    <button id="btnFormat">格式化</button>
+    <button id="btnRestore">恢复上次备份</button>
+  </div>
+  <label class="fl">题库 JSON</label>
+  <textarea id="txtBank" spellcheck="false" placeholder="点击上方「载入当前题库」"></textarea>
+  <div class="btns">
+    <button class="primary" id="btnSaveBank">保存题库</button>
+  </div>
+  <label class="fl">或从网址导入题库（http/https，返回同样格式的 JSON）</label>
+  <input type="text" id="inImportUrl" placeholder="http://192.168.1.10:8000/questions.json">
+  <div class="btns">
+    <button class="warn" id="btnImport">从网址导入</button>
+  </div>
+</div>
+
+<div class="tip">
+  · 电视和手机必须连接同一个 WiFi / 路由器。<br>
+  · 题库支持 2–6 个选项，推荐 4 个。<br>
+  · 登录状态保留 12 小时，超过需重新输入管理密码。
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  // 正常走 Cookie 会话；个别内嵌浏览器禁用 Cookie 时，管理页会带 ?pin= 作为后备凭证
+  var pin = '';
+  var redirecting = false;
+  try {
+    var m = location.search.match(/[?&]pin=([^&]*)/);
+    if (m) { pin = decodeURIComponent(m[1]).trim(); }
+    if (location.search) { history.replaceState(null, '', location.pathname); }
+  } catch (e) {}
+  var state = null;
+
+  function toast(msg, ms) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tid);
+    t._tid = setTimeout(function () { t.classList.remove('show'); }, ms || 2200);
+  }
+
+  function api(path, opt) {
+    opt = opt || {};
+    opt.headers = opt.headers || {};
+    if (opt.body) { opt.headers['Content-Type'] = 'application/json'; }
+    if (pin) { opt.headers['X-PIN'] = pin; }
+    return fetch(path, opt).then(function (r) {
+      return r.text().then(function (txt) {
+        var data = null;
+        try { data = txt ? JSON.parse(txt) : {}; } catch (e) { data = { raw: txt }; }
+        if (r.status === 401) {
+          if (!redirecting) {
+            redirecting = true;
+            toast('登录已失效，请重新输入管理密码', 1600);
+            setTimeout(function () { location.replace('/'); }, 900);
+          }
+          throw new Error('登录已失效，请重新登录');
+        }
+        if (!r.ok) { throw new Error((data && data.error) || ('HTTP ' + r.status)); }
+        return data || {};
+      });
+    });
+  }
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function hhmm(ts) {
+    if (!ts) { return '—'; }
+    var d = new Date(ts);
+    return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+  }
+
+  function render() {
+    if (!state) { return; }
+    $('subline').textContent = '已连接 ' + (state.ip || '?') + ':' + (state.port || '') + ' · 题锁 ' + (state.appVersion || '');
+    $('pinWarn').style.display = state.pinDefault ? '' : 'none';
+    var on = !!state.enabled;
+    $('stEnabled').innerHTML = on ? '<span class="badge on">拦截中</span>' : '<span class="badge off">已暂停</span>';
+    $('stQuiz').innerHTML = state.quizRunning
+      ? '<span style="color:#ffc857">答题弹窗显示中</span>'
+      : '<span style="color:#9fb0c7">未弹出</span>';
+    $('stInterval').textContent = '每 ' + state.intervalMinutes + ' 分钟';
+    $('stCount').textContent = state.quizCount + ' 题';
+    $('stBank').textContent = state.questionCount + ' 题';
+    if (state.pending) {
+      $('stDue').innerHTML = '<span style="color:#ffc857">上一轮未完成</span>';
+    } else if (on && state.dueAt > 0) {
+      var left = Math.max(0, state.dueAt - Date.now());
+      $('stDue').textContent = hhmm(state.dueAt) + '（' + Math.ceil(left / 60000) + ' 分钟后）';
+    } else {
+      $('stDue').textContent = '—';
+    }
+    var box = $('stSubjects');
+    box.innerHTML = '';
+    var m = state.countBySubject || {};
+    Object.keys(m).forEach(function (k) {
+      var d = document.createElement('div');
+      d.className = 'chip';
+      d.innerHTML = k + ' <b>' + m[k] + '</b>';
+      box.appendChild(d);
+    });
+    $('stErr').textContent = state.serverError ? ('服务提示：' + state.serverError) : '';
+
+    $('swEnabled').className = 'switch' + (on ? ' on' : '');
+    $('swBoot').className = 'switch' + (state.bootQuiz ? ' on' : '');
+    $('inInterval').value = state.intervalMinutes;
+    $('inQuizCount').value = state.quizCount;
+    $('inSubjects').value = state.subjects || '';
+    $('inPort').value = state.port;
+    selectedGrades = String(state.grades || '1,2,3,4,5,6')
+      .split(',').map(function (x) { return parseInt(x, 10); })
+      .filter(function (g) { return g >= 1 && g <= 6; });
+    selectedGrades.sort(function (a, b) { return a - b; });
+    renderGrades();
+
+    // ---- 防卸载
+    var g = !!state.uninstallGuard;
+    if (!g) {
+      $('stGuard').innerHTML = '<span class="badge off">已关闭</span>';
+    } else if (state.uninstallBlocked) {
+      $('stGuard').innerHTML = '<span class="badge on">已锁定</span>';
+    } else if (state.isAdminActive) {
+      $('stGuard').innerHTML = '<span class="badge on">基础保护</span>';
+    } else {
+      $('stGuard').innerHTML = '<span class="badge off">未生效</span>';
+    }
+    $('stAdmin').innerHTML = state.isAdminActive
+      ? '<span class="badge on">已激活</span>' : '<span class="badge off">未激活</span>';
+    $('stOwner').innerHTML = state.isDeviceOwner
+      ? '<span class="badge on">已生效</span>' : '<span class="badge off">未设置</span>';
+    if (!state.isDeviceOwner) {
+      $('stBlock').innerHTML = '<span style="color:#9fb0c7">需设备所有者</span>';
+    } else {
+      $('stBlock').innerHTML = state.uninstallBlocked
+        ? '<span class="badge on">已锁定</span>' : '<span class="badge off">未锁定</span>';
+    }
+    var codeTxt = state.uninstallPinCustom ? '已自定义' : '<span style="color:#ffc857">默认 246810</span>';
+    if (state.uninstallLockMs > 0) {
+      codeTxt += ' <span style="color:#ff6b6b">（输错锁定 ' +
+        Math.ceil(state.uninstallLockMs / 1000) + 's）</span>';
+    }
+    $('stCode').innerHTML = codeTxt;
+    $('swGuard').className = 'switch' + (g ? ' on' : '');
+    $('swFactory').className = 'switch' + (state.blockFactoryReset ? ' on' : '');
+    $('ownerCmd').textContent = state.deviceOwnerCmd || '';
+  }
+
+  // ---- 出题年级（多选）
+  var selectedGrades = [];
+
+  function renderGrades() {
+    var box = $('gradeBox');
+    if (!box) { return; }
+    var cnt = (state && state.countByGrade) || {};
+    box.innerHTML = '';
+    for (var g = 1; g <= 6; g++) {
+      (function (gg) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        var picked = selectedGrades.indexOf(gg) >= 0;
+        b.className = picked ? 'on' : '';
+        b.innerHTML = gg + ' 年级<span class="gn">' + (cnt[String(gg)] || 0) + ' 题</span>';
+        b.onclick = function () {
+          var i = selectedGrades.indexOf(gg);
+          if (i >= 0) {
+            selectedGrades.splice(i, 1);
+          } else {
+            selectedGrades.push(gg);
+            selectedGrades.sort(function (a, c) { return a - c; });
+          }
+          renderGrades();
+        };
+        box.appendChild(b);
+      })(g);
+    }
+    var total = 0;
+    selectedGrades.forEach(function (g) { total += (cnt[String(g)] || 0); });
+    var generic = cnt['0'] || 0;
+    var txt;
+    if (selectedGrades.length === 0) {
+      txt = '没有选年级 = 1-6 年级全部出题';
+    } else {
+      txt = '已选 ' + selectedGrades.join('、') + ' 年级，可用 ' + total + ' 题';
+    }
+    if (generic > 0) {
+      txt += '（另有 ' + generic + ' 道未标年级的题，任何年级都会出）';
+    }
+    $('gradeStat').textContent = txt;
+  }
+
+  function loadState() {
+    return api('/api/state').then(function (s) { state = s; render(); }).catch(function (e) {
+      $('subline').textContent = '连接失败：' + e.message;
+    });
+  }
+
+  // ---- 交互
+  $('swEnabled').onclick = function () {
+    if (!state) { return; }
+    state.enabled = !state.enabled;
+    $('swEnabled').className = 'switch' + (state.enabled ? ' on' : '');
+  };
+  $('swBoot').onclick = function () {
+    if (!state) { return; }
+    state.bootQuiz = !state.bootQuiz;
+    $('swBoot').className = 'switch' + (state.bootQuiz ? ' on' : '');
+  };
+  $('swGuard').onclick = function () {
+    if (!state) { return; }
+    state.uninstallGuard = !state.uninstallGuard;
+    $('swGuard').className = 'switch' + (state.uninstallGuard ? ' on' : '');
+    toast(state.uninstallGuard ? '已开启，记得点「保存设置」' : '已关闭，记得点「保存设置」', 2600);
+  };
+  $('swFactory').onclick = function () {
+    if (!state) { return; }
+    if (!state.isDeviceOwner) {
+      toast('需先设置设备所有者才能禁止恢复出厂', 3000);
+      return;
+    }
+    state.blockFactoryReset = !state.blockFactoryReset;
+    $('swFactory').className = 'switch' + (state.blockFactoryReset ? ' on' : '');
+    toast('记得点「保存设置」生效', 2200);
+  };
+
+  $('btnGradeAll').onclick = function () {
+    selectedGrades = [1, 2, 3, 4, 5, 6];
+    renderGrades();
+    toast('已选中全部年级，记得点「保存设置」', 2400);
+  };
+
+  $('btnSaveSettings').onclick = function () {
+    var body = {
+      enabled: state ? !!state.enabled : true,
+      intervalMinutes: parseInt($('inInterval').value, 10) || 30,
+      quizCount: parseInt($('inQuizCount').value, 10) || 5,
+      bootQuiz: state ? !!state.bootQuiz : true,
+      subjects: $('inSubjects').value || '语文,数学,英语',
+      grades: selectedGrades.length ? selectedGrades.join(',') : '1,2,3,4,5,6',
+      port: parseInt($('inPort').value, 10) || 8899
+    };
+    if (state) {
+      body.uninstallGuard = !!state.uninstallGuard;
+      body.blockFactoryReset = !!state.blockFactoryReset;
+    }
+    var np = $('inPinNew').value.trim();
+    if (np) { body.pin = np; }
+    api('/api/settings', { method: 'POST', body: JSON.stringify(body) }).then(function (r) {
+      if (np) {
+        // 服务端会踢掉所有旧会话，并给当前这台设备重发登录态
+        if (pin) { pin = np; }
+        $('inPinNew').value = '';
+        toast('设置已保存，管理密码已更新（其他设备需重新登录）', 3200);
+        return loadState();
+      }
+      toast('设置已保存');
+      return loadState();
+    }).catch(function (e) { toast(e.message, 3200); });
+  };
+
+  $('btnLogout').onclick = function () {
+    api('/api/logout', { method: 'POST', body: '{}' }).then(function () {
+      location.replace('/');
+    }).catch(function () {
+      location.replace('/');
+    });
+  };
+
+  $('btnSaveCode').onclick = function () {
+    var nv = $('inNewCode').value.trim();
+    var ov = $('inOldCode').value.trim();
+    if (!nv) { toast('请填写新卸载码'); return; }
+    if (!ov) { toast('请先填写当前卸载码（出厂默认 246810）'); return; }
+    api('/api/settings', {
+      method: 'POST',
+      body: JSON.stringify({ uninstallPin: nv, oldUninstallPin: ov })
+    }).then(function () {
+      $('inNewCode').value = '';
+      $('inOldCode').value = '';
+      toast('卸载码已更新');
+      return loadState();
+    }).catch(function (e) { toast(e.message, 3600); });
+  };
+
+  $('btnCopyCmd').onclick = function () {
+    var cmd = (state && state.deviceOwnerCmd) || $('ownerCmd').textContent;
+    if (!cmd) { toast('暂未获取到命令'); return; }
+    function done() { toast('已复制，可发到电脑上执行'); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(cmd).then(done).catch(fallback);
+    } else {
+      fallback();
+    }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = cmd;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { toast('请长按上面的命令手动复制', 3000); }
+      document.body.removeChild(ta);
+    }
+  };
+
+  $('btnTest').onclick = function () {
+    api('/api/test', { method: 'POST', body: '{}' }).then(function () {
+      toast('电视端已弹出题目');
+    }).catch(function (e) { toast(e.message, 3200); });
+  };
+
+  $('btnReschedule').onclick = function () {
+    api('/api/reschedule', { method: 'POST', body: '{}' }).then(function () {
+      toast('已从现在重新计时');
+      return loadState();
+    }).catch(function (e) { toast(e.message, 3200); });
+  };
+
+  $('btnUnlock').onclick = function () {
+    if (!confirm('立即解锁会关掉电视上正在显示的答题弹窗，孩子可以继续看电视；\n下一轮从现在重新计时。确定放行吗？')) { return; }
+    api('/api/unlock', { method: 'POST', body: '{}' }).then(function () {
+      toast('已解锁，孩子可以继续看电视；下一轮从现在重新计时', 3400);
+      // 关界面在主线程异步收尾，稍等一下再刷新「当前弹窗」状态
+      setTimeout(loadState, 700);
+    }).catch(function (e) { toast(e.message, 3200); });
+  };
+
+  function loadBank() {
+    api('/api/questions').then(function (data) {
+      $('txtBank').value = JSON.stringify(data, null, 2);
+      toast('已载入 ' + ((data.questions || []).length) + ' 题');
+    }).catch(function (e) { toast(e.message, 3200); });
+  }
+
+  $('btnReloadBank').onclick = loadBank;
+
+  $('btnFormat').onclick = function () {
+    try {
+      var obj = JSON.parse($('txtBank').value);
+      $('txtBank').value = JSON.stringify(obj, null, 2);
+      toast('已格式化');
+    } catch (e) { toast('JSON 格式有误：' + e.message, 3000); }
+  };
+
+  $('btnSaveBank').onclick = function () {
+    var txt = $('txtBank').value.trim();
+    if (!txt) { toast('题库内容为空'); return; }
+    try { JSON.parse(txt); } catch (e) { toast('JSON 格式有误：' + e.message, 3200); return; }
+    api('/api/questions', { method: 'POST', body: JSON.stringify({ json: txt }) }).then(function (r) {
+      toast('题库已保存，共 ' + r.count + ' 题');
+      return loadState();
+    }).catch(function (e) { toast(e.message, 3600); });
+  };
+
+  $('btnRestore').onclick = function () {
+    if (!confirm('确定恢复到上一次保存前的题库吗？')) { return; }
+    api('/api/restore', { method: 'POST', body: '{}' }).then(function () {
+      toast('已恢复备份');
+      loadBank();
+      return loadState();
+    }).catch(function (e) { toast(e.message, 3200); });
+  };
+
+  $('btnImport').onclick = function () {
+    var url = $('inImportUrl').value.trim();
+    if (!url) { toast('请填写网址'); return; }
+    toast('正在从网址导入…', 4000);
+    api('/api/import', { method: 'POST', body: JSON.stringify({ url: url }) }).then(function (r) {
+      toast('导入成功，共 ' + r.count + ' 题');
+      loadBank();
+      return loadState();
+    }).catch(function (e) { toast(e.message, 4000); });
+  };
+
+  // ---- 初始化
+  loadState();
+  setInterval(loadState, 15000);
+})();
+</script>
+</body>
+</html>

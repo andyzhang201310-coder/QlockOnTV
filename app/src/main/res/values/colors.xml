@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#0B1220</color>
+    <color name="surface">#151E2E</color>
+    <color name="surfaceFocus">#1E3A5C</color>
+    <color name="stroke">#2A3B55</color>
+    <color name="strokeFocus">#4CC2FF</color>
+    <color name="textPrimary">#F2F6FC</color>
+    <color name="textSecondary">#9FB0C7</color>
+    <color name="accent">#4CC2FF</color>
+    <color name="green">#4ADE80</color>
+    <color name="red">#FF6B6B</color>
+    <color name="amber">#FFC857</color>
+    <color name="white">#FFFFFF</color>
+</resources>

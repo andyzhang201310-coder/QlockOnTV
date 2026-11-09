@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="56dp"
+        android:paddingTop="36dp"
+        android:paddingRight="56dp"
+        android:paddingBottom="36dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="防卸载设置"
+            android:textColor="@color/textPrimary"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="这一页只放必须在本机完成的动作，其他参数请用手机扫码修改"
+            android:textColor="@color/textSecondary"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tvGuard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_card"
+            android:lineSpacingExtra="7dp"
+            android:padding="22dp"
+            android:text="检测中…"
+            android:textColor="@color/textPrimary"
+            android:textSize="20sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnGuard"
+                style="@style/TvButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginRight="12dp"
+                android:text="开启防卸载" />
+
+            <Button
+                android:id="@+id/btnOwner"
+                style="@style/TvButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginRight="12dp"
+                android:text="彻底锁定（需 adb）" />
+
+            <Button
+                android:id="@+id/btnUninstall"
+                style="@style/TvButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginRight="12dp"
+                android:text="卸载应用" />
+
+            <Button
+                android:id="@+id/btnBack"
+                style="@style/TvButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="返回" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:lineSpacingExtra="4dp"
+            android:text="说明：激活设备管理员后，孩子从系统设置卸载时会先被要求「停用设备管理员」；再用电脑执行一次 adb 设为设备所有者，系统里的「卸载」按钮会直接置灰，必须回到这里输入卸载码才能卸载。"
+            android:textColor="@color/textSecondary"
+            android:textSize="15sp" />
+
+    </LinearLayout>
+</ScrollView>

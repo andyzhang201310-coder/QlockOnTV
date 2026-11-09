@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title>题锁 · 请输入管理密码</title>
+<link rel="icon" type="image/png" href="/logo.png">
+<style>
+  :root{
+    --bg:#0b1220; --card:#151e2e; --line:#27374f; --txt:#eef4fb;
+    --sub:#9fb0c7; --accent:#4cc2ff; --red:#ff6b6b; --amber:#ffc857;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:15px;line-height:1.6;display:flex;align-items:center;justify-content:center;padding:24px 18px}
+  .wrap{width:100%;max-width:360px}
+  .logo{display:block;width:76px;height:76px;border-radius:20px;margin:0 auto 14px;
+    box-shadow:0 8px 26px rgba(0,0,0,.38)}
+  h1{font-size:19px;margin:0 0 6px;text-align:center;font-weight:600}
+  .sub{color:var(--sub);font-size:13px;text-align:center;margin-bottom:22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  label.fl{display:block;color:var(--sub);font-size:13px;margin:0 0 8px}
+  input{width:100%;background:#0e1726;border:1px solid var(--line);border-radius:10px;
+    color:var(--txt);padding:13px 14px;font-size:17px;letter-spacing:2px;font-family:inherit;outline:none}
+  input:focus{border-color:var(--accent)}
+  button{width:100%;margin-top:14px;padding:13px;border-radius:11px;border:1px solid transparent;
+    background:linear-gradient(135deg,#2f8fd8,#4cc2ff);color:#04121f;font-size:15px;
+    font-family:inherit;font-weight:700}
+  button:active{opacity:.85}
+  button[disabled]{opacity:.6}
+  .err{color:var(--red);font-size:13px;min-height:20px;margin-top:10px;text-align:center;word-break:break-all}
+  .tip{color:var(--sub);font-size:12.5px;line-height:1.7;margin-top:16px}
+  .tip code{background:#0e1726;padding:1px 5px;border-radius:4px;color:var(--accent)}
+  .shake{animation:sk .28s}
+  @keyframes sk{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <img class="logo" src="/logo.png" alt="题锁">
+  <h1>题锁 · 管理后台</h1>
+  <div class="sub">请输入电视上设置的管理密码</div>
+
+  <div class="card" id="card">
+    <label class="fl">管理密码</label>
+    <input id="inPin" type="password" inputmode="numeric" autocomplete="off"
+           autocorrect="off" autocapitalize="off" maxlength="16" placeholder="至少 4 位">
+    <button id="btnLogin">进入管理后台</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="tip">
+    · 密码与电视端「管理密码」一致，出厂默认 <code>1234</code>，请尽快改掉。<br>
+    · 登录状态保留 12 小时，关闭页面不会自动保存密码。<br>
+    · 忘了密码：在电视上答对 5 道题进入信息页查看管理地址。
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var inp = $('inPin'); var btn = $('btnLogin');
+
+  function showErr(msg) {
+    $('err').textContent = msg || '';
+    var c = $('card');
+    c.classList.remove('shake');
+    void c.offsetWidth;
+    c.classList.add('shake');
+  }
+
+  function go(tokenPin) {
+    // 少数内嵌浏览器会禁用 Cookie，这时把密码作为后备凭证带给管理页
+    location.replace('/?pin=' + encodeURIComponent(tokenPin));
+  }
+
+  function submit() {
+    var pin = inp.value.trim();
+    if (!pin) { showErr('请输入管理密码'); return; }
+    btn.disabled = true;
+    btn.textContent = '验证中…';
+    fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: pin })
+    }).then(function (r) {
+      return r.text().then(function (txt) {
+        var d = {};
+        try { d = txt ? JSON.parse(txt) : {}; } catch (e) {}
+        if (!r.ok) { throw new Error(d.error || (r.status === 429 ? '错误次数过多，请稍后再试' : '管理密码错误')); }
+        return d;
+      });
+    }).then(function () {
+      // 确认会话 Cookie 是否真的写进去了
+      return fetch('/api/state', { method: 'GET' }).then(function (s) {
+        if (s.ok) { location.replace('/'); } else { go(pin); }
+      }).catch(function () { go(pin); });
+    }).catch(function (e) {
+      btn.disabled = false;
+      btn.textContent = '进入管理后台';
+      showErr(e.message);
+      inp.focus();
+      try { inp.select(); } catch (x) {}
+    });
+  }
+
+  btn.onclick = submit;
+  inp.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.keyCode === 13) { submit(); }
+  });
+  setTimeout(function () { try { inp.focus(); } catch (e) {} }, 260);
+})();
+</script>
+</body>
+</html>

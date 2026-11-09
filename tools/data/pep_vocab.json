@@ -1,0 +1,7022 @@
+[
+ {
+  "en": "hello",
+  "cn": "你好",
+  "pos": "interj.",
+  "ex": "Hello, how are you?",
+  "exCn": "你好，你好吗？",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "hi",
+  "cn": "嗨；你好",
+  "pos": "interj.",
+  "ex": "Hi, Sarah!",
+  "exCn": "嗨，莎拉！",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "goodbye",
+  "cn": "再见",
+  "pos": "interj.",
+  "ex": "Goodbye, Miss White!",
+  "exCn": "再见，怀特老师！",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "bye",
+  "cn": "再见",
+  "pos": "interj.",
+  "ex": "Bye, Mom!",
+  "exCn": "再见，妈妈！",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "I",
+  "cn": "我",
+  "pos": "pron.",
+  "ex": "I am a student.",
+  "exCn": "我是一个学生。",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "am",
+  "cn": "是",
+  "pos": "v.",
+  "ex": "I am fine.",
+  "exCn": "我很好。",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "Miss",
+  "cn": "小姐；女士",
+  "pos": "n.",
+  "ex": "This is Miss Li.",
+  "exCn": "这是李小姐。",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "Mr",
+  "cn": "先生",
+  "pos": "n.",
+  "ex": "Mr Jones is our teacher.",
+  "exCn": "琼斯先生是我们的老师。",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "and",
+  "cn": "和；与",
+  "pos": "conj.",
+  "ex": "Mike and John are friends.",
+  "exCn": "迈克和约翰是朋友。",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "too",
+  "cn": "也；太",
+  "pos": "adv.",
+  "ex": "Nice to meet you, too.",
+  "exCn": "也很高兴认识你。",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "how",
+  "cn": "怎样；如何",
+  "pos": "adv.",
+  "ex": "How are you?",
+  "exCn": "你好吗？",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "are",
+  "cn": "是",
+  "pos": "v.",
+  "ex": "How are you?",
+  "exCn": "你好吗？",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "you",
+  "cn": "你；你们",
+  "pos": "pron.",
+  "ex": "Thank you!",
+  "exCn": "谢谢你！",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "fine",
+  "cn": "好的",
+  "pos": "adj.",
+  "ex": "I'm fine, thank you.",
+  "exCn": "我很好，谢谢。",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "thank",
+  "cn": "感谢",
+  "pos": "v.",
+  "ex": "Thank you very much.",
+  "exCn": "非常感谢你。",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "nice",
+  "cn": "好的；令人愉快的",
+  "pos": "adj.",
+  "ex": "Nice to meet you!",
+  "exCn": "很高兴认识你！",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "meet",
+  "cn": "遇见；碰到",
+  "pos": "v.",
+  "ex": "Nice to meet you!",
+  "exCn": "很高兴认识你！",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "good",
+  "cn": "好的",
+  "pos": "adj.",
+  "ex": "Good morning!",
+  "exCn": "早上好！",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "morning",
+  "cn": "早晨；上午",
+  "pos": "n.",
+  "ex": "Good morning, class!",
+  "exCn": "早上好，同学们！",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "afternoon",
+  "cn": "下午",
+  "pos": "n.",
+  "ex": "Good afternoon!",
+  "exCn": "下午好！",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "evening",
+  "cn": "傍晚；晚上",
+  "pos": "n.",
+  "ex": "Good evening, Dad!",
+  "exCn": "晚上好，爸爸！",
+  "grade": 3,
+  "topic": "问候"
+ },
+ {
+  "en": "red",
+  "cn": "红色；红色的",
+  "pos": "adj./n.",
+  "ex": "I like red.",
+  "exCn": "我喜欢红色。",
+  "grade": 3,
+  "topic": "颜色"
+ },
+ {
+  "en": "yellow",
+  "cn": "黄色；黄色的",
+  "pos": "adj./n.",
+  "ex": "The banana is yellow.",
+  "exCn": "香蕉是黄色的。",
+  "grade": 3,
+  "topic": "颜色"
+ },
+ {
+  "en": "green",
+  "cn": "绿色；绿色的",
+  "pos": "adj./n.",
+  "ex": "The grass is green.",
+  "exCn": "草是绿色的。",
+  "grade": 3,
+  "topic": "颜色"
+ },
+ {
+  "en": "blue",
+  "cn": "蓝色；蓝色的",
+  "pos": "adj./n.",
+  "ex": "The sky is blue.",
+  "exCn": "天空是蓝色的。",
+  "grade": 3,
+  "topic": "颜色"
+ },
+ {
+  "en": "black",
+  "cn": "黑色；黑色的",
+  "pos": "adj./n.",
+  "ex": "I have a black cat.",
+  "exCn": "我有一只黑猫。",
+  "grade": 3,
+  "topic": "颜色"
+ },
+ {
+  "en": "white",
+  "cn": "白色；白色的",
+  "pos": "adj./n.",
+  "ex": "The snow is white.",
+  "exCn": "雪是白色的。",
+  "grade": 3,
+  "topic": "颜色"
+ },
+ {
+  "en": "orange",
+  "cn": "橙色；橙色的",
+  "pos": "adj./n.",
+  "ex": "I like orange.",
+  "exCn": "我喜欢橙色。",
+  "grade": 3,
+  "topic": "颜色"
+ },
+ {
+  "en": "brown",
+  "cn": "棕色；棕色的",
+  "pos": "adj./n.",
+  "ex": "The bear is brown.",
+  "exCn": "熊是棕色的。",
+  "grade": 3,
+  "topic": "颜色"
+ },
+ {
+  "en": "colour",
+  "cn": "颜色",
+  "pos": "n.",
+  "ex": "What colour is it?",
+  "exCn": "它是什么颜色？",
+  "grade": 3,
+  "topic": "颜色"
+ },
+ {
+  "en": "see",
+  "cn": "看见",
+  "pos": "v.",
+  "ex": "I can see a rainbow.",
+  "exCn": "我能看到一道彩虹。",
+  "grade": 3,
+  "topic": "颜色"
+ },
+ {
+  "en": "face",
+  "cn": "脸",
+  "pos": "n.",
+  "ex": "Wash your face.",
+  "exCn": "洗你的脸。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "ear",
+  "cn": "耳朵",
+  "pos": "n.",
+  "ex": "Touch your ear.",
+  "exCn": "摸摸你的耳朵。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "eye",
+  "cn": "眼睛",
+  "pos": "n.",
+  "ex": "Close your eyes.",
+  "exCn": "闭上你的眼睛。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "nose",
+  "cn": "鼻子",
+  "pos": "n.",
+  "ex": "Touch your nose.",
+  "exCn": "摸摸你的鼻子。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "mouth",
+  "cn": "嘴巴",
+  "pos": "n.",
+  "ex": "Open your mouth.",
+  "exCn": "张开你的嘴巴。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "arm",
+  "cn": "手臂",
+  "pos": "n.",
+  "ex": "Wave your arms.",
+  "exCn": "挥动你的手臂。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "hand",
+  "cn": "手",
+  "pos": "n.",
+  "ex": "Clap your hands.",
+  "exCn": "拍拍你的手。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "head",
+  "cn": "头",
+  "pos": "n.",
+  "ex": "Nod your head.",
+  "exCn": "点点你的头。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "body",
+  "cn": "身体",
+  "pos": "n.",
+  "ex": "This is my body.",
+  "exCn": "这是我的身体。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "leg",
+  "cn": "腿",
+  "pos": "n.",
+  "ex": "I have two legs.",
+  "exCn": "我有两条腿。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "foot",
+  "cn": "脚",
+  "pos": "n.",
+  "ex": "Stamp your foot.",
+  "exCn": "跺跺你的脚。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "look",
+  "cn": "看",
+  "pos": "v.",
+  "ex": "Look at me!",
+  "exCn": "看着我！",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "at",
+  "cn": "在",
+  "pos": "prep.",
+  "ex": "Look at the cat.",
+  "exCn": "看那只猫。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "this",
+  "cn": "这；这个",
+  "pos": "pron.",
+  "ex": "This is my nose.",
+  "exCn": "这是我的鼻子。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "my",
+  "cn": "我的",
+  "pos": "pron.",
+  "ex": "This is my face.",
+  "exCn": "这是我的脸。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "me",
+  "cn": "我",
+  "pos": "pron.",
+  "ex": "Follow me!",
+  "exCn": "跟我来！",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "your",
+  "cn": "你的；你们的",
+  "pos": "pron.",
+  "ex": "Touch your nose.",
+  "exCn": "摸摸你的鼻子。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "the",
+  "cn": "这；那",
+  "pos": "art.",
+  "ex": "Open the door.",
+  "exCn": "打开门。",
+  "grade": 3,
+  "topic": "身体部位"
+ },
+ {
+  "en": "cat",
+  "cn": "猫",
+  "pos": "n.",
+  "ex": "I have a cat.",
+  "exCn": "我有一只猫。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "dog",
+  "cn": "狗",
+  "pos": "n.",
+  "ex": "The dog is big.",
+  "exCn": "这只狗很大。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "duck",
+  "cn": "鸭子",
+  "pos": "n.",
+  "ex": "The duck can swim.",
+  "exCn": "鸭子会游泳。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "pig",
+  "cn": "猪",
+  "pos": "n.",
+  "ex": "The pig is fat.",
+  "exCn": "这只猪很胖。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "bear",
+  "cn": "熊",
+  "pos": "n.",
+  "ex": "I see a bear.",
+  "exCn": "我看到了一只熊。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "bird",
+  "cn": "鸟",
+  "pos": "n.",
+  "ex": "The bird can fly.",
+  "exCn": "鸟会飞。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "panda",
+  "cn": "熊猫",
+  "pos": "n.",
+  "ex": "The panda is cute.",
+  "exCn": "熊猫很可爱。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "tiger",
+  "cn": "老虎",
+  "pos": "n.",
+  "ex": "The tiger is strong.",
+  "exCn": "老虎很强壮。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "elephant",
+  "cn": "大象",
+  "pos": "n.",
+  "ex": "The elephant is big.",
+  "exCn": "大象很大。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "monkey",
+  "cn": "猴子",
+  "pos": "n.",
+  "ex": "The monkey likes bananas.",
+  "exCn": "猴子喜欢香蕉。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "zoo",
+  "cn": "动物园",
+  "pos": "n.",
+  "ex": "Let's go to the zoo.",
+  "exCn": "我们去动物园吧。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "animal",
+  "cn": "动物",
+  "pos": "n.",
+  "ex": "I love animals.",
+  "exCn": "我爱动物。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "what",
+  "cn": "什么",
+  "pos": "pron.",
+  "ex": "What is this?",
+  "exCn": "这是什么？",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "a",
+  "cn": "一（个、只）",
+  "pos": "art.",
+  "ex": "I see a bird.",
+  "exCn": "我看到了一只鸟。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "an",
+  "cn": "一（个、只）",
+  "pos": "art.",
+  "ex": "It is an elephant.",
+  "exCn": "这是一只大象。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "is",
+  "cn": "是",
+  "pos": "v.",
+  "ex": "It is a cat.",
+  "exCn": "这是一只猫。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "it",
+  "cn": "它",
+  "pos": "pron.",
+  "ex": "It is a dog.",
+  "exCn": "它是一只狗。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "cute",
+  "cn": "可爱的",
+  "pos": "adj.",
+  "ex": "The cat is cute.",
+  "exCn": "猫很可爱。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "funny",
+  "cn": "有趣的；滑稽的",
+  "pos": "adj.",
+  "ex": "The monkey is funny.",
+  "exCn": "猴子很有趣。",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "cool",
+  "cn": "酷的；凉爽的",
+  "pos": "adj.",
+  "ex": "That's cool!",
+  "exCn": "太酷了！",
+  "grade": 3,
+  "topic": "动物"
+ },
+ {
+  "en": "bread",
+  "cn": "面包",
+  "pos": "n.",
+  "ex": "I'd like some bread.",
+  "exCn": "我想要一些面包。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "juice",
+  "cn": "果汁",
+  "pos": "n.",
+  "ex": "I like juice.",
+  "exCn": "我喜欢果汁。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "egg",
+  "cn": "蛋",
+  "pos": "n.",
+  "ex": "I have an egg.",
+  "exCn": "我有一个鸡蛋。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "milk",
+  "cn": "牛奶",
+  "pos": "n.",
+  "ex": "Drink some milk.",
+  "exCn": "喝一些牛奶。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "water",
+  "cn": "水",
+  "pos": "n.",
+  "ex": "Can I have some water?",
+  "exCn": "我可以喝点水吗？",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "cake",
+  "cn": "蛋糕",
+  "pos": "n.",
+  "ex": "The cake is delicious.",
+  "exCn": "蛋糕很好吃。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "fish",
+  "cn": "鱼",
+  "pos": "n.",
+  "ex": "I like fish.",
+  "exCn": "我喜欢鱼。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "rice",
+  "cn": "米饭",
+  "pos": "n.",
+  "ex": "I'd like some rice.",
+  "exCn": "我想要一些米饭。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "eat",
+  "cn": "吃",
+  "pos": "v.",
+  "ex": "Let's eat!",
+  "exCn": "我们吃饭吧！",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "drink",
+  "cn": "喝",
+  "pos": "v.",
+  "ex": "Drink some water.",
+  "exCn": "喝点水。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "have",
+  "cn": "有；吃",
+  "pos": "v.",
+  "ex": "I have some bread.",
+  "exCn": "我有一些面包。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "some",
+  "cn": "一些",
+  "pos": "adj.",
+  "ex": "Have some juice.",
+  "exCn": "喝点果汁吧。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "like",
+  "cn": "喜欢",
+  "pos": "v.",
+  "ex": "I like eggs.",
+  "exCn": "我喜欢鸡蛋。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "here",
+  "cn": "这里",
+  "pos": "adv.",
+  "ex": "Here you are.",
+  "exCn": "给你。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "please",
+  "cn": "请",
+  "pos": "adv.",
+  "ex": "Some water, please.",
+  "exCn": "请给我一些水。",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "thanks",
+  "cn": "谢谢",
+  "pos": "interj.",
+  "ex": "Thanks!",
+  "exCn": "谢谢！",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "can",
+  "cn": "能；可以",
+  "pos": "v.",
+  "ex": "Can I have some milk?",
+  "exCn": "我可以喝点牛奶吗？",
+  "grade": 3,
+  "topic": "食物"
+ },
+ {
+  "en": "one",
+  "cn": "一",
+  "pos": "num.",
+  "ex": "I have one book.",
+  "exCn": "我有一本书。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "two",
+  "cn": "二",
+  "pos": "num.",
+  "ex": "I have two eyes.",
+  "exCn": "我有两只眼睛。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "three",
+  "cn": "三",
+  "pos": "num.",
+  "ex": "I have three pens.",
+  "exCn": "我有三支笔。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "four",
+  "cn": "四",
+  "pos": "num.",
+  "ex": "There are four cats.",
+  "exCn": "有四只猫。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "five",
+  "cn": "五",
+  "pos": "num.",
+  "ex": "I have five fingers.",
+  "exCn": "我有五根手指。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "six",
+  "cn": "六",
+  "pos": "num.",
+  "ex": "I am six years old.",
+  "exCn": "我六岁了。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "seven",
+  "cn": "七",
+  "pos": "num.",
+  "ex": "There are seven days in a week.",
+  "exCn": "一周有七天。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "eight",
+  "cn": "八",
+  "pos": "num.",
+  "ex": "I have eight books.",
+  "exCn": "我有八本书。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "nine",
+  "cn": "九",
+  "pos": "num.",
+  "ex": "I am nine years old.",
+  "exCn": "我九岁了。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "ten",
+  "cn": "十",
+  "pos": "num.",
+  "ex": "I have ten pencils.",
+  "exCn": "我有十支铅笔。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "happy",
+  "cn": "快乐的",
+  "pos": "adj.",
+  "ex": "Happy birthday!",
+  "exCn": "生日快乐！",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "birthday",
+  "cn": "生日",
+  "pos": "n.",
+  "ex": "Happy birthday to you!",
+  "exCn": "祝你生日快乐！",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "gift",
+  "cn": "礼物",
+  "pos": "n.",
+  "ex": "This is a gift for you.",
+  "exCn": "这是给你的礼物。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "old",
+  "cn": "老的；旧的",
+  "pos": "adj.",
+  "ex": "How old are you?",
+  "exCn": "你多大了？",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "year",
+  "cn": "年",
+  "pos": "n.",
+  "ex": "Happy New Year!",
+  "exCn": "新年快乐！",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "old",
+  "cn": "……岁的",
+  "pos": "adj.",
+  "ex": "I'm eight years old.",
+  "exCn": "我八岁了。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "how",
+  "cn": "多少",
+  "pos": "adv.",
+  "ex": "How many plates?",
+  "exCn": "多少个盘子？",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "many",
+  "cn": "许多的",
+  "pos": "adj.",
+  "ex": "How many books do you have?",
+  "exCn": "你有多少本书？",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "plate",
+  "cn": "盘子",
+  "pos": "n.",
+  "ex": "I need a plate.",
+  "exCn": "我需要一个盘子。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "candle",
+  "cn": "蜡烛",
+  "pos": "n.",
+  "ex": "Blow out the candles.",
+  "exCn": "吹灭蜡烛。",
+  "grade": 3,
+  "topic": "数字与生日"
+ },
+ {
+  "en": "boy",
+  "cn": "男孩",
+  "pos": "n.",
+  "ex": "He is a boy.",
+  "exCn": "他是一个男孩。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "girl",
+  "cn": "女孩",
+  "pos": "n.",
+  "ex": "She is a girl.",
+  "exCn": "她是一个女孩。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "teacher",
+  "cn": "老师",
+  "pos": "n.",
+  "ex": "She is my teacher.",
+  "exCn": "她是我的老师。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "student",
+  "cn": "学生",
+  "pos": "n.",
+  "ex": "I am a student.",
+  "exCn": "我是一个学生。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "pupil",
+  "cn": "小学生",
+  "pos": "n.",
+  "ex": "He is a new pupil.",
+  "exCn": "他是一个新同学。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "China",
+  "cn": "中国",
+  "pos": "n.",
+  "ex": "I'm from China.",
+  "exCn": "我来自中国。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "UK",
+  "cn": "英国",
+  "pos": "n.",
+  "ex": "She's from the UK.",
+  "exCn": "她来自英国。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "USA",
+  "cn": "美国",
+  "pos": "n.",
+  "ex": "He's from the USA.",
+  "exCn": "他来自美国。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "Canada",
+  "cn": "加拿大",
+  "pos": "n.",
+  "ex": "I'm from Canada.",
+  "exCn": "我来自加拿大。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "from",
+  "cn": "从；来自",
+  "pos": "prep.",
+  "ex": "Where are you from?",
+  "exCn": "你来自哪里？",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "new",
+  "cn": "新的",
+  "pos": "adj.",
+  "ex": "We have a new friend.",
+  "exCn": "我们有一个新朋友。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "friend",
+  "cn": "朋友",
+  "pos": "n.",
+  "ex": "She is my friend.",
+  "exCn": "她是我的朋友。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "welcome",
+  "cn": "欢迎",
+  "pos": "interj.",
+  "ex": "Welcome back to school!",
+  "exCn": "欢迎回到学校！",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "back",
+  "cn": "回来",
+  "pos": "adv.",
+  "ex": "Welcome back!",
+  "exCn": "欢迎回来！",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "school",
+  "cn": "学校",
+  "pos": "n.",
+  "ex": "I go to school.",
+  "exCn": "我去上学。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "where",
+  "cn": "哪里",
+  "pos": "adv.",
+  "ex": "Where are you from?",
+  "exCn": "你来自哪里？",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "he",
+  "cn": "他",
+  "pos": "pron.",
+  "ex": "He is my brother.",
+  "exCn": "他是我的哥哥。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "she",
+  "cn": "她",
+  "pos": "pron.",
+  "ex": "She is my sister.",
+  "exCn": "她是我的姐姐。",
+  "grade": 3,
+  "topic": "学校与国籍"
+ },
+ {
+  "en": "father",
+  "cn": "父亲；爸爸",
+  "pos": "n.",
+  "ex": "This is my father.",
+  "exCn": "这是我的爸爸。",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "dad",
+  "cn": "爸爸",
+  "pos": "n.",
+  "ex": "My dad is tall.",
+  "exCn": "我爸爸很高。",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "mother",
+  "cn": "母亲；妈妈",
+  "pos": "n.",
+  "ex": "This is my mother.",
+  "exCn": "这是我的妈妈。",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "mum",
+  "cn": "妈妈",
+  "pos": "n.",
+  "ex": "My mum is beautiful.",
+  "exCn": "我妈妈很漂亮。",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "man",
+  "cn": "男人",
+  "pos": "n.",
+  "ex": "Who's that man?",
+  "exCn": "那个男人是谁？",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "woman",
+  "cn": "女人",
+  "pos": "n.",
+  "ex": "Who's that woman?",
+  "exCn": "那个女人是谁？",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "sister",
+  "cn": "姐；妹",
+  "pos": "n.",
+  "ex": "This is my sister.",
+  "exCn": "这是我的姐姐。",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "brother",
+  "cn": "兄；弟",
+  "pos": "n.",
+  "ex": "He is my brother.",
+  "exCn": "他是我的弟弟。",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "grandmother",
+  "cn": "祖母；外祖母",
+  "pos": "n.",
+  "ex": "This is my grandmother.",
+  "exCn": "这是我的奶奶。",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "grandfather",
+  "cn": "祖父；外祖父",
+  "pos": "n.",
+  "ex": "My grandfather is kind.",
+  "exCn": "我爷爷很和蔼。",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "family",
+  "cn": "家庭",
+  "pos": "n.",
+  "ex": "I love my family.",
+  "exCn": "我爱我的家庭。",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "who",
+  "cn": "谁",
+  "pos": "pron.",
+  "ex": "Who is he?",
+  "exCn": "他是谁？",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "that",
+  "cn": "那；那个",
+  "pos": "pron.",
+  "ex": "Who's that boy?",
+  "exCn": "那个男孩是谁？",
+  "grade": 3,
+  "topic": "家庭"
+ },
+ {
+  "en": "thin",
+  "cn": "瘦的",
+  "pos": "adj.",
+  "ex": "The monkey is thin.",
+  "exCn": "猴子很瘦。",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "fat",
+  "cn": "胖的",
+  "pos": "adj.",
+  "ex": "The pig is fat.",
+  "exCn": "猪很胖。",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "tall",
+  "cn": "高的",
+  "pos": "adj.",
+  "ex": "The giraffe is tall.",
+  "exCn": "长颈鹿很高。",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "short",
+  "cn": "矮的；短的",
+  "pos": "adj.",
+  "ex": "The rabbit is short.",
+  "exCn": "兔子很矮。",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "long",
+  "cn": "长的",
+  "pos": "adj.",
+  "ex": "The snake is long.",
+  "exCn": "蛇很长。",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "small",
+  "cn": "小的",
+  "pos": "adj.",
+  "ex": "The mouse is small.",
+  "exCn": "老鼠很小。",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "big",
+  "cn": "大的",
+  "pos": "adj.",
+  "ex": "The elephant is big.",
+  "exCn": "大象很大。",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "giraffe",
+  "cn": "长颈鹿",
+  "pos": "n.",
+  "ex": "The giraffe is very tall.",
+  "exCn": "长颈鹿非常高。",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "children",
+  "cn": "儿童(复数)",
+  "pos": "n.",
+  "ex": "The children are happy.",
+  "exCn": "孩子们很开心。",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "tail",
+  "cn": "尾巴",
+  "pos": "n.",
+  "ex": "The monkey has a long tail.",
+  "exCn": "猴子有一条长尾巴。",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "so",
+  "cn": "如此；这么",
+  "pos": "adv.",
+  "ex": "It's so tall!",
+  "exCn": "它好高啊！",
+  "grade": 3,
+  "topic": "描述"
+ },
+ {
+  "en": "on",
+  "cn": "在……上面",
+  "pos": "prep.",
+  "ex": "The book is on the desk.",
+  "exCn": "书在桌子上。",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "in",
+  "cn": "在……里面",
+  "pos": "prep.",
+  "ex": "The cat is in the box.",
+  "exCn": "猫在盒子里。",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "under",
+  "cn": "在……下面",
+  "pos": "prep.",
+  "ex": "The ball is under the chair.",
+  "exCn": "球在椅子下面。",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "desk",
+  "cn": "书桌",
+  "pos": "n.",
+  "ex": "The book is on the desk.",
+  "exCn": "书在书桌上。",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "chair",
+  "cn": "椅子",
+  "pos": "n.",
+  "ex": "Sit on the chair.",
+  "exCn": "坐在椅子上。",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "cap",
+  "cn": "帽子",
+  "pos": "n.",
+  "ex": "Where is my cap?",
+  "exCn": "我的帽子在哪里？",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "ball",
+  "cn": "球",
+  "pos": "n.",
+  "ex": "I have a ball.",
+  "exCn": "我有一个球。",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "car",
+  "cn": "小汽车",
+  "pos": "n.",
+  "ex": "Where is my car?",
+  "exCn": "我的小汽车在哪里？",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "boat",
+  "cn": "小船",
+  "pos": "n.",
+  "ex": "The boat is on the water.",
+  "exCn": "小船在水面上。",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "map",
+  "cn": "地图",
+  "pos": "n.",
+  "ex": "I have a map.",
+  "exCn": "我有一张地图。",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "toy",
+  "cn": "玩具",
+  "pos": "n.",
+  "ex": "I like my toy car.",
+  "exCn": "我喜欢我的玩具车。",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "box",
+  "cn": "盒子",
+  "pos": "n.",
+  "ex": "The toy is in the box.",
+  "exCn": "玩具在盒子里。",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "where",
+  "cn": "在哪里",
+  "pos": "adv.",
+  "ex": "Where is my bag?",
+  "exCn": "我的包在哪里？",
+  "grade": 3,
+  "topic": "位置与物品"
+ },
+ {
+  "en": "apple",
+  "cn": "苹果",
+  "pos": "n.",
+  "ex": "I like apples.",
+  "exCn": "我喜欢苹果。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "pear",
+  "cn": "梨",
+  "pos": "n.",
+  "ex": "Do you like pears?",
+  "exCn": "你喜欢梨吗？",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "orange",
+  "cn": "橙子",
+  "pos": "n.",
+  "ex": "I have an orange.",
+  "exCn": "我有一个橙子。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "banana",
+  "cn": "香蕉",
+  "pos": "n.",
+  "ex": "The monkey likes bananas.",
+  "exCn": "猴子喜欢香蕉。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "watermelon",
+  "cn": "西瓜",
+  "pos": "n.",
+  "ex": "I like watermelons.",
+  "exCn": "我喜欢西瓜。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "strawberry",
+  "cn": "草莓",
+  "pos": "n.",
+  "ex": "The strawberry is red.",
+  "exCn": "草莓是红色的。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "grape",
+  "cn": "葡萄",
+  "pos": "n.",
+  "ex": "I like grapes.",
+  "exCn": "我喜欢葡萄。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "buy",
+  "cn": "买",
+  "pos": "v.",
+  "ex": "Let's buy some fruit.",
+  "exCn": "我们买些水果吧。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "fruit",
+  "cn": "水果",
+  "pos": "n.",
+  "ex": "I like fruit.",
+  "exCn": "我喜欢水果。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "yes",
+  "cn": "是的",
+  "pos": "adv.",
+  "ex": "Yes, I do.",
+  "exCn": "是的，我喜欢。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "no",
+  "cn": "不；不是",
+  "pos": "adv.",
+  "ex": "No, I don't.",
+  "exCn": "不，我不喜欢。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "do",
+  "cn": "做",
+  "pos": "v.",
+  "ex": "Do you like apples?",
+  "exCn": "你喜欢苹果吗？",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "don't",
+  "cn": "不（do not）",
+  "pos": "v.",
+  "ex": "I don't like pears.",
+  "exCn": "我不喜欢梨。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "sorry",
+  "cn": "对不起",
+  "pos": "adj.",
+  "ex": "Sorry, I don't know.",
+  "exCn": "对不起，我不知道。",
+  "grade": 3,
+  "topic": "水果"
+ },
+ {
+  "en": "eleven",
+  "cn": "十一",
+  "pos": "num.",
+  "ex": "I have eleven books.",
+  "exCn": "我有十一本书。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "twelve",
+  "cn": "十二",
+  "pos": "num.",
+  "ex": "There are twelve months.",
+  "exCn": "有十二个月。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "thirteen",
+  "cn": "十三",
+  "pos": "num.",
+  "ex": "I am thirteen.",
+  "exCn": "我十三岁了。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "fourteen",
+  "cn": "十四",
+  "pos": "num.",
+  "ex": "I have fourteen pens.",
+  "exCn": "我有十四支笔。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "fifteen",
+  "cn": "十五",
+  "pos": "num.",
+  "ex": "There are fifteen birds.",
+  "exCn": "有十五只鸟。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "sixteen",
+  "cn": "十六",
+  "pos": "num.",
+  "ex": "I see sixteen stars.",
+  "exCn": "我看到了十六颗星星。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "seventeen",
+  "cn": "十七",
+  "pos": "num.",
+  "ex": "There are seventeen students.",
+  "exCn": "有十七个学生。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "eighteen",
+  "cn": "十八",
+  "pos": "num.",
+  "ex": "She is eighteen.",
+  "exCn": "她十八岁了。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "nineteen",
+  "cn": "十九",
+  "pos": "num.",
+  "ex": "I have nineteen crayons.",
+  "exCn": "我有十九支蜡笔。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "twenty",
+  "cn": "二十",
+  "pos": "num.",
+  "ex": "I can count to twenty.",
+  "exCn": "我能数到二十。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "kite",
+  "cn": "风筝",
+  "pos": "n.",
+  "ex": "I have a kite.",
+  "exCn": "我有一个风筝。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "beautiful",
+  "cn": "美丽的",
+  "pos": "adj.",
+  "ex": "The kite is beautiful.",
+  "exCn": "风筝很漂亮。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "open",
+  "cn": "打开",
+  "pos": "v.",
+  "ex": "Open the box.",
+  "exCn": "打开盒子。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "close",
+  "cn": "关上",
+  "pos": "v.",
+  "ex": "Close the window.",
+  "exCn": "关上窗户。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "crayon",
+  "cn": "蜡笔",
+  "pos": "n.",
+  "ex": "I have a red crayon.",
+  "exCn": "我有一支红色蜡笔。",
+  "grade": 3,
+  "topic": "数字(11-20)"
+ },
+ {
+  "en": "classroom",
+  "cn": "教室",
+  "pos": "n.",
+  "ex": "This is my classroom.",
+  "exCn": "这是我的教室。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "window",
+  "cn": "窗户",
+  "pos": "n.",
+  "ex": "Clean the window.",
+  "exCn": "擦窗户。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "blackboard",
+  "cn": "黑板",
+  "pos": "n.",
+  "ex": "Look at the blackboard.",
+  "exCn": "看黑板。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "light",
+  "cn": "灯",
+  "pos": "n.",
+  "ex": "Turn on the light.",
+  "exCn": "开灯。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "picture",
+  "cn": "图片；照片",
+  "pos": "n.",
+  "ex": "It's a picture of Beijing.",
+  "exCn": "这是一张北京的照片。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "door",
+  "cn": "门",
+  "pos": "n.",
+  "ex": "Open the door, please.",
+  "exCn": "请开门。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "floor",
+  "cn": "地板",
+  "pos": "n.",
+  "ex": "Clean the floor.",
+  "exCn": "扫地。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "wall",
+  "cn": "墙",
+  "pos": "n.",
+  "ex": "The picture is on the wall.",
+  "exCn": "图片在墙上。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "computer",
+  "cn": "电脑",
+  "pos": "n.",
+  "ex": "I have a computer.",
+  "exCn": "我有一台电脑。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "fan",
+  "cn": "风扇",
+  "pos": "n.",
+  "ex": "Turn on the fan.",
+  "exCn": "开风扇。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "near",
+  "cn": "近的",
+  "pos": "prep.",
+  "ex": "My seat is near the window.",
+  "exCn": "我的座位靠近窗户。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "clean",
+  "cn": "打扫；干净的",
+  "pos": "v./adj.",
+  "ex": "Let me clean the classroom.",
+  "exCn": "让我打扫教室。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "help",
+  "cn": "帮助",
+  "pos": "v.",
+  "ex": "Let me help you.",
+  "exCn": "让我帮你。",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "really",
+  "cn": "真的",
+  "pos": "adv.",
+  "ex": "It's really big!",
+  "exCn": "它真的好大！",
+  "grade": 4,
+  "topic": "教室"
+ },
+ {
+  "en": "schoolbag",
+  "cn": "书包",
+  "pos": "n.",
+  "ex": "My schoolbag is heavy.",
+  "exCn": "我的书包很重。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "book",
+  "cn": "书",
+  "pos": "n.",
+  "ex": "I have a new book.",
+  "exCn": "我有一本新书。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "English book",
+  "cn": "英语书",
+  "pos": "n.",
+  "ex": "This is my English book.",
+  "exCn": "这是我的英语书。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "Chinese book",
+  "cn": "语文书",
+  "pos": "n.",
+  "ex": "I like my Chinese book.",
+  "exCn": "我喜欢我的语文书。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "maths book",
+  "cn": "数学书",
+  "pos": "n.",
+  "ex": "The maths book is in my bag.",
+  "exCn": "数学书在我的书包里。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "storybook",
+  "cn": "故事书",
+  "pos": "n.",
+  "ex": "I like reading storybooks.",
+  "exCn": "我喜欢读故事书。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "notebook",
+  "cn": "笔记本",
+  "pos": "n.",
+  "ex": "I have two notebooks.",
+  "exCn": "我有两个笔记本。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "pencil",
+  "cn": "铅笔",
+  "pos": "n.",
+  "ex": "I need a pencil.",
+  "exCn": "我需要一支铅笔。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "pencil box",
+  "cn": "铅笔盒",
+  "pos": "n.",
+  "ex": "The pencil is in the pencil box.",
+  "exCn": "铅笔在铅笔盒里。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "ruler",
+  "cn": "尺子",
+  "pos": "n.",
+  "ex": "I have a long ruler.",
+  "exCn": "我有一把长尺子。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "eraser",
+  "cn": "橡皮",
+  "pos": "n.",
+  "ex": "Can I use your eraser?",
+  "exCn": "我能用你的橡皮吗？",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "candy",
+  "cn": "糖果",
+  "pos": "n.",
+  "ex": "I like candy.",
+  "exCn": "我喜欢糖果。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "heavy",
+  "cn": "重的",
+  "pos": "adj.",
+  "ex": "My schoolbag is heavy.",
+  "exCn": "我的书包很重。",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "wow",
+  "cn": "哇",
+  "pos": "interj.",
+  "ex": "Wow, it's so cute!",
+  "exCn": "哇，好可爱！",
+  "grade": 4,
+  "topic": "书包与课本"
+ },
+ {
+  "en": "strong",
+  "cn": "强壮的",
+  "pos": "adj.",
+  "ex": "He is strong.",
+  "exCn": "他很强壮。",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "friendly",
+  "cn": "友好的",
+  "pos": "adj.",
+  "ex": "She is very friendly.",
+  "exCn": "她很友好。",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "quiet",
+  "cn": "安静的",
+  "pos": "adj.",
+  "ex": "He is quiet.",
+  "exCn": "他很安静。",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "hair",
+  "cn": "头发",
+  "pos": "n.",
+  "ex": "She has long hair.",
+  "exCn": "她有长头发。",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "shoe",
+  "cn": "鞋",
+  "pos": "n.",
+  "ex": "I have new shoes.",
+  "exCn": "我有新鞋。",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "glasses",
+  "cn": "眼镜",
+  "pos": "n.",
+  "ex": "He has glasses.",
+  "exCn": "他戴眼镜。",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "his",
+  "cn": "他的",
+  "pos": "pron.",
+  "ex": "His name is Zhang Peng.",
+  "exCn": "他的名字叫张鹏。",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "her",
+  "cn": "她的",
+  "pos": "pron.",
+  "ex": "Her name is Amy.",
+  "exCn": "她的名字叫艾米。",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "name",
+  "cn": "名字",
+  "pos": "n.",
+  "ex": "What's your name?",
+  "exCn": "你叫什么名字？",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "has",
+  "cn": "有",
+  "pos": "v.",
+  "ex": "She has long hair.",
+  "exCn": "她有长头发。",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "or",
+  "cn": "或者",
+  "pos": "conj.",
+  "ex": "Is he tall or short?",
+  "exCn": "他是高还是矮？",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "right",
+  "cn": "对的；正确的",
+  "pos": "adj.",
+  "ex": "Yes, you're right!",
+  "exCn": "对，你说对了！",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "hat",
+  "cn": "帽子",
+  "pos": "n.",
+  "ex": "He has a blue hat.",
+  "exCn": "他有一顶蓝色的帽子。",
+  "grade": 4,
+  "topic": "朋友与描述"
+ },
+ {
+  "en": "home",
+  "cn": "家",
+  "pos": "n.",
+  "ex": "Welcome to my home.",
+  "exCn": "欢迎来我家。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "room",
+  "cn": "房间",
+  "pos": "n.",
+  "ex": "This is my room.",
+  "exCn": "这是我的房间。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "bedroom",
+  "cn": "卧室",
+  "pos": "n.",
+  "ex": "My bedroom is small.",
+  "exCn": "我的卧室很小。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "living room",
+  "cn": "客厅",
+  "pos": "n.",
+  "ex": "The sofa is in the living room.",
+  "exCn": "沙发在客厅里。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "study",
+  "cn": "书房",
+  "pos": "n.",
+  "ex": "I read in the study.",
+  "exCn": "我在书房看书。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "kitchen",
+  "cn": "厨房",
+  "pos": "n.",
+  "ex": "Mom is in the kitchen.",
+  "exCn": "妈妈在厨房里。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "bathroom",
+  "cn": "浴室",
+  "pos": "n.",
+  "ex": "The bathroom is clean.",
+  "exCn": "浴室很干净。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "bed",
+  "cn": "床",
+  "pos": "n.",
+  "ex": "The cat is on the bed.",
+  "exCn": "猫在床上。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "phone",
+  "cn": "电话",
+  "pos": "n.",
+  "ex": "The phone is on the table.",
+  "exCn": "电话在桌子上。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "table",
+  "cn": "桌子",
+  "pos": "n.",
+  "ex": "The book is on the table.",
+  "exCn": "书在桌子上。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "sofa",
+  "cn": "沙发",
+  "pos": "n.",
+  "ex": "The sofa is soft.",
+  "exCn": "沙发很软。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "fridge",
+  "cn": "冰箱",
+  "pos": "n.",
+  "ex": "The milk is in the fridge.",
+  "exCn": "牛奶在冰箱里。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "find",
+  "cn": "找到",
+  "pos": "v.",
+  "ex": "I can't find my keys.",
+  "exCn": "我找不到我的钥匙。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "them",
+  "cn": "他们",
+  "pos": "pron.",
+  "ex": "I can see them.",
+  "exCn": "我能看到他们。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "come",
+  "cn": "来",
+  "pos": "v.",
+  "ex": "Come to my home.",
+  "exCn": "来我家吧。",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "key",
+  "cn": "钥匙",
+  "pos": "n.",
+  "ex": "Where are my keys?",
+  "exCn": "我的钥匙在哪里？",
+  "grade": 4,
+  "topic": "家与房间"
+ },
+ {
+  "en": "beef",
+  "cn": "牛肉",
+  "pos": "n.",
+  "ex": "I'd like some beef.",
+  "exCn": "我想要一些牛肉。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "chicken",
+  "cn": "鸡肉",
+  "pos": "n.",
+  "ex": "I like chicken.",
+  "exCn": "我喜欢鸡肉。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "noodles",
+  "cn": "面条",
+  "pos": "n.",
+  "ex": "I'd like some noodles.",
+  "exCn": "我想要一些面条。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "soup",
+  "cn": "汤",
+  "pos": "n.",
+  "ex": "The soup is hot.",
+  "exCn": "汤很热。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "vegetable",
+  "cn": "蔬菜",
+  "pos": "n.",
+  "ex": "Eat more vegetables.",
+  "exCn": "多吃蔬菜。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "chopsticks",
+  "cn": "筷子",
+  "pos": "n.",
+  "ex": "I can use chopsticks.",
+  "exCn": "我会用筷子。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "bowl",
+  "cn": "碗",
+  "pos": "n.",
+  "ex": "Pass me the bowl.",
+  "exCn": "把碗递给我。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "fork",
+  "cn": "叉子",
+  "pos": "n.",
+  "ex": "Use the fork.",
+  "exCn": "用叉子。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "knife",
+  "cn": "小刀",
+  "pos": "n.",
+  "ex": "Use the knife and fork.",
+  "exCn": "用刀叉。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "spoon",
+  "cn": "勺子",
+  "pos": "n.",
+  "ex": "Use the spoon.",
+  "exCn": "用勺子。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "dinner",
+  "cn": "晚餐",
+  "pos": "n.",
+  "ex": "Dinner's ready!",
+  "exCn": "晚餐准备好了！",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "ready",
+  "cn": "准备好的",
+  "pos": "adj.",
+  "ex": "Dinner's ready!",
+  "exCn": "晚餐准备好了！",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "would",
+  "cn": "愿意",
+  "pos": "v.",
+  "ex": "What would you like?",
+  "exCn": "你想要什么？",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "pass",
+  "cn": "递；传",
+  "pos": "v.",
+  "ex": "Pass me the spoon.",
+  "exCn": "把勺子递给我。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "cut",
+  "cn": "切",
+  "pos": "v.",
+  "ex": "Cut the bread.",
+  "exCn": "切面包。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "use",
+  "cn": "使用",
+  "pos": "v.",
+  "ex": "Use the chopsticks.",
+  "exCn": "使用筷子。",
+  "grade": 4,
+  "topic": "餐具与食物"
+ },
+ {
+  "en": "parents",
+  "cn": "父母",
+  "pos": "n.",
+  "ex": "These are my parents.",
+  "exCn": "这是我的父母。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "cousin",
+  "cn": "堂兄弟姐妹",
+  "pos": "n.",
+  "ex": "This is my cousin.",
+  "exCn": "这是我的堂弟。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "uncle",
+  "cn": "叔；舅",
+  "pos": "n.",
+  "ex": "My uncle is a doctor.",
+  "exCn": "我叔叔是医生。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "aunt",
+  "cn": "姑；姨",
+  "pos": "n.",
+  "ex": "My aunt is a nurse.",
+  "exCn": "我阿姨是护士。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "baby",
+  "cn": "婴儿",
+  "pos": "n.",
+  "ex": "The baby is cute.",
+  "exCn": "婴儿很可爱。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "doctor",
+  "cn": "医生",
+  "pos": "n.",
+  "ex": "My father is a doctor.",
+  "exCn": "我爸爸是医生。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "cook",
+  "cn": "厨师",
+  "pos": "n.",
+  "ex": "My mother is a cook.",
+  "exCn": "我妈妈是厨师。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "driver",
+  "cn": "司机",
+  "pos": "n.",
+  "ex": "He is a bus driver.",
+  "exCn": "他是公交车司机。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "farmer",
+  "cn": "农民",
+  "pos": "n.",
+  "ex": "My grandpa is a farmer.",
+  "exCn": "我爷爷是农民。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "nurse",
+  "cn": "护士",
+  "pos": "n.",
+  "ex": "My aunt is a nurse.",
+  "exCn": "我阿姨是护士。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "job",
+  "cn": "工作",
+  "pos": "n.",
+  "ex": "What's your father's job?",
+  "exCn": "你爸爸的工作是什么？",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "people",
+  "cn": "人们",
+  "pos": "n.",
+  "ex": "There are many people.",
+  "exCn": "有很多人。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "but",
+  "cn": "但是",
+  "pos": "conj.",
+  "ex": "He is young but strong.",
+  "exCn": "他很年轻但是很强壮。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "little",
+  "cn": "小的",
+  "pos": "adj.",
+  "ex": "She is a little girl.",
+  "exCn": "她是一个小女孩。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "puppy",
+  "cn": "小狗",
+  "pos": "n.",
+  "ex": "The puppy is cute.",
+  "exCn": "小狗很可爱。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "football",
+  "cn": "足球",
+  "pos": "n.",
+  "ex": "He likes football.",
+  "exCn": "他喜欢足球。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "basketball",
+  "cn": "篮球",
+  "pos": "n.",
+  "ex": "I play basketball.",
+  "exCn": "我打篮球。",
+  "grade": 4,
+  "topic": "职业"
+ },
+ {
+  "en": "playground",
+  "cn": "操场",
+  "pos": "n.",
+  "ex": "Let's go to the playground.",
+  "exCn": "我们去操场吧。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "garden",
+  "cn": "花园",
+  "pos": "n.",
+  "ex": "The garden is beautiful.",
+  "exCn": "花园很漂亮。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "library",
+  "cn": "图书馆",
+  "pos": "n.",
+  "ex": "Let's go to the library.",
+  "exCn": "我们去图书馆吧。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "art room",
+  "cn": "美术教室",
+  "pos": "n.",
+  "ex": "The art room is on the second floor.",
+  "exCn": "美术教室在二楼。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "music room",
+  "cn": "音乐教室",
+  "pos": "n.",
+  "ex": "We sing in the music room.",
+  "exCn": "我们在音乐教室唱歌。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "computer room",
+  "cn": "电脑教室",
+  "pos": "n.",
+  "ex": "The computer room is big.",
+  "exCn": "电脑教室很大。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "gym",
+  "cn": "体育馆",
+  "pos": "n.",
+  "ex": "We play in the gym.",
+  "exCn": "我们在体育馆玩。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "first",
+  "cn": "第一",
+  "pos": "num.",
+  "ex": "It's on the first floor.",
+  "exCn": "它在一楼。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "second",
+  "cn": "第二",
+  "pos": "num.",
+  "ex": "It's on the second floor.",
+  "exCn": "它在二楼。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "next to",
+  "cn": "紧邻",
+  "pos": "prep.",
+  "ex": "The library is next to the gym.",
+  "exCn": "图书馆紧邻体育馆。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "homework",
+  "cn": "家庭作业",
+  "pos": "n.",
+  "ex": "I do my homework.",
+  "exCn": "我做家庭作业。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "class",
+  "cn": "班级；课",
+  "pos": "n.",
+  "ex": "Time for class!",
+  "exCn": "上课时间到了！",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "forty",
+  "cn": "四十",
+  "pos": "num.",
+  "ex": "There are forty students.",
+  "exCn": "有四十个学生。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "way",
+  "cn": "路；方向",
+  "pos": "n.",
+  "ex": "This way, please.",
+  "exCn": "请走这边。",
+  "grade": 4,
+  "topic": "学校设施"
+ },
+ {
+  "en": "time",
+  "cn": "时间",
+  "pos": "n.",
+  "ex": "What time is it?",
+  "exCn": "几点了？",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "o'clock",
+  "cn": "……点钟",
+  "pos": "adv.",
+  "ex": "It's eight o'clock.",
+  "exCn": "八点了。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "lunch",
+  "cn": "午餐",
+  "pos": "n.",
+  "ex": "It's time for lunch.",
+  "exCn": "午餐时间到了。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "breakfast",
+  "cn": "早餐",
+  "pos": "n.",
+  "ex": "I have breakfast at seven.",
+  "exCn": "我七点吃早餐。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "music",
+  "cn": "音乐",
+  "pos": "n.",
+  "ex": "I like music.",
+  "exCn": "我喜欢音乐。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "English",
+  "cn": "英语",
+  "pos": "n.",
+  "ex": "I like English class.",
+  "exCn": "我喜欢英语课。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "get up",
+  "cn": "起床",
+  "pos": "v.",
+  "ex": "I get up at six.",
+  "exCn": "我六点起床。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "go to school",
+  "cn": "去上学",
+  "pos": "v.",
+  "ex": "I go to school at seven.",
+  "exCn": "我七点去上学。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "go home",
+  "cn": "回家",
+  "pos": "v.",
+  "ex": "I go home at four.",
+  "exCn": "我四点回家。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "go to bed",
+  "cn": "上床睡觉",
+  "pos": "v.",
+  "ex": "I go to bed at nine.",
+  "exCn": "我九点睡觉。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "over",
+  "cn": "结束",
+  "pos": "adv.",
+  "ex": "School is over.",
+  "exCn": "放学了。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "now",
+  "cn": "现在",
+  "pos": "adv.",
+  "ex": "What time is it now?",
+  "exCn": "现在几点了？",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "kid",
+  "cn": "小孩",
+  "pos": "n.",
+  "ex": "Come on, kids!",
+  "exCn": "来吧，孩子们！",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "just",
+  "cn": "仅仅；刚好",
+  "pos": "adv.",
+  "ex": "Just a minute.",
+  "exCn": "等一下。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "minute",
+  "cn": "分钟",
+  "pos": "n.",
+  "ex": "Wait a minute.",
+  "exCn": "等一下。",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "hurry",
+  "cn": "赶快",
+  "pos": "v.",
+  "ex": "Hurry up!",
+  "exCn": "赶快！",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "up",
+  "cn": "向上",
+  "pos": "adv.",
+  "ex": "Get up!",
+  "exCn": "起床！",
+  "grade": 4,
+  "topic": "时间"
+ },
+ {
+  "en": "weather",
+  "cn": "天气",
+  "pos": "n.",
+  "ex": "What's the weather like?",
+  "exCn": "天气怎么样？",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "cold",
+  "cn": "寒冷的",
+  "pos": "adj.",
+  "ex": "It's cold today.",
+  "exCn": "今天很冷。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "warm",
+  "cn": "温暖的",
+  "pos": "adj.",
+  "ex": "It's warm in spring.",
+  "exCn": "春天很温暖。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "hot",
+  "cn": "热的",
+  "pos": "adj.",
+  "ex": "It's hot in summer.",
+  "exCn": "夏天很热。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "rainy",
+  "cn": "多雨的",
+  "pos": "adj.",
+  "ex": "It's rainy today.",
+  "exCn": "今天下雨。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "windy",
+  "cn": "多风的",
+  "pos": "adj.",
+  "ex": "It's windy outside.",
+  "exCn": "外面刮风。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "cloudy",
+  "cn": "多云的",
+  "pos": "adj.",
+  "ex": "It's cloudy today.",
+  "exCn": "今天多云。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "snowy",
+  "cn": "多雪的",
+  "pos": "adj.",
+  "ex": "It's snowy in winter.",
+  "exCn": "冬天下雪。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "sunny",
+  "cn": "晴朗的",
+  "pos": "adj.",
+  "ex": "It's sunny today.",
+  "exCn": "今天是晴天。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "outside",
+  "cn": "在外面",
+  "pos": "adv.",
+  "ex": "Go outside and play.",
+  "exCn": "到外面去玩。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "fly",
+  "cn": "飞；放（风筝）",
+  "pos": "v.",
+  "ex": "I can fly a kite.",
+  "exCn": "我能放风筝。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "degree",
+  "cn": "度",
+  "pos": "n.",
+  "ex": "It's thirty degrees.",
+  "exCn": "三十度。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "Beijing",
+  "cn": "北京",
+  "pos": "n.",
+  "ex": "I live in Beijing.",
+  "exCn": "我住在北京。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "New York",
+  "cn": "纽约",
+  "pos": "n.",
+  "ex": "New York is a big city.",
+  "exCn": "纽约是一座大城市。",
+  "grade": 4,
+  "topic": "天气"
+ },
+ {
+  "en": "farm",
+  "cn": "农场",
+  "pos": "n.",
+  "ex": "Let's go to the farm.",
+  "exCn": "我们去农场吧。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "hen",
+  "cn": "母鸡",
+  "pos": "n.",
+  "ex": "The hen has eggs.",
+  "exCn": "母鸡下蛋了。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "cow",
+  "cn": "奶牛",
+  "pos": "n.",
+  "ex": "The cow gives us milk.",
+  "exCn": "奶牛给我们提供牛奶。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "horse",
+  "cn": "马",
+  "pos": "n.",
+  "ex": "The horse is fast.",
+  "exCn": "马跑得很快。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "sheep",
+  "cn": "绵羊",
+  "pos": "n.",
+  "ex": "I see many sheep.",
+  "exCn": "我看到了很多绵羊。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "goat",
+  "cn": "山羊",
+  "pos": "n.",
+  "ex": "The goat is white.",
+  "exCn": "山羊是白色的。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "lamb",
+  "cn": "小羊",
+  "pos": "n.",
+  "ex": "The lamb is cute.",
+  "exCn": "小羊很可爱。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "tomato",
+  "cn": "西红柿",
+  "pos": "n.",
+  "ex": "I like tomatoes.",
+  "exCn": "我喜欢西红柿。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "potato",
+  "cn": "土豆",
+  "pos": "n.",
+  "ex": "The potatoes are big.",
+  "exCn": "土豆很大。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "carrot",
+  "cn": "胡萝卜",
+  "pos": "n.",
+  "ex": "The rabbit likes carrots.",
+  "exCn": "兔子喜欢胡萝卜。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "onion",
+  "cn": "洋葱",
+  "pos": "n.",
+  "ex": "I don't like onions.",
+  "exCn": "我不喜欢洋葱。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "green beans",
+  "cn": "四季豆",
+  "pos": "n.",
+  "ex": "I like green beans.",
+  "exCn": "我喜欢四季豆。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "these",
+  "cn": "这些",
+  "pos": "pron.",
+  "ex": "These are tomatoes.",
+  "exCn": "这些是西红柿。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "those",
+  "cn": "那些",
+  "pos": "pron.",
+  "ex": "Those are sheep.",
+  "exCn": "那些是绵羊。",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "yum",
+  "cn": "好吃",
+  "pos": "interj.",
+  "ex": "Yum! It's delicious!",
+  "exCn": "好吃！真美味！",
+  "grade": 4,
+  "topic": "农场"
+ },
+ {
+  "en": "clothes",
+  "cn": "衣服",
+  "pos": "n.",
+  "ex": "I like your clothes.",
+  "exCn": "我喜欢你的衣服。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "shirt",
+  "cn": "衬衫",
+  "pos": "n.",
+  "ex": "I have a white shirt.",
+  "exCn": "我有一件白色衬衫。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "T-shirt",
+  "cn": "T恤",
+  "pos": "n.",
+  "ex": "I like this T-shirt.",
+  "exCn": "我喜欢这件T恤。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "skirt",
+  "cn": "短裙",
+  "pos": "n.",
+  "ex": "She has a red skirt.",
+  "exCn": "她有一条红色短裙。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "dress",
+  "cn": "连衣裙",
+  "pos": "n.",
+  "ex": "The dress is beautiful.",
+  "exCn": "这件连衣裙很漂亮。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "pants",
+  "cn": "裤子",
+  "pos": "n.",
+  "ex": "These pants are new.",
+  "exCn": "这些裤子是新的。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "shorts",
+  "cn": "短裤",
+  "pos": "n.",
+  "ex": "I wear shorts in summer.",
+  "exCn": "我夏天穿短裤。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "jacket",
+  "cn": "夹克",
+  "pos": "n.",
+  "ex": "Put on your jacket.",
+  "exCn": "穿上你的夹克。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "coat",
+  "cn": "外套",
+  "pos": "n.",
+  "ex": "Put on your coat.",
+  "exCn": "穿上你的外套。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "sweater",
+  "cn": "毛衣",
+  "pos": "n.",
+  "ex": "I have a warm sweater.",
+  "exCn": "我有一件暖和的毛衣。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "sock",
+  "cn": "袜子",
+  "pos": "n.",
+  "ex": "I need clean socks.",
+  "exCn": "我需要干净的袜子。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "jeans",
+  "cn": "牛仔裤",
+  "pos": "n.",
+  "ex": "He is wearing jeans.",
+  "exCn": "他穿着牛仔裤。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "put on",
+  "cn": "穿上",
+  "pos": "v.",
+  "ex": "Put on your shoes.",
+  "exCn": "穿上你的鞋子。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "take off",
+  "cn": "脱下",
+  "pos": "v.",
+  "ex": "Take off your hat.",
+  "exCn": "脱下你的帽子。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "hang up",
+  "cn": "挂起来",
+  "pos": "v.",
+  "ex": "Hang up your coat.",
+  "exCn": "把你的外套挂起来。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "wear",
+  "cn": "穿",
+  "pos": "v.",
+  "ex": "I wear a dress today.",
+  "exCn": "我今天穿连衣裙。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "whose",
+  "cn": "谁的",
+  "pos": "pron.",
+  "ex": "Whose coat is this?",
+  "exCn": "这是谁的外套？",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "mine",
+  "cn": "我的",
+  "pos": "pron.",
+  "ex": "The blue shirt is mine.",
+  "exCn": "蓝色衬衫是我的。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "yours",
+  "cn": "你的",
+  "pos": "pron.",
+  "ex": "Is this yours?",
+  "exCn": "这是你的吗？",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "pack",
+  "cn": "收拾；打包",
+  "pos": "v.",
+  "ex": "Pack your clothes.",
+  "exCn": "收拾你的衣服。",
+  "grade": 4,
+  "topic": "衣物"
+ },
+ {
+  "en": "shop",
+  "cn": "商店",
+  "pos": "n.",
+  "ex": "Let's go to the shop.",
+  "exCn": "我们去商店吧。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "glove",
+  "cn": "手套",
+  "pos": "n.",
+  "ex": "I need gloves.",
+  "exCn": "我需要手套。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "scarf",
+  "cn": "围巾",
+  "pos": "n.",
+  "ex": "The scarf is warm.",
+  "exCn": "围巾很暖和。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "umbrella",
+  "cn": "雨伞",
+  "pos": "n.",
+  "ex": "I have an umbrella.",
+  "exCn": "我有一把雨伞。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "sunglasses",
+  "cn": "太阳镜",
+  "pos": "n.",
+  "ex": "I need sunglasses.",
+  "exCn": "我需要太阳镜。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "pretty",
+  "cn": "漂亮的",
+  "pos": "adj.",
+  "ex": "The dress is pretty.",
+  "exCn": "这件连衣裙很漂亮。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "expensive",
+  "cn": "昂贵的",
+  "pos": "adj.",
+  "ex": "It's too expensive.",
+  "exCn": "太贵了。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "cheap",
+  "cn": "便宜的",
+  "pos": "adj.",
+  "ex": "It's very cheap.",
+  "exCn": "很便宜。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "nice",
+  "cn": "好看的",
+  "pos": "adj.",
+  "ex": "The gloves are nice.",
+  "exCn": "手套很好看。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "try",
+  "cn": "试",
+  "pos": "v.",
+  "ex": "Can I try them on?",
+  "exCn": "我能试穿吗？",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "size",
+  "cn": "尺码",
+  "pos": "n.",
+  "ex": "What size do you wear?",
+  "exCn": "你穿什么尺码？",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "of course",
+  "cn": "当然",
+  "pos": "adv.",
+  "ex": "Of course you can!",
+  "exCn": "你当然可以！",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "too",
+  "cn": "太",
+  "pos": "adv.",
+  "ex": "It's too small.",
+  "exCn": "太小了。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "just",
+  "cn": "刚好",
+  "pos": "adv.",
+  "ex": "It's just right.",
+  "exCn": "刚刚好。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "how much",
+  "cn": "多少钱",
+  "pos": "adv.",
+  "ex": "How much is it?",
+  "exCn": "多少钱？",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "yuan",
+  "cn": "元",
+  "pos": "n.",
+  "ex": "It's fifty yuan.",
+  "exCn": "五十元。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "dollar",
+  "cn": "美元",
+  "pos": "n.",
+  "ex": "It's ten dollars.",
+  "exCn": "十美元。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "us",
+  "cn": "我们（宾格）",
+  "pos": "pron.",
+  "ex": "Help us, please.",
+  "exCn": "请帮帮我们。",
+  "grade": 4,
+  "topic": "购物"
+ },
+ {
+  "en": "young",
+  "cn": "年轻的",
+  "pos": "adj.",
+  "ex": "She is young.",
+  "exCn": "她很年轻。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "kind",
+  "cn": "和蔼的；亲切的",
+  "pos": "adj.",
+  "ex": "My teacher is very kind.",
+  "exCn": "我的老师非常和蔼。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "strict",
+  "cn": "严格的",
+  "pos": "adj.",
+  "ex": "My maths teacher is strict.",
+  "exCn": "我的数学老师很严格。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "polite",
+  "cn": "有礼貌的",
+  "pos": "adj.",
+  "ex": "The boy is polite.",
+  "exCn": "这个男孩有礼貌。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "helpful",
+  "cn": "有帮助的",
+  "pos": "adj.",
+  "ex": "She is helpful at home.",
+  "exCn": "她在家很有帮助。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "clever",
+  "cn": "聪明的",
+  "pos": "adj.",
+  "ex": "The dog is clever.",
+  "exCn": "这只狗很聪明。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "shy",
+  "cn": "害羞的",
+  "pos": "adj.",
+  "ex": "She is shy.",
+  "exCn": "她很害羞。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "know",
+  "cn": "知道",
+  "pos": "v.",
+  "ex": "Do you know him?",
+  "exCn": "你认识他吗？",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "our",
+  "cn": "我们的",
+  "pos": "pron.",
+  "ex": "This is our teacher.",
+  "exCn": "这是我们的老师。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "will",
+  "cn": "将要",
+  "pos": "v.",
+  "ex": "She will be our new teacher.",
+  "exCn": "她将是我们的新老师。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "sometimes",
+  "cn": "有时候",
+  "pos": "adv.",
+  "ex": "Sometimes I read books.",
+  "exCn": "有时候我看书。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "robot",
+  "cn": "机器人",
+  "pos": "n.",
+  "ex": "The robot can talk.",
+  "exCn": "机器人会说话。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "speak",
+  "cn": "说话",
+  "pos": "v.",
+  "ex": "He can speak English.",
+  "exCn": "他会说英语。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "finish",
+  "cn": "完成",
+  "pos": "v.",
+  "ex": "I finish my homework.",
+  "exCn": "我完成了作业。",
+  "grade": 5,
+  "topic": "性格描述"
+ },
+ {
+  "en": "Monday",
+  "cn": "星期一",
+  "pos": "n.",
+  "ex": "I have English on Monday.",
+  "exCn": "我星期一有英语课。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "Tuesday",
+  "cn": "星期二",
+  "pos": "n.",
+  "ex": "Tuesday is my favourite day.",
+  "exCn": "星期二是我最喜欢的一天。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "Wednesday",
+  "cn": "星期三",
+  "pos": "n.",
+  "ex": "We have art on Wednesday.",
+  "exCn": "我们星期三有美术课。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "Thursday",
+  "cn": "星期四",
+  "pos": "n.",
+  "ex": "I play football on Thursday.",
+  "exCn": "我星期四踢足球。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "Friday",
+  "cn": "星期五",
+  "pos": "n.",
+  "ex": "Friday is the last school day.",
+  "exCn": "星期五是最后一个上学日。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "Saturday",
+  "cn": "星期六",
+  "pos": "n.",
+  "ex": "I play on Saturday.",
+  "exCn": "我星期六玩。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "Sunday",
+  "cn": "星期日",
+  "pos": "n.",
+  "ex": "Sunday is a holiday.",
+  "exCn": "星期日是假日。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "weekend",
+  "cn": "周末",
+  "pos": "n.",
+  "ex": "What do you do on the weekend?",
+  "exCn": "你周末做什么？",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "wash",
+  "cn": "洗",
+  "pos": "v.",
+  "ex": "I wash my clothes.",
+  "exCn": "我洗我的衣服。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "watch",
+  "cn": "看",
+  "pos": "v.",
+  "ex": "I watch TV on Sunday.",
+  "exCn": "我星期天看电视。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "read",
+  "cn": "读",
+  "pos": "v.",
+  "ex": "I read books every day.",
+  "exCn": "我每天读书。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "play",
+  "cn": "玩；播放",
+  "pos": "v.",
+  "ex": "Let's play together.",
+  "exCn": "我们一起玩吧。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "often",
+  "cn": "经常",
+  "pos": "adv.",
+  "ex": "I often read books.",
+  "exCn": "我经常看书。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "every",
+  "cn": "每一个",
+  "pos": "adj.",
+  "ex": "I study every day.",
+  "exCn": "我每天都学习。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "day",
+  "cn": "天；日",
+  "pos": "n.",
+  "ex": "What day is it today?",
+  "exCn": "今天星期几？",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "schedule",
+  "cn": "时间表",
+  "pos": "n.",
+  "ex": "Look at the schedule.",
+  "exCn": "看看时间表。",
+  "grade": 5,
+  "topic": "星期"
+ },
+ {
+  "en": "sandwich",
+  "cn": "三明治",
+  "pos": "n.",
+  "ex": "I'd like a sandwich.",
+  "exCn": "我想要一个三明治。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "salad",
+  "cn": "沙拉",
+  "pos": "n.",
+  "ex": "The salad is fresh.",
+  "exCn": "沙拉很新鲜。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "hamburger",
+  "cn": "汉堡包",
+  "pos": "n.",
+  "ex": "I like hamburgers.",
+  "exCn": "我喜欢汉堡包。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "ice cream",
+  "cn": "冰淇淋",
+  "pos": "n.",
+  "ex": "I love ice cream.",
+  "exCn": "我爱冰淇淋。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "tea",
+  "cn": "茶",
+  "pos": "n.",
+  "ex": "Would you like some tea?",
+  "exCn": "你想要一些茶吗？",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "fresh",
+  "cn": "新鲜的",
+  "pos": "adj.",
+  "ex": "The vegetables are fresh.",
+  "exCn": "蔬菜很新鲜。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "healthy",
+  "cn": "健康的",
+  "pos": "adj.",
+  "ex": "Fruit is healthy.",
+  "exCn": "水果是健康的。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "delicious",
+  "cn": "美味的",
+  "pos": "adj.",
+  "ex": "The food is delicious.",
+  "exCn": "食物很美味。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "hot",
+  "cn": "辣的",
+  "pos": "adj.",
+  "ex": "The food is too hot.",
+  "exCn": "食物太辣了。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "sweet",
+  "cn": "甜的",
+  "pos": "adj.",
+  "ex": "The cake is sweet.",
+  "exCn": "蛋糕很甜。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "salty",
+  "cn": "咸的",
+  "pos": "adj.",
+  "ex": "The fish is salty.",
+  "exCn": "鱼是咸的。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "favourite",
+  "cn": "最喜欢的",
+  "pos": "adj.",
+  "ex": "What's your favourite food?",
+  "exCn": "你最喜欢的食物是什么？",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "thirsty",
+  "cn": "渴的",
+  "pos": "adj.",
+  "ex": "I'm thirsty.",
+  "exCn": "我渴了。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "hungry",
+  "cn": "饿的",
+  "pos": "adj.",
+  "ex": "I'm hungry.",
+  "exCn": "我饿了。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "food",
+  "cn": "食物",
+  "pos": "n.",
+  "ex": "Chinese food is delicious.",
+  "exCn": "中国食物很美味。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "order",
+  "cn": "点餐",
+  "pos": "v.",
+  "ex": "Let's order some food.",
+  "exCn": "我们点些食物吧。",
+  "grade": 5,
+  "topic": "食物与味道"
+ },
+ {
+  "en": "sing",
+  "cn": "唱歌",
+  "pos": "v.",
+  "ex": "I can sing English songs.",
+  "exCn": "我会唱英文歌。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "song",
+  "cn": "歌曲",
+  "pos": "n.",
+  "ex": "This is a nice song.",
+  "exCn": "这是一首好听的歌。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "dance",
+  "cn": "跳舞",
+  "pos": "v.",
+  "ex": "She can dance.",
+  "exCn": "她会跳舞。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "draw",
+  "cn": "画画",
+  "pos": "v.",
+  "ex": "I can draw cartoons.",
+  "exCn": "我会画卡通画。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "cartoon",
+  "cn": "卡通",
+  "pos": "n.",
+  "ex": "I like cartoons.",
+  "exCn": "我喜欢卡通。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "swim",
+  "cn": "游泳",
+  "pos": "v.",
+  "ex": "I can swim.",
+  "exCn": "我会游泳。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "play basketball",
+  "cn": "打篮球",
+  "pos": "v.",
+  "ex": "I can play basketball.",
+  "exCn": "我会打篮球。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "play ping-pong",
+  "cn": "打乒乓球",
+  "pos": "v.",
+  "ex": "Can you play ping-pong?",
+  "exCn": "你会打乒乓球吗？",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "speak English",
+  "cn": "说英语",
+  "pos": "v.",
+  "ex": "I can speak English.",
+  "exCn": "我会说英语。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "cook",
+  "cn": "烹饪",
+  "pos": "v.",
+  "ex": "I can cook.",
+  "exCn": "我会做饭。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "kung fu",
+  "cn": "功夫",
+  "pos": "n.",
+  "ex": "I can do kung fu.",
+  "exCn": "我会功夫。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "wonderful",
+  "cn": "精彩的",
+  "pos": "adj.",
+  "ex": "That's wonderful!",
+  "exCn": "太精彩了！",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "learn",
+  "cn": "学习",
+  "pos": "v.",
+  "ex": "I want to learn to swim.",
+  "exCn": "我想学游泳。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "any",
+  "cn": "任何的",
+  "pos": "adj.",
+  "ex": "Can you do any kung fu?",
+  "exCn": "你会功夫吗？",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "problem",
+  "cn": "问题",
+  "pos": "n.",
+  "ex": "No problem!",
+  "exCn": "没问题！",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "no problem",
+  "cn": "没问题",
+  "pos": "interj.",
+  "ex": "No problem, I can help.",
+  "exCn": "没问题，我能帮忙。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "party",
+  "cn": "聚会",
+  "pos": "n.",
+  "ex": "We'll have a party.",
+  "exCn": "我们将举行一个聚会。",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "next",
+  "cn": "下一个",
+  "pos": "adj.",
+  "ex": "Who's next?",
+  "exCn": "下一个是谁？",
+  "grade": 5,
+  "topic": "能力"
+ },
+ {
+  "en": "clock",
+  "cn": "钟",
+  "pos": "n.",
+  "ex": "There is a clock on the wall.",
+  "exCn": "墙上有一个钟。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "plant",
+  "cn": "植物",
+  "pos": "n.",
+  "ex": "There are many plants.",
+  "exCn": "有很多植物。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "bottle",
+  "cn": "瓶子",
+  "pos": "n.",
+  "ex": "There is a water bottle.",
+  "exCn": "有一个水瓶。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "photo",
+  "cn": "照片",
+  "pos": "n.",
+  "ex": "There are some photos.",
+  "exCn": "有一些照片。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "bike",
+  "cn": "自行车",
+  "pos": "n.",
+  "ex": "I have a new bike.",
+  "exCn": "我有一辆新自行车。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "between",
+  "cn": "在……中间",
+  "pos": "prep.",
+  "ex": "The ball is between the boxes.",
+  "exCn": "球在两个盒子中间。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "above",
+  "cn": "在……上方",
+  "pos": "prep.",
+  "ex": "The bird is above the tree.",
+  "exCn": "鸟在树的上方。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "beside",
+  "cn": "在……旁边",
+  "pos": "prep.",
+  "ex": "The cat is beside the sofa.",
+  "exCn": "猫在沙发旁边。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "behind",
+  "cn": "在……后面",
+  "pos": "prep.",
+  "ex": "The dog is behind the door.",
+  "exCn": "狗在门后面。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "in front of",
+  "cn": "在……前面",
+  "pos": "prep.",
+  "ex": "There is a tree in front of the house.",
+  "exCn": "房子前面有一棵树。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "there",
+  "cn": "那里（表示存在）",
+  "pos": "adv.",
+  "ex": "There is a bed.",
+  "exCn": "有一张床。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "lots of",
+  "cn": "许多",
+  "pos": "adj.",
+  "ex": "There are lots of flowers.",
+  "exCn": "有很多花。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "dirty",
+  "cn": "脏的",
+  "pos": "adj.",
+  "ex": "The room is dirty.",
+  "exCn": "房间很脏。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "their",
+  "cn": "他们的",
+  "pos": "pron.",
+  "ex": "This is their room.",
+  "exCn": "这是他们的房间。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "house",
+  "cn": "房子",
+  "pos": "n.",
+  "ex": "My house is big.",
+  "exCn": "我的房子很大。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "flower",
+  "cn": "花",
+  "pos": "n.",
+  "ex": "The flowers are beautiful.",
+  "exCn": "花很漂亮。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "lots",
+  "cn": "许多",
+  "pos": "n.",
+  "ex": "There are lots of books.",
+  "exCn": "有很多书。",
+  "grade": 5,
+  "topic": "家居"
+ },
+ {
+  "en": "park",
+  "cn": "公园",
+  "pos": "n.",
+  "ex": "Let's go to the park.",
+  "exCn": "我们去公园吧。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "lake",
+  "cn": "湖",
+  "pos": "n.",
+  "ex": "There is a lake in the park.",
+  "exCn": "公园里有一个湖。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "river",
+  "cn": "河",
+  "pos": "n.",
+  "ex": "The river is long.",
+  "exCn": "河很长。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "forest",
+  "cn": "森林",
+  "pos": "n.",
+  "ex": "There is a forest.",
+  "exCn": "有一片森林。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "mountain",
+  "cn": "高山",
+  "pos": "n.",
+  "ex": "The mountain is high.",
+  "exCn": "山很高。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "hill",
+  "cn": "小山",
+  "pos": "n.",
+  "ex": "There are many hills.",
+  "exCn": "有很多小山。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "tree",
+  "cn": "树",
+  "pos": "n.",
+  "ex": "There are many trees.",
+  "exCn": "有很多树。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "bridge",
+  "cn": "桥",
+  "pos": "n.",
+  "ex": "There is a bridge over the river.",
+  "exCn": "河上有一座桥。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "building",
+  "cn": "建筑物",
+  "pos": "n.",
+  "ex": "There are tall buildings.",
+  "exCn": "有高楼。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "village",
+  "cn": "村庄",
+  "pos": "n.",
+  "ex": "The village is quiet.",
+  "exCn": "村庄很安静。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "nature",
+  "cn": "自然",
+  "pos": "n.",
+  "ex": "I love nature.",
+  "exCn": "我爱大自然。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "rabbit",
+  "cn": "兔子",
+  "pos": "n.",
+  "ex": "I see a rabbit.",
+  "exCn": "我看到了一只兔子。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "high",
+  "cn": "高的",
+  "pos": "adj.",
+  "ex": "The mountain is high.",
+  "exCn": "山很高。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "go boating",
+  "cn": "去划船",
+  "pos": "v.",
+  "ex": "Let's go boating.",
+  "exCn": "我们去划船吧。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "aren't",
+  "cn": "不是(are not)",
+  "pos": "v.",
+  "ex": "There aren't any fish.",
+  "exCn": "没有鱼。",
+  "grade": 5,
+  "topic": "自然"
+ },
+ {
+  "en": "eat breakfast",
+  "cn": "吃早餐",
+  "pos": "v.",
+  "ex": "I eat breakfast at 7 o'clock.",
+  "exCn": "我七点吃早餐。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "have ... class",
+  "cn": "上……课",
+  "pos": "v.",
+  "ex": "I have English class at 9.",
+  "exCn": "我九点上英语课。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "eat lunch",
+  "cn": "吃午餐",
+  "pos": "v.",
+  "ex": "We eat lunch at noon.",
+  "exCn": "我们中午吃午餐。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "do morning exercises",
+  "cn": "做早操",
+  "pos": "v.",
+  "ex": "We do morning exercises at 8.",
+  "exCn": "我们八点做早操。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "eat dinner",
+  "cn": "吃晚餐",
+  "pos": "v.",
+  "ex": "We eat dinner at 6.",
+  "exCn": "我们六点吃晚餐。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "clean my room",
+  "cn": "打扫我的房间",
+  "pos": "v.",
+  "ex": "I clean my room on Sunday.",
+  "exCn": "我星期天打扫房间。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "go for a walk",
+  "cn": "去散步",
+  "pos": "v.",
+  "ex": "I go for a walk after dinner.",
+  "exCn": "我晚饭后去散步。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "go shopping",
+  "cn": "去购物",
+  "pos": "v.",
+  "ex": "I go shopping on Saturday.",
+  "exCn": "我星期六去购物。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "take",
+  "cn": "上（课）",
+  "pos": "v.",
+  "ex": "I take a dancing class.",
+  "exCn": "我上舞蹈课。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "dancing",
+  "cn": "跳舞的",
+  "pos": "n.",
+  "ex": "I like dancing.",
+  "exCn": "我喜欢跳舞。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "shopping",
+  "cn": "购物",
+  "pos": "n.",
+  "ex": "I like shopping.",
+  "exCn": "我喜欢购物。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "usually",
+  "cn": "通常",
+  "pos": "adv.",
+  "ex": "I usually get up at 6:30.",
+  "exCn": "我通常六点半起床。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "together",
+  "cn": "一起",
+  "pos": "adv.",
+  "ex": "Let's play together.",
+  "exCn": "我们一起玩吧。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "when",
+  "cn": "什么时候",
+  "pos": "adv.",
+  "ex": "When do you get up?",
+  "exCn": "你什么时候起床？",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "exercise",
+  "cn": "锻炼",
+  "pos": "n.",
+  "ex": "Exercise is good for us.",
+  "exCn": "锻炼对我们有好处。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "after",
+  "cn": "在……之后",
+  "pos": "prep.",
+  "ex": "I play after school.",
+  "exCn": "我放学后玩。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "a.m.",
+  "cn": "上午",
+  "pos": "n.",
+  "ex": "I go to school at 8 a.m.",
+  "exCn": "我上午八点上学。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "p.m.",
+  "cn": "下午",
+  "pos": "n.",
+  "ex": "I go home at 4 p.m.",
+  "exCn": "我下午四点回家。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "noon",
+  "cn": "中午",
+  "pos": "n.",
+  "ex": "We eat lunch at noon.",
+  "exCn": "我们中午吃午餐。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "morning",
+  "cn": "早晨",
+  "pos": "n.",
+  "ex": "I read in the morning.",
+  "exCn": "我早晨读书。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "evening",
+  "cn": "晚上",
+  "pos": "n.",
+  "ex": "I watch TV in the evening.",
+  "exCn": "我晚上看电视。",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "night",
+  "cn": "夜晚",
+  "pos": "n.",
+  "ex": "Good night!",
+  "exCn": "晚安！",
+  "grade": 5,
+  "topic": "日常活动"
+ },
+ {
+  "en": "spring",
+  "cn": "春天",
+  "pos": "n.",
+  "ex": "I like spring.",
+  "exCn": "我喜欢春天。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "summer",
+  "cn": "夏天",
+  "pos": "n.",
+  "ex": "Summer is hot.",
+  "exCn": "夏天很热。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "autumn",
+  "cn": "秋天",
+  "pos": "n.",
+  "ex": "Autumn is golden.",
+  "exCn": "秋天是金色的。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "winter",
+  "cn": "冬天",
+  "pos": "n.",
+  "ex": "Winter is cold.",
+  "exCn": "冬天很冷。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "season",
+  "cn": "季节",
+  "pos": "n.",
+  "ex": "Which season do you like best?",
+  "exCn": "你最喜欢哪个季节？",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "go swimming",
+  "cn": "去游泳",
+  "pos": "v.",
+  "ex": "I go swimming in summer.",
+  "exCn": "我夏天去游泳。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "go on a picnic",
+  "cn": "去野餐",
+  "pos": "v.",
+  "ex": "Let's go on a picnic.",
+  "exCn": "我们去野餐吧。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "pick apples",
+  "cn": "摘苹果",
+  "pos": "v.",
+  "ex": "I pick apples in autumn.",
+  "exCn": "我秋天摘苹果。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "make a snowman",
+  "cn": "堆雪人",
+  "pos": "v.",
+  "ex": "I make a snowman in winter.",
+  "exCn": "我冬天堆雪人。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "picnic",
+  "cn": "野餐",
+  "pos": "n.",
+  "ex": "We have a picnic in spring.",
+  "exCn": "我们春天野餐。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "snow",
+  "cn": "雪",
+  "pos": "n.",
+  "ex": "I like snow.",
+  "exCn": "我喜欢雪。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "snowman",
+  "cn": "雪人",
+  "pos": "n.",
+  "ex": "Let's make a snowman.",
+  "exCn": "我们堆雪人吧。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "which",
+  "cn": "哪个",
+  "pos": "pron.",
+  "ex": "Which season do you like?",
+  "exCn": "你喜欢哪个季节？",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "best",
+  "cn": "最",
+  "pos": "adv.",
+  "ex": "I like spring best.",
+  "exCn": "我最喜欢春天。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "because",
+  "cn": "因为",
+  "pos": "conj.",
+  "ex": "Because I can swim.",
+  "exCn": "因为我可以游泳。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "vacation",
+  "cn": "假期",
+  "pos": "n.",
+  "ex": "I like summer vacation.",
+  "exCn": "我喜欢暑假。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "all",
+  "cn": "全部",
+  "pos": "adj.",
+  "ex": "I like all seasons.",
+  "exCn": "我喜欢所有季节。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "leaf",
+  "cn": "叶子",
+  "pos": "n.",
+  "ex": "The leaves are green.",
+  "exCn": "叶子是绿色的。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "paint",
+  "cn": "画画",
+  "pos": "v.",
+  "ex": "I like to paint.",
+  "exCn": "我喜欢画画。",
+  "grade": 5,
+  "topic": "季节"
+ },
+ {
+  "en": "January",
+  "cn": "一月",
+  "pos": "n.",
+  "ex": "New Year's Day is in January.",
+  "exCn": "元旦在一月。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "February",
+  "cn": "二月",
+  "pos": "n.",
+  "ex": "February is short.",
+  "exCn": "二月很短。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "March",
+  "cn": "三月",
+  "pos": "n.",
+  "ex": "Tree Planting Day is in March.",
+  "exCn": "植树节在三月。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "April",
+  "cn": "四月",
+  "pos": "n.",
+  "ex": "April Fool's Day is in April.",
+  "exCn": "愚人节在四月。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "May",
+  "cn": "五月",
+  "pos": "n.",
+  "ex": "May Day is in May.",
+  "exCn": "劳动节在五月。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "June",
+  "cn": "六月",
+  "pos": "n.",
+  "ex": "Children's Day is in June.",
+  "exCn": "儿童节在六月。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "July",
+  "cn": "七月",
+  "pos": "n.",
+  "ex": "Summer vacation starts in July.",
+  "exCn": "暑假从七月开始。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "August",
+  "cn": "八月",
+  "pos": "n.",
+  "ex": "August is very hot.",
+  "exCn": "八月很热。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "September",
+  "cn": "九月",
+  "pos": "n.",
+  "ex": "School starts in September.",
+  "exCn": "九月开学。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "October",
+  "cn": "十月",
+  "pos": "n.",
+  "ex": "National Day is in October.",
+  "exCn": "国庆节在十月。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "November",
+  "cn": "十一月",
+  "pos": "n.",
+  "ex": "November is cool.",
+  "exCn": "十一月很凉爽。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "December",
+  "cn": "十二月",
+  "pos": "n.",
+  "ex": "Christmas is in December.",
+  "exCn": "圣诞节在十二月。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "few",
+  "cn": "少的",
+  "pos": "adj.",
+  "ex": "A few things.",
+  "exCn": "一些东西。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "thing",
+  "cn": "事情",
+  "pos": "n.",
+  "ex": "There are many fun things.",
+  "exCn": "有很多有趣的事情。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "meet",
+  "cn": "见面",
+  "pos": "v.",
+  "ex": "Nice to meet you.",
+  "exCn": "很高兴认识你。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "sports meet",
+  "cn": "运动会",
+  "pos": "n.",
+  "ex": "We have a sports meet.",
+  "exCn": "我们有运动会。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "Easter",
+  "cn": "复活节",
+  "pos": "n.",
+  "ex": "Easter is in spring.",
+  "exCn": "复活节在春天。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "trip",
+  "cn": "旅行",
+  "pos": "n.",
+  "ex": "We go on a school trip.",
+  "exCn": "我们去学校旅行。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "year",
+  "cn": "年",
+  "pos": "n.",
+  "ex": "Happy New Year!",
+  "exCn": "新年快乐！",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "plant",
+  "cn": "种植",
+  "pos": "v.",
+  "ex": "We plant trees in March.",
+  "exCn": "我们三月种树。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "national",
+  "cn": "国家的",
+  "pos": "adj.",
+  "ex": "National Day is October 1st.",
+  "exCn": "国庆节是十月一日。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "American",
+  "cn": "美国的",
+  "pos": "adj.",
+  "ex": "Thanksgiving is an American holiday.",
+  "exCn": "感恩节是美国的节日。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "Thanksgiving",
+  "cn": "感恩节",
+  "pos": "n.",
+  "ex": "Thanksgiving is in November.",
+  "exCn": "感恩节在十一月。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "Christmas",
+  "cn": "圣诞节",
+  "pos": "n.",
+  "ex": "Merry Christmas!",
+  "exCn": "圣诞节快乐！",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "holiday",
+  "cn": "假日",
+  "pos": "n.",
+  "ex": "I like holidays.",
+  "exCn": "我喜欢假日。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "game",
+  "cn": "游戏；比赛",
+  "pos": "n.",
+  "ex": "Let's play a game.",
+  "exCn": "我们玩个游戏吧。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "roll",
+  "cn": "滚动",
+  "pos": "v.",
+  "ex": "Roll the eggs.",
+  "exCn": "滚彩蛋。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "look for",
+  "cn": "寻找",
+  "pos": "v.",
+  "ex": "We look for eggs.",
+  "exCn": "我们找彩蛋。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "chocolate",
+  "cn": "巧克力",
+  "pos": "n.",
+  "ex": "I like chocolate eggs.",
+  "exCn": "我喜欢巧克力彩蛋。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "bunny",
+  "cn": "兔子",
+  "pos": "n.",
+  "ex": "The Easter bunny brings eggs.",
+  "exCn": "复活节兔子带来彩蛋。",
+  "grade": 5,
+  "topic": "月份与节日"
+ },
+ {
+  "en": "first (1st)",
+  "cn": "第一",
+  "pos": "num.",
+  "ex": "January 1st is New Year's Day.",
+  "exCn": "一月一日是元旦。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "second (2nd)",
+  "cn": "第二",
+  "pos": "num.",
+  "ex": "The second day.",
+  "exCn": "第二天。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "third (3rd)",
+  "cn": "第三",
+  "pos": "num.",
+  "ex": "March 3rd.",
+  "exCn": "三月三日。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "fourth (4th)",
+  "cn": "第四",
+  "pos": "num.",
+  "ex": "April 4th.",
+  "exCn": "四月四日。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "fifth (5th)",
+  "cn": "第五",
+  "pos": "num.",
+  "ex": "May 5th.",
+  "exCn": "五月五日。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "twelfth (12th)",
+  "cn": "第十二",
+  "pos": "num.",
+  "ex": "December 12th.",
+  "exCn": "十二月十二日。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "twentieth (20th)",
+  "cn": "第二十",
+  "pos": "num.",
+  "ex": "March 20th.",
+  "exCn": "三月二十日。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "twenty-first (21st)",
+  "cn": "第二十一",
+  "pos": "num.",
+  "ex": "June 21st is summer.",
+  "exCn": "六月二十一日是夏天。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "twenty-third (23rd)",
+  "cn": "第二十三",
+  "pos": "num.",
+  "ex": "April 23rd.",
+  "exCn": "四月二十三日。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "thirtieth (30th)",
+  "cn": "第三十",
+  "pos": "num.",
+  "ex": "March 30th.",
+  "exCn": "三月三十日。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "birthday",
+  "cn": "生日",
+  "pos": "n.",
+  "ex": "When is your birthday?",
+  "exCn": "你的生日是什么时候？",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "when",
+  "cn": "什么时候",
+  "pos": "adv.",
+  "ex": "When is the party?",
+  "exCn": "聚会什么时候？",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "April Fool's Day",
+  "cn": "愚人节",
+  "pos": "n.",
+  "ex": "April Fool's Day is fun.",
+  "exCn": "愚人节很有趣。",
+  "grade": 5,
+  "topic": "日期"
+ },
+ {
+  "en": "mine",
+  "cn": "我的",
+  "pos": "pron.",
+  "ex": "The book is mine.",
+  "exCn": "这本书是我的。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "yours",
+  "cn": "你的",
+  "pos": "pron.",
+  "ex": "Is this pen yours?",
+  "exCn": "这支笔是你的吗？",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "his",
+  "cn": "他的",
+  "pos": "pron.",
+  "ex": "The dog is his.",
+  "exCn": "这只狗是他的。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "hers",
+  "cn": "她的",
+  "pos": "pron.",
+  "ex": "The cat is hers.",
+  "exCn": "这只猫是她的。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "theirs",
+  "cn": "他们的",
+  "pos": "pron.",
+  "ex": "The toys are theirs.",
+  "exCn": "这些玩具是他们的。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "ours",
+  "cn": "我们的",
+  "pos": "pron.",
+  "ex": "The garden is ours.",
+  "exCn": "这个花园是我们的。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "climbing",
+  "cn": "攀登",
+  "pos": "v.",
+  "ex": "The cat is climbing.",
+  "exCn": "猫在攀爬。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "eating",
+  "cn": "吃",
+  "pos": "v.",
+  "ex": "The panda is eating bamboo.",
+  "exCn": "熊猫在吃竹子。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "playing",
+  "cn": "玩",
+  "pos": "v.",
+  "ex": "The dog is playing.",
+  "exCn": "狗在玩。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "jumping",
+  "cn": "跳",
+  "pos": "v.",
+  "ex": "The rabbit is jumping.",
+  "exCn": "兔子在跳。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "drinking",
+  "cn": "喝",
+  "pos": "v.",
+  "ex": "The horse is drinking water.",
+  "exCn": "马在喝水。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "sleeping",
+  "cn": "睡觉",
+  "pos": "v.",
+  "ex": "The cat is sleeping.",
+  "exCn": "猫在睡觉。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "each",
+  "cn": "每一个",
+  "pos": "adj.",
+  "ex": "Each student has a book.",
+  "exCn": "每个学生都有一本书。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "other",
+  "cn": "其他的",
+  "pos": "adj.",
+  "ex": "The other dogs are sleeping.",
+  "exCn": "其他的狗在睡觉。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "each other",
+  "cn": "互相",
+  "pos": "pron.",
+  "ex": "They play with each other.",
+  "exCn": "他们互相玩耍。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "exciting",
+  "cn": "令人兴奋的",
+  "pos": "adj.",
+  "ex": "The game is exciting!",
+  "exCn": "游戏太刺激了！",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "like",
+  "cn": "像",
+  "pos": "prep.",
+  "ex": "It looks like a rabbit.",
+  "exCn": "它看起来像兔子。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "walk",
+  "cn": "走",
+  "pos": "v.",
+  "ex": "The dog is walking.",
+  "exCn": "狗在走路。",
+  "grade": 5,
+  "topic": "所有格与现在进行时"
+ },
+ {
+  "en": "doing morning exercises",
+  "cn": "做早操",
+  "pos": "v.",
+  "ex": "They are doing morning exercises.",
+  "exCn": "他们正在做早操。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "having ... class",
+  "cn": "上……课",
+  "pos": "v.",
+  "ex": "We are having an English class.",
+  "exCn": "我们正在上英语课。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "reading a book",
+  "cn": "看书",
+  "pos": "v.",
+  "ex": "She is reading a book.",
+  "exCn": "她正在看书。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "listening to music",
+  "cn": "听音乐",
+  "pos": "v.",
+  "ex": "He is listening to music.",
+  "exCn": "他正在听音乐。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "keep",
+  "cn": "保持",
+  "pos": "v.",
+  "ex": "Keep your desk clean.",
+  "exCn": "保持你的桌子干净。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "keep to the right",
+  "cn": "靠右",
+  "pos": "v.",
+  "ex": "Keep to the right.",
+  "exCn": "靠右走。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "talk quietly",
+  "cn": "小声说话",
+  "pos": "v.",
+  "ex": "Talk quietly, please.",
+  "exCn": "请小声说话。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "take turns",
+  "cn": "轮流",
+  "pos": "v.",
+  "ex": "Take turns, please.",
+  "exCn": "请轮流来。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "bamboo",
+  "cn": "竹子",
+  "pos": "n.",
+  "ex": "Pandas eat bamboo.",
+  "exCn": "熊猫吃竹子。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "its",
+  "cn": "它的",
+  "pos": "pron.",
+  "ex": "Its name is Fido.",
+  "exCn": "它叫菲多。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "show",
+  "cn": "展示",
+  "pos": "v.",
+  "ex": "Can you show me?",
+  "exCn": "你能展示给我看吗？",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "anything",
+  "cn": "任何事",
+  "pos": "pron.",
+  "ex": "Is there anything else?",
+  "exCn": "还有别的事吗？",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "else",
+  "cn": "其他的",
+  "pos": "adv.",
+  "ex": "What else do you want?",
+  "exCn": "你还想要什么？",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "practice",
+  "cn": "练习",
+  "pos": "v.",
+  "ex": "Practice makes perfect.",
+  "exCn": "熟能生巧。",
+  "grade": 5,
+  "topic": "行为规范"
+ },
+ {
+  "en": "science",
+  "cn": "科学",
+  "pos": "n.",
+  "ex": "I like science.",
+  "exCn": "我喜欢科学。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "museum",
+  "cn": "博物馆",
+  "pos": "n.",
+  "ex": "Where is the science museum?",
+  "exCn": "科学博物馆在哪里？",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "post office",
+  "cn": "邮局",
+  "pos": "n.",
+  "ex": "I go to the post office.",
+  "exCn": "我去邮局。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "bookstore",
+  "cn": "书店",
+  "pos": "n.",
+  "ex": "I buy books at the bookstore.",
+  "exCn": "我在书店买书。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "cinema",
+  "cn": "电影院",
+  "pos": "n.",
+  "ex": "Let's go to the cinema.",
+  "exCn": "我们去电影院吧。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "hospital",
+  "cn": "医院",
+  "pos": "n.",
+  "ex": "The hospital is near here.",
+  "exCn": "医院在这附近。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "crossing",
+  "cn": "十字路口",
+  "pos": "n.",
+  "ex": "Turn left at the crossing.",
+  "exCn": "在十字路口左转。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "turn",
+  "cn": "转弯",
+  "pos": "v.",
+  "ex": "Turn right at the corner.",
+  "exCn": "在拐角处右转。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "left",
+  "cn": "左边",
+  "pos": "n.",
+  "ex": "Turn left.",
+  "exCn": "向左转。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "right",
+  "cn": "右边",
+  "pos": "n.",
+  "ex": "Turn right.",
+  "exCn": "向右转。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "straight",
+  "cn": "笔直地",
+  "pos": "adv.",
+  "ex": "Go straight.",
+  "exCn": "直走。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "get",
+  "cn": "到达",
+  "pos": "v.",
+  "ex": "How can I get there?",
+  "exCn": "我怎么到那里？",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "GPS",
+  "cn": "全球定位系统",
+  "pos": "n.",
+  "ex": "Use the GPS.",
+  "exCn": "使用GPS。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "gave",
+  "cn": "给(give过去式)",
+  "pos": "v.",
+  "ex": "He gave me a gift.",
+  "exCn": "他给了我一个礼物。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "feature",
+  "cn": "特征",
+  "pos": "n.",
+  "ex": "What a great feature!",
+  "exCn": "多好的功能！",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "follow",
+  "cn": "跟随",
+  "pos": "v.",
+  "ex": "Follow me, please.",
+  "exCn": "请跟我来。",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "far",
+  "cn": "远的",
+  "pos": "adj.",
+  "ex": "Is it far?",
+  "exCn": "远吗？",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "tell",
+  "cn": "告诉",
+  "pos": "v.",
+  "ex": "Can you tell me?",
+  "exCn": "你能告诉我吗？",
+  "grade": 6,
+  "topic": "方位与地点"
+ },
+ {
+  "en": "by",
+  "cn": "乘坐",
+  "pos": "prep.",
+  "ex": "I go to school by bus.",
+  "exCn": "我坐公交车上学。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "bus",
+  "cn": "公交车",
+  "pos": "n.",
+  "ex": "I take a bus.",
+  "exCn": "我坐公交车。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "plane",
+  "cn": "飞机",
+  "pos": "n.",
+  "ex": "I go by plane.",
+  "exCn": "我坐飞机去。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "taxi",
+  "cn": "出租车",
+  "pos": "n.",
+  "ex": "Let's take a taxi.",
+  "exCn": "我们打车吧。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "ship",
+  "cn": "轮船",
+  "pos": "n.",
+  "ex": "We go by ship.",
+  "exCn": "我们坐船去。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "subway",
+  "cn": "地铁",
+  "pos": "n.",
+  "ex": "I go by subway.",
+  "exCn": "我坐地铁去。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "train",
+  "cn": "火车",
+  "pos": "n.",
+  "ex": "I take the train.",
+  "exCn": "我坐火车。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "slow",
+  "cn": "慢的",
+  "pos": "adj.",
+  "ex": "The bus is slow.",
+  "exCn": "公交车很慢。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "down",
+  "cn": "向下",
+  "pos": "adv.",
+  "ex": "Slow down!",
+  "exCn": "慢下来！",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "slow down",
+  "cn": "慢下来",
+  "pos": "v.",
+  "ex": "Slow down and stop.",
+  "exCn": "慢下来并停下。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "stop",
+  "cn": "停下",
+  "pos": "v.",
+  "ex": "Stop at a red light.",
+  "exCn": "红灯停。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "fast",
+  "cn": "快的",
+  "pos": "adj.",
+  "ex": "The plane is fast.",
+  "exCn": "飞机很快。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "wait",
+  "cn": "等待",
+  "pos": "v.",
+  "ex": "Wait at the crossing.",
+  "exCn": "在十字路口等待。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "go",
+  "cn": "去；走",
+  "pos": "v.",
+  "ex": "Let's go!",
+  "exCn": "我们走吧！",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "come",
+  "cn": "来",
+  "pos": "v.",
+  "ex": "Come here, please.",
+  "exCn": "请过来这里。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "on foot",
+  "cn": "步行",
+  "pos": "adv.",
+  "ex": "I go to school on foot.",
+  "exCn": "我步行上学。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "traffic",
+  "cn": "交通",
+  "pos": "n.",
+  "ex": "Pay attention to the traffic.",
+  "exCn": "注意交通。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "light",
+  "cn": "灯",
+  "pos": "n.",
+  "ex": "Stop at the red light.",
+  "exCn": "红灯停。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "helmet",
+  "cn": "头盔",
+  "pos": "n.",
+  "ex": "Wear a helmet.",
+  "exCn": "戴头盔。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "must",
+  "cn": "必须",
+  "pos": "v.",
+  "ex": "You must look right.",
+  "exCn": "你必须看右边。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "wear",
+  "cn": "戴",
+  "pos": "v.",
+  "ex": "You must wear a helmet.",
+  "exCn": "你必须戴头盔。",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "attention",
+  "cn": "注意",
+  "pos": "n.",
+  "ex": "Pay attention!",
+  "exCn": "注意！",
+  "grade": 6,
+  "topic": "交通方式"
+ },
+ {
+  "en": "went",
+  "cn": "去(go过去式)",
+  "pos": "v.",
+  "ex": "I went to Xinjiang.",
+  "exCn": "我去了新疆。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "camp",
+  "cn": "野营",
+  "pos": "n.",
+  "ex": "We went to a camp.",
+  "exCn": "我们去野营了。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "went camping",
+  "cn": "去野营",
+  "pos": "v.",
+  "ex": "I went camping last weekend.",
+  "exCn": "我上周末去野营了。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "fish",
+  "cn": "钓鱼",
+  "pos": "v.",
+  "ex": "I went fishing.",
+  "exCn": "我去钓鱼了。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "went fishing",
+  "cn": "去钓鱼",
+  "pos": "v.",
+  "ex": "He went fishing yesterday.",
+  "exCn": "他昨天去钓鱼了。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "rode",
+  "cn": "骑(ride过去式)",
+  "pos": "v.",
+  "ex": "I rode a horse.",
+  "exCn": "我骑了马。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "rode a horse",
+  "cn": "骑马",
+  "pos": "v.",
+  "ex": "She rode a horse.",
+  "exCn": "她骑了马。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "hurt",
+  "cn": "受伤",
+  "pos": "v.",
+  "ex": "I hurt my foot.",
+  "exCn": "我伤了我的脚。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "hurt my foot",
+  "cn": "伤了脚",
+  "pos": "v.",
+  "ex": "He hurt his foot.",
+  "exCn": "他伤了脚。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "ate",
+  "cn": "吃(eat过去式)",
+  "pos": "v.",
+  "ex": "I ate fresh food.",
+  "exCn": "我吃了新鲜食物。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "took",
+  "cn": "拍照(take过去式)",
+  "pos": "v.",
+  "ex": "I took many pictures.",
+  "exCn": "我拍了很多照片。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "took pictures",
+  "cn": "拍照",
+  "pos": "v.",
+  "ex": "She took pictures.",
+  "exCn": "她拍了照片。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "bought",
+  "cn": "买(buy过去式)",
+  "pos": "v.",
+  "ex": "I bought gifts.",
+  "exCn": "我买了礼物。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "bought gifts",
+  "cn": "买礼物",
+  "pos": "v.",
+  "ex": "He bought gifts for us.",
+  "exCn": "他给我们买了礼物。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "last",
+  "cn": "上一个",
+  "pos": "adj.",
+  "ex": "Last weekend I went hiking.",
+  "exCn": "上周末我去远足了。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "weekend",
+  "cn": "周末",
+  "pos": "n.",
+  "ex": "What did you do last weekend?",
+  "exCn": "你上周末做了什么？",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "ago",
+  "cn": "以前",
+  "pos": "adv.",
+  "ex": "I went there two days ago.",
+  "exCn": "我两天前去了那里。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "Xinjiang",
+  "cn": "新疆",
+  "pos": "n.",
+  "ex": "I went to Xinjiang.",
+  "exCn": "我去了新疆。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "fell",
+  "cn": "摔倒(fall过去式)",
+  "pos": "v.",
+  "ex": "I fell off my bike.",
+  "exCn": "我从自行车上摔了下来。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "off",
+  "cn": "脱离",
+  "pos": "adv.",
+  "ex": "I fell off the horse.",
+  "exCn": "我从马上摔了下来。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "Labour Day",
+  "cn": "劳动节",
+  "pos": "n.",
+  "ex": "Labour Day is May 1st.",
+  "exCn": "劳动节是五月一日。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "mule",
+  "cn": "骡子",
+  "pos": "n.",
+  "ex": "I rode a mule.",
+  "exCn": "我骑了骡子。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "Turpan",
+  "cn": "吐鲁番",
+  "pos": "n.",
+  "ex": "I went to Turpan.",
+  "exCn": "我去了吐鲁番。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "could",
+  "cn": "能(can过去式)",
+  "pos": "v.",
+  "ex": "I could ride a horse.",
+  "exCn": "我会骑马了。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "till",
+  "cn": "直到",
+  "pos": "conj.",
+  "ex": "I waited till noon.",
+  "exCn": "我一直等到中午。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "beach",
+  "cn": "海滩",
+  "pos": "n.",
+  "ex": "We went to the beach.",
+  "exCn": "我们去了海滩。",
+  "grade": 6,
+  "topic": "过去式(地点)"
+ },
+ {
+  "en": "dining hall",
+  "cn": "餐厅",
+  "pos": "n.",
+  "ex": "There was no dining hall.",
+  "exCn": "以前没有餐厅。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "grass",
+  "cn": "草",
+  "pos": "n.",
+  "ex": "There was no grass.",
+  "exCn": "以前没有草。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "gym",
+  "cn": "体育馆",
+  "pos": "n.",
+  "ex": "There was no gym.",
+  "exCn": "以前没有体育馆。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "ago",
+  "cn": "以前",
+  "pos": "adv.",
+  "ex": "Ten years ago.",
+  "exCn": "十年前。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "cycling",
+  "cn": "骑自行车",
+  "pos": "n.",
+  "ex": "I like cycling.",
+  "exCn": "我喜欢骑自行车。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "go cycling",
+  "cn": "去骑自行车",
+  "pos": "v.",
+  "ex": "Let's go cycling.",
+  "exCn": "我们去骑自行车吧。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "ice-skate",
+  "cn": "滑冰",
+  "pos": "v.",
+  "ex": "I can ice-skate.",
+  "exCn": "我会滑冰。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "badminton",
+  "cn": "羽毛球",
+  "pos": "n.",
+  "ex": "I play badminton.",
+  "exCn": "我打羽毛球。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "different",
+  "cn": "不同的",
+  "pos": "adj.",
+  "ex": "Now I'm different.",
+  "exCn": "现在我不同了。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "was",
+  "cn": "是(is过去式)",
+  "pos": "v.",
+  "ex": "There was a tree.",
+  "exCn": "以前有一棵树。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "were",
+  "cn": "是(are过去式)",
+  "pos": "v.",
+  "ex": "There were many trees.",
+  "exCn": "以前有很多树。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "went",
+  "cn": "去",
+  "pos": "v.",
+  "ex": "I went to Hainan.",
+  "exCn": "我去了海南。",
+  "grade": 6,
+  "topic": "过去与现在"
+ },
+ {
+  "en": "factory",
+  "cn": "工厂",
+  "pos": "n.",
+  "ex": "He works in a factory.",
+  "exCn": "他在工厂工作。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "worker",
+  "cn": "工人",
+  "pos": "n.",
+  "ex": "He is a factory worker.",
+  "exCn": "他是一个工厂工人。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "postman",
+  "cn": "邮递员",
+  "pos": "n.",
+  "ex": "The postman brings letters.",
+  "exCn": "邮递员送信。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "businessman",
+  "cn": "商人",
+  "pos": "n.",
+  "ex": "He is a businessman.",
+  "exCn": "他是一个商人。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "police officer",
+  "cn": "警官",
+  "pos": "n.",
+  "ex": "The police officer is brave.",
+  "exCn": "警官很勇敢。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "fisherman",
+  "cn": "渔夫",
+  "pos": "n.",
+  "ex": "The fisherman works at sea.",
+  "exCn": "渔夫在海上工作。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "scientist",
+  "cn": "科学家",
+  "pos": "n.",
+  "ex": "I want to be a scientist.",
+  "exCn": "我想成为一名科学家。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "pilot",
+  "cn": "飞行员",
+  "pos": "n.",
+  "ex": "He wants to be a pilot.",
+  "exCn": "他想成为一名飞行员。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "coach",
+  "cn": "教练",
+  "pos": "n.",
+  "ex": "He is a football coach.",
+  "exCn": "他是一个足球教练。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "country",
+  "cn": "国家",
+  "pos": "n.",
+  "ex": "Australia is a big country.",
+  "exCn": "澳大利亚是一个大国。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "head teacher",
+  "cn": "校长",
+  "pos": "n.",
+  "ex": "She is a head teacher.",
+  "exCn": "她是校长。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "sea",
+  "cn": "海",
+  "pos": "n.",
+  "ex": "The fisherman works at sea.",
+  "exCn": "渔夫在海上工作。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "stay",
+  "cn": "保持",
+  "pos": "v.",
+  "ex": "Stay healthy.",
+  "exCn": "保持健康。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "university",
+  "cn": "大学",
+  "pos": "n.",
+  "ex": "She studies at a university.",
+  "exCn": "她在大学学习。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "reporter",
+  "cn": "记者",
+  "pos": "n.",
+  "ex": "She is a reporter.",
+  "exCn": "她是记者。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "type",
+  "cn": "打字",
+  "pos": "v.",
+  "ex": "She can type quickly.",
+  "exCn": "她打字很快。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "quickly",
+  "cn": "快速地",
+  "pos": "adv.",
+  "ex": "He runs quickly.",
+  "exCn": "他跑得很快。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "secretary",
+  "cn": "秘书",
+  "pos": "n.",
+  "ex": "She is a secretary.",
+  "exCn": "她是秘书。",
+  "grade": 6,
+  "topic": "职业"
+ },
+ {
+  "en": "angry",
+  "cn": "生气的",
+  "pos": "adj.",
+  "ex": "Don't be angry.",
+  "exCn": "不要生气。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "afraid",
+  "cn": "害怕的",
+  "pos": "adj.",
+  "ex": "Don't be afraid.",
+  "exCn": "不要害怕。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "sad",
+  "cn": "伤心的",
+  "pos": "adj.",
+  "ex": "I feel sad.",
+  "exCn": "我感到伤心。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "worried",
+  "cn": "担心的",
+  "pos": "adj.",
+  "ex": "Don't be worried.",
+  "exCn": "不要担心。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "worry",
+  "cn": "担心",
+  "pos": "v.",
+  "ex": "Don't worry.",
+  "exCn": "别担心。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "happy",
+  "cn": "高兴的",
+  "pos": "adj.",
+  "ex": "I'm very happy.",
+  "exCn": "我很高兴。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "see a doctor",
+  "cn": "看医生",
+  "pos": "v.",
+  "ex": "You should see a doctor.",
+  "exCn": "你应该去看医生。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "wear",
+  "cn": "穿",
+  "pos": "v.",
+  "ex": "Wear warm clothes.",
+  "exCn": "穿暖和的衣服。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "more",
+  "cn": "更多的",
+  "pos": "adj.",
+  "ex": "Drink more water.",
+  "exCn": "多喝水。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "deep",
+  "cn": "深的",
+  "pos": "adj.",
+  "ex": "Take a deep breath.",
+  "exCn": "深呼吸。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "breath",
+  "cn": "呼吸",
+  "pos": "n.",
+  "ex": "Take a deep breath.",
+  "exCn": "深呼吸。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "count",
+  "cn": "数",
+  "pos": "v.",
+  "ex": "Count to ten.",
+  "exCn": "数到十。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "chase",
+  "cn": "追赶",
+  "pos": "v.",
+  "ex": "The cat chases the mouse.",
+  "exCn": "猫追老鼠。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "mice",
+  "cn": "老鼠(复数)",
+  "pos": "n.",
+  "ex": "The mice are afraid.",
+  "exCn": "老鼠害怕了。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "bad",
+  "cn": "坏的",
+  "pos": "adj.",
+  "ex": "I feel bad.",
+  "exCn": "我感觉不好。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "hurt",
+  "cn": "疼",
+  "pos": "v.",
+  "ex": "My head hurts.",
+  "exCn": "我头疼。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "ill",
+  "cn": "生病的",
+  "pos": "adj.",
+  "ex": "I feel ill.",
+  "exCn": "我感觉生病了。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "wrong",
+  "cn": "错误的；有毛病的",
+  "pos": "adj.",
+  "ex": "What's wrong?",
+  "exCn": "怎么了？",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "should",
+  "cn": "应该",
+  "pos": "v.",
+  "ex": "You should rest.",
+  "exCn": "你应该休息。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "feel",
+  "cn": "感觉",
+  "pos": "v.",
+  "ex": "How do you feel?",
+  "exCn": "你感觉怎样？",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "well",
+  "cn": "好的",
+  "pos": "adj.",
+  "ex": "I don't feel well.",
+  "exCn": "我感觉不舒服。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "sit",
+  "cn": "坐",
+  "pos": "v.",
+  "ex": "Sit down, please.",
+  "exCn": "请坐下。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "grass",
+  "cn": "草地",
+  "pos": "n.",
+  "ex": "Sit on the grass.",
+  "exCn": "坐在草地上。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "hear",
+  "cn": "听到",
+  "pos": "v.",
+  "ex": "I can hear the birds.",
+  "exCn": "我能听到鸟叫。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "ant",
+  "cn": "蚂蚁",
+  "pos": "n.",
+  "ex": "The ant is small.",
+  "exCn": "蚂蚁很小。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "stuck",
+  "cn": "卡住",
+  "pos": "adj.",
+  "ex": "The car is stuck in the mud.",
+  "exCn": "车卡在泥里了。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "pull",
+  "cn": "拉",
+  "pos": "v.",
+  "ex": "Pull the rope.",
+  "exCn": "拉绳子。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "everyone",
+  "cn": "每个人",
+  "pos": "pron.",
+  "ex": "Everyone is happy.",
+  "exCn": "每个人都很开心。",
+  "grade": 6,
+  "topic": "情绪与健康"
+ },
+ {
+  "en": "younger",
+  "cn": "更年轻的",
+  "pos": "adj.",
+  "ex": "I'm younger than you.",
+  "exCn": "我比你年轻。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "older",
+  "cn": "更年老的",
+  "pos": "adj.",
+  "ex": "My brother is older.",
+  "exCn": "我哥哥更年长。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "taller",
+  "cn": "更高的",
+  "pos": "adj.",
+  "ex": "I'm taller than my sister.",
+  "exCn": "我比我妹妹高。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "shorter",
+  "cn": "更矮的",
+  "pos": "adj.",
+  "ex": "She is shorter than me.",
+  "exCn": "她比我矮。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "longer",
+  "cn": "更长的",
+  "pos": "adj.",
+  "ex": "My hair is longer.",
+  "exCn": "我的头发更长。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "thinner",
+  "cn": "更瘦的",
+  "pos": "adj.",
+  "ex": "She is thinner than me.",
+  "exCn": "她比我瘦。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "heavier",
+  "cn": "更重的",
+  "pos": "adj.",
+  "ex": "He is heavier than me.",
+  "exCn": "他比我重。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "bigger",
+  "cn": "更大的",
+  "pos": "adj.",
+  "ex": "My feet are bigger.",
+  "exCn": "我的脚更大。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "smaller",
+  "cn": "更小的",
+  "pos": "adj.",
+  "ex": "Your room is smaller.",
+  "exCn": "你的房间更小。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "stronger",
+  "cn": "更强壮的",
+  "pos": "adj.",
+  "ex": "He is stronger than me.",
+  "exCn": "他比我更强壮。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "dinosaur",
+  "cn": "恐龙",
+  "pos": "n.",
+  "ex": "The dinosaur is big.",
+  "exCn": "恐龙很大。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "hall",
+  "cn": "大厅",
+  "pos": "n.",
+  "ex": "The hall is big.",
+  "exCn": "大厅很大。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "metre",
+  "cn": "米",
+  "pos": "n.",
+  "ex": "I'm 1.5 metres tall.",
+  "exCn": "我1.5米高。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "than",
+  "cn": "比",
+  "pos": "conj.",
+  "ex": "I'm taller than you.",
+  "exCn": "我比你高。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "both",
+  "cn": "两个都",
+  "pos": "pron.",
+  "ex": "Both of you are tall.",
+  "exCn": "你们两个都很高。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "kilogram",
+  "cn": "千克",
+  "pos": "n.",
+  "ex": "I'm 40 kilograms.",
+  "exCn": "我40公斤。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "size",
+  "cn": "尺码",
+  "pos": "n.",
+  "ex": "What size are your shoes?",
+  "exCn": "你的鞋穿多大码？",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "your",
+  "cn": "你的",
+  "pos": "pron.",
+  "ex": "Your feet are big!",
+  "exCn": "你的脚真大！",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "countryside",
+  "cn": "乡村",
+  "pos": "n.",
+  "ex": "I live in the countryside.",
+  "exCn": "我住在乡村。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "lower",
+  "cn": "更低的",
+  "pos": "adj.",
+  "ex": "The sun is lower.",
+  "exCn": "太阳更低了。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "shadow",
+  "cn": "影子",
+  "pos": "n.",
+  "ex": "My shadow is longer.",
+  "exCn": "我的影子更长了。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "smarter",
+  "cn": "更聪明的",
+  "pos": "adj.",
+  "ex": "The dolphin is smarter.",
+  "exCn": "海豚更聪明。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "become",
+  "cn": "变成",
+  "pos": "v.",
+  "ex": "The days become longer.",
+  "exCn": "白天变长了。",
+  "grade": 6,
+  "topic": "比较级"
+ },
+ {
+  "en": "cleaned",
+  "cn": "打扫(clean过去式)",
+  "pos": "v.",
+  "ex": "I cleaned my room.",
+  "exCn": "我打扫了房间。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "stayed",
+  "cn": "停留(stay过去式)",
+  "pos": "v.",
+  "ex": "I stayed at home.",
+  "exCn": "我待在家里。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "watched",
+  "cn": "看(watch过去式)",
+  "pos": "v.",
+  "ex": "I watched TV.",
+  "exCn": "我看了电视。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "read",
+  "cn": "读(read过去式)",
+  "pos": "v.",
+  "ex": "I read a book.",
+  "exCn": "我看了一本书。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "saw",
+  "cn": "看见(see过去式)",
+  "pos": "v.",
+  "ex": "I saw a film.",
+  "exCn": "我看了一场电影。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "slept",
+  "cn": "睡觉(sleep过去式)",
+  "pos": "v.",
+  "ex": "I slept all day.",
+  "exCn": "我睡了一整天。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "washed",
+  "cn": "洗(wash过去式)",
+  "pos": "v.",
+  "ex": "I washed my clothes.",
+  "exCn": "我洗了衣服。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "had",
+  "cn": "有(have过去式)",
+  "pos": "v.",
+  "ex": "I had a cold.",
+  "exCn": "我感冒了。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "had a cold",
+  "cn": "感冒",
+  "pos": "v.",
+  "ex": "She had a cold.",
+  "exCn": "她感冒了。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "slept",
+  "cn": "睡",
+  "pos": "v.",
+  "ex": "I slept well.",
+  "exCn": "我睡得很好。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "last",
+  "cn": "上一个",
+  "pos": "adj.",
+  "ex": "Last Monday I went to the park.",
+  "exCn": "上周一我去了公园。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "yesterday",
+  "cn": "昨天",
+  "pos": "adv.",
+  "ex": "I went to the zoo yesterday.",
+  "exCn": "我昨天去了动物园。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "before",
+  "cn": "之前",
+  "pos": "adv.",
+  "ex": "I saw him before.",
+  "exCn": "我之前见过他。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "drank",
+  "cn": "喝(drink过去式)",
+  "pos": "v.",
+  "ex": "I drank some juice.",
+  "exCn": "我喝了一些果汁。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "show",
+  "cn": "演出",
+  "pos": "n.",
+  "ex": "The show was great.",
+  "exCn": "演出很棒。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "magazine",
+  "cn": "杂志",
+  "pos": "n.",
+  "ex": "I read a magazine.",
+  "exCn": "我看了一本杂志。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "better",
+  "cn": "更好的",
+  "pos": "adj.",
+  "ex": "I feel better now.",
+  "exCn": "我现在感觉好多了。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "faster",
+  "cn": "更快的",
+  "pos": "adj.",
+  "ex": "He runs faster.",
+  "exCn": "他跑得更快。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "hotel",
+  "cn": "旅馆",
+  "pos": "n.",
+  "ex": "We stayed at a hotel.",
+  "exCn": "我们住在旅馆。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "fixed",
+  "cn": "修理(fix过去式)",
+  "pos": "v.",
+  "ex": "He fixed the chair.",
+  "exCn": "他修好了椅子。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "broken",
+  "cn": "破损的",
+  "pos": "adj.",
+  "ex": "The window is broken.",
+  "exCn": "窗户破损了。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "everything",
+  "cn": "一切",
+  "pos": "pron.",
+  "ex": "Everything was great.",
+  "exCn": "一切都很棒。",
+  "grade": 6,
+  "topic": "过去式(活动)"
+ },
+ {
+  "en": "went swimming",
+  "cn": "去游泳",
+  "pos": "v.",
+  "ex": "I went swimming.",
+  "exCn": "我去游泳了。",
+  "grade": 6,
+  "topic": "过去式(旅行)"
+ },
+ {
+  "en": "took pictures",
+  "cn": "拍照",
+  "pos": "v.",
+  "ex": "I took many pictures.",
+  "exCn": "我拍了很多照片。",
+  "grade": 6,
+  "topic": "过去式(旅行)"
+ },
+ {
+  "en": "bought gifts",
+  "cn": "买礼物",
+  "pos": "v.",
+  "ex": "I bought gifts for my friends.",
+  "exCn": "我给朋友们买了礼物。",
+  "grade": 6,
+  "topic": "过去式(旅行)"
+ },
+ {
+  "en": "Sanya",
+  "cn": "三亚",
+  "pos": "n.",
+  "ex": "I went to Sanya.",
+  "exCn": "我去了三亚。",
+  "grade": 6,
+  "topic": "过去式(旅行)"
+ },
+ {
+  "en": "beautiful",
+  "cn": "美丽的",
+  "pos": "adj.",
+  "ex": "The beach was beautiful.",
+  "exCn": "海滩很美。",
+  "grade": 6,
+  "topic": "过去式(旅行)"
+ },
+ {
+  "en": "Hainan",
+  "cn": "海南",
+  "pos": "n.",
+  "ex": "Hainan is beautiful.",
+  "exCn": "海南很美。",
+  "grade": 6,
+  "topic": "过去式(旅行)"
+ },
+ {
+  "en": "far",
+  "cn": "远的",
+  "pos": "adj.",
+  "ex": "It's not far from here.",
+  "exCn": "离这里不远。",
+  "grade": 6,
+  "topic": "过去式(旅行)"
+ },
+ {
+  "en": "sometime",
+  "cn": "某个时候",
+  "pos": "adv.",
+  "ex": "Let's go sometime.",
+  "exCn": "我们某个时候去吧。",
+  "grade": 6,
+  "topic": "过去式(旅行)"
+ },
+ {
+  "en": "sat",
+  "cn": "坐(sit过去式)",
+  "pos": "v.",
+  "ex": "I sat under a tree.",
+  "exCn": "我坐在树下。",
+  "grade": 6,
+  "topic": "过去式(旅行)"
+ },
+ {
+  "en": "picture",
+  "cn": "图片",
+  "pos": "n.",
+  "ex": "Look at the picture.",
+  "exCn": "看这张图片。",
+  "grade": 6,
+  "topic": "过去式(旅行)"
+ },
+ {
+  "en": "ago",
+  "cn": "以前",
+  "pos": "adv.",
+  "ex": "Five years ago, I was short.",
+  "exCn": "五年前，我很矮。",
+  "grade": 6,
+  "topic": "变化"
+ },
+ {
+  "en": "different",
+  "cn": "不同的",
+  "pos": "adj.",
+  "ex": "Things are different now.",
+  "exCn": "现在事物不同了。",
+  "grade": 6,
+  "topic": "变化"
+ },
+ {
+  "en": "active",
+  "cn": "积极的",
+  "pos": "adj.",
+  "ex": "I was not active.",
+  "exCn": "我以前不积极。",
+  "grade": 6,
+  "topic": "变化"
+ },
+ {
+  "en": "cycling",
+  "cn": "骑自行车运动",
+  "pos": "n.",
+  "ex": "Now I love cycling.",
+  "exCn": "现在我热爱骑自行车。",
+  "grade": 6,
+  "topic": "变化"
+ },
+ {
+  "en": "before",
+  "cn": "之前",
+  "pos": "prep.",
+  "ex": "Before, I was quiet.",
+  "exCn": "之前，我很安静。",
+  "grade": 6,
+  "topic": "变化"
+ },
+ {
+  "en": "nothing",
+  "cn": "没有什么",
+  "pos": "pron.",
+  "ex": "There was nothing.",
+  "exCn": "什么都没有。",
+  "grade": 6,
+  "topic": "变化"
+ },
+ {
+  "en": "thought",
+  "cn": "想(think过去式)",
+  "pos": "v.",
+  "ex": "I thought about it.",
+  "exCn": "我想了这件事。",
+  "grade": 6,
+  "topic": "变化"
+ },
+ {
+  "en": "star",
+  "cn": "星星",
+  "pos": "n.",
+  "ex": "I looked at the stars.",
+  "exCn": "我看着星星。",
+  "grade": 6,
+  "topic": "变化"
+ },
+ {
+  "en": "easy",
+  "cn": "容易的",
+  "pos": "adj.",
+  "ex": "It's easy now.",
+  "exCn": "现在很容易。",
+  "grade": 6,
+  "topic": "变化"
+ },
+ {
+  "en": "look up",
+  "cn": "查阅",
+  "pos": "v.",
+  "ex": "I look up words in a dictionary.",
+  "exCn": "我查字典找单词。",
+  "grade": 6,
+  "topic": "变化"
+ },
+ {
+  "en": "internet",
+  "cn": "互联网",
+  "pos": "n.",
+  "ex": "I use the internet.",
+  "exCn": "我使用互联网。",
+  "grade": 6,
+  "topic": "变化"
+ }
+]

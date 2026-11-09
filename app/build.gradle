@@ -1,0 +1,66 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.family.studytv'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.family.studytv"
+        // 兼容老电视盒子（Android 5.0+）
+        minSdk 21
+        // 关键：targetSdk 保持在 28，避免 Android 10+ 对后台启动 Activity 的拦截，
+        // 否则“强制弹窗”在较新的盒子上会被系统静默忽略。
+        targetSdk 28
+        versionCode 14
+        versionName "1.7.5"
+        resConfigs "zh", "en"
+    }
+
+    buildFeatures {
+        // 管理页上报版本号用，避免手写字符串漂移
+        buildConfig true
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            // 自用分发，直接用 debug 签名，免去配置 keystore
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+            returnDefaultValues = true
+        }
+    }
+
+    packagingOptions {
+        // 只保留一份，减小体积
+        resources.excludes += ["META-INF/*.kotlin_module", "META-INF/*.version"]
+    }
+}
+
+dependencies {
+    // 仅用于生成二维码（纯 Java，无 Android 依赖）
+    implementation 'com.google.zxing:core:3.5.3'
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.11.1'
+}
