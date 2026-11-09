@@ -48,7 +48,8 @@
 | 隐藏管理入口 | 答题页**没有任何管理按钮或文字提示**；家长连按遥控器「上键」5 次（每次间隔 < 0.8 秒）才会弹出管理密码键盘 |
 | 电视端无设置项 | 电视端只有答题页和只读信息页（二维码 + 状态）；所有参数只能手机改 |
 | 遥控器操作 | 全部控件可 D-pad 聚焦，卸载码用屏幕数字键盘输入（老遥控器没有数字键也能用） |
-| 防卸载 | 设备管理员 + 设备所有者（`setUninstallBlocked`）双层保护，卸载必须输入卸载码 |
+| 防卸载 | 设备管理员 + 设备所有者（`setUninstallBlocked`）双层保护，卸载必须输入卸载码；只激活管理员仅有基础保护，彻底锁死需一次 adb，详见「防卸载」章节 |
+| 卸载码提示修正（v1.7.6） | 卸载码对话框此前固定显示「请输入管理密码」，实际校验的是卸载码，家长容易输错；现按调用方显示「请输入卸载码 / 请输入管理密码」 |
 | 统一品牌图标（v1.7.2） | 桌面图标、Android TV 横幅、手机管理后台三处共用 `assets/logo.png`；换图跑一次生成脚本即可 |
 
 ## 命名与升级兼容（v1.7.5）
@@ -204,6 +205,55 @@ Android 10 起系统限制「后台启动界面」（BAL），Android 14/15 收�
 
 设置设备所有者失败最常见的原因是设备上还有已登录账号（`Not allowed to set the device owner`），先到 设置 → 账户 里全部删除再试。**升级 APK 时**若已被锁定，先输卸载码解锁，或用 `adb install -r` 覆盖安装。
 
+### 电视端一步步设（实测流程）
+
+只有「设备所有者」才真正禁用系统卸载按钮，**只点激活设备管理员是不够的**，信息页会一直提示「只有基础保护」。
+
+1. **激活设备管理员**：答题页连按 5 次上键 → 输管理密码 → 信息页 → `防卸载设置` → 点「开启防卸载」→ 系统页点「激活」。
+2. **打开调试**：电视 `设置 → 关于` 连点「版本号」7 次 → 回上一层进「开发者选项」→ 打开 **USB 调试**（部分盒子叫「ADB 调试 / 网络调试」）。
+3. **连电脑**：电视和电脑接同一 WiFi。
+   - Android 10 及更早：`adb connect 电视IP:5555`
+   - Android 11+：电视 `开发者选项 → 无线调试`，先 `adb pair 电视IP:配对端口` 输配对码，再 `adb connect 电视IP:调试端口`
+   - 盒子有 USB 口也可以直接双公头 USB 线连电脑，免 WiFi。
+4. **执行命令**（页面「彻底锁定」里可复制）：
+   ```bash
+   adb shell dpm set-device-owner com.family.studytv/.StudyDeviceAdmin
+   ```
+   成功的输出是这样（实测 Android 15）：
+   ```
+   Success: Device owner set to package com.family.studytv/.StudyDeviceAdmin
+   Active admin set to component com.family.studytv/.StudyDeviceAdmin
+   ```
+5. **验证**：
+   ```bash
+   adb shell dpm list-owners
+   # 1 owner:
+   # User  0: admin=com.family.studytv/.StudyDeviceAdmin,DeviceOwner,Affiliated
+   ```
+   然后退出「防卸载设置」页再进一次，状态会变成「已锁定（系统卸载按钮已禁用，必须输入卸载码）」。
+
+此时连 `adb uninstall` 都会被系统拒绝（实测返回 `Failure [DELETE_FAILED_DEVICE_POLICY_MANAGER]`），只能回电视输卸载码。
+
+| 设备所有者生效后的状态页 | 卸载前必须输卸载码 |
+| --- | --- |
+| ![已锁定](docs/screenshots/tv-uninstall-owner.png) | ![输入卸载码](docs/screenshots/tv-uninstall-pin.png) |
+
+### 常见报错对照
+
+| 报错 | 原因与处理 |
+| --- | --- |
+| `Not allowed to set the device owner because there are already some accounts on the device` | 电视上登着 Google / 厂商账号，`设置 → 账户` 全部删除后再执行（删账号可能影响应用商店，自行权衡） |
+| `Not allowed to set the device owner because there are already several users on the device` | 有访客/子用户，先删掉其它用户 |
+| `Unknown admin: ComponentInfo{...}` | 包名或类名写错，别手打，用页面「复制到剪贴板」 |
+| `already set` / `already a device owner` | 已经设过了，不用重复执行 |
+| 命令 Success 但页面仍显示未生效 | 退出该页再进来，状态在 `onResume` 刷新 |
+| `error: device offline` / 连不上 5555 | Android 11+ 必须走「无线调试」的随机端口 + `adb pair`，5555 已不可用 |
+
+### 两个必须知道的后果
+
+- **设备所有者不能用 `adb shell dpm remove-active-admin` 撤销**（实测 exit 255，无输出）。要解除只能在应用内 `防卸载设置 → 卸载应用` 输卸载码（会先 `clearDeviceOwnerApp` 再跳系统卸载），或者**恢复出厂设置**。所以：先把卸载码从默认 `246810` 改掉，并记牢。
+- 设了设备所有者后**覆盖安装仍正常**（`adb install -r`、应用商店更新都可以，设置与所有者身份都保留），只有「卸载」被锁。
+
 ## 技术要点
 
 - 原生 Java，`minSdk 21`（Android 5.0 起，覆盖老电视盒子），`targetSdk 28`。
@@ -285,7 +335,7 @@ set JAVA_HOME=D:\android-toolchain\jdk-17.0.21+9
 gradle-8.7\bin\gradle.bat :app:testDebugUnitTest
 ```
 
-覆盖内容（共 73 项）：
+覆盖内容（共 75 项）：
 
 - `EntryFlowTest`：首次打开先显示二维码页且只显示一次（按钮变「开始答题」）；之后点图标直接跳答题；只有带 `EXTRA_INFO` 才停留在信息页；信息页不含参数修改控件；安全页可正常渲染。
 - `QuizActivityTest`：5 题全对才关闭并重新计时，且通关后**不打开二维码页**；答错当场标出正确答案再换新题（新题不重复刚答错那套）；揭示期间点击无效；返回键无法退出；打开即标记「未完成」；界面上不存在可见的管理入口；连按 5 次上键才弹密码键盘、输错不弹二维码页、输对才打开信息页且答题页留在下面；只按 4 次、间隔过大、中间夹别的键、长按重复事件都不触发；冷却期内连键盘都不弹；家长「立即解锁」能远程结束答题页。
@@ -293,6 +343,7 @@ gradle-8.7\bin\gradle.bat :app:testDebugUnitTest
 - `HttpServerTest`：真实起服务，验证**扫码只看到登录页**、密码错误不发 Cookie、登录后可读管理页与状态、未登录访问 `/api/state` 与 `/api/questions` 一律 401、退出登录后旧会话立即失效、连错 5 次锁 30 秒（429）、改密码踢掉其他设备；另有年级设置往返（字符串/数组/去重排序/非法值归一化）、题库替换、空题库拒绝、改卸载码必须带原码（403/400/200 三种分支）、防卸载开关可通过接口改、上报 `pinDefault`、品牌图 `/logo.png` / `/favicon.ico` 未登录即可读取且返回 PNG；新增 `/api/unlock` 必须登录（未登录 401）、解锁后清 `pending` 并从现在重排计时、`/api/state` 上报 `quizRunning`。
 - `QuestionBankTest`：内置题库释放（18000 题、每学科 6000、每年级 3000、每科每年级 1000）、学科轮流出题、只选三年级只出三年级题、多选 1–3 年级、全选覆盖 1–6 年级、选中年级无题时自动回退、`grade` 支持中文/数字/缺省、老题库无 grade 仍可出题、文本/下标两种 answer 写法、非法 JSON 与越界 answer 被拒绝、备份恢复。
 - `UninstallCodeTest`：SHA-256 摘要稳定且不含明文、定长比较、卸载码格式校验、冷却时长分档。
+- `PinDialogTest`：卸载码对话框标题显示「请输入卸载码」、管理密码对话框仍是「请输入管理密码」（防止布局写死的标题再次盖掉调用方文案）。
 - `UninstallPrefsTest`：默认码 246810 生效、改码后默认码失效、连错 5 次锁定且锁定期内正确码也拒绝、成功后计数清零。
 
 ## 安装与首次设置

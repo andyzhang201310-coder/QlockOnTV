@@ -6,6 +6,7 @@
     android:padding="26dp">
 
     <TextView
+        android:id="@+id/tvPinTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="请输入管理密码"

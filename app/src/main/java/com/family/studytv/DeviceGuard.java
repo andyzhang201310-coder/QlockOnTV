@@ -155,18 +155,23 @@ public final class DeviceGuard {
 
     /** 设备所有者设置步骤，电视端弹窗与手机管理页共用 */
     public static String ownerGuide(Context c) {
-        return "要把系统里的「卸载」按钮彻底禁用，需要电脑执行一次下面的命令，之后永久有效：\n\n"
+        return "要把系统里的「卸载」按钮彻底禁用，必须用电脑执行一次下面的命令，之后永久有效：\n\n"
                 + adbCommand(c) + "\n\n"
                 + "步骤：\n"
-                + "① 电视/盒子进入 设置 → 关于 → 连点版本号打开「开发者选项」，再打开 USB 调试\n"
-                + "② 或用同一 WiFi 的无线调试：adb connect 电视IP:5555\n"
-                + "③ 电脑执行上面的命令，看到 Success 即成功\n"
-                + "④ 重新打开本应用，「设备所有者」会显示已生效\n\n"
+                + "① 电视：设置 → 关于 → 连点「版本号」7 次，打开开发者选项，再打开 USB 调试\n"
+                + "② 电视与电脑连同一个 WiFi，电视上用「无线调试」看 IP 和端口（Android 11+ 需要配对码）\n"
+                + "③ 电脑执行 adb connect 电视IP:端口（Android 11+ 先 adb pair 电视IP:配对端口）\n"
+                + "④ 电脑执行上面的命令，看到 Success 即成功\n"
+                + "⑤ 重新打开本应用，「设备所有者」会显示已生效\n\n"
+                + "验证：adb shell dpm list-owners，能看到 DeviceOwner 就对了\n\n"
                 + "常见失败：\n"
-                + "· Not allowed to set the device owner —— 设备上还有已登录账号，"
-                + "先到 设置 → 账户 里全部删除再试\n"
-                + "· already set —— 已经设置过，不需要重复执行\n\n"
+                + "· Not allowed to set the device owner because there are already some accounts"
+                + " —— 电视上还登着账号，先到 设置 → 账户 全部删除再试\n"
+                + "· ...because there are already several users on the device —— 先删掉访客/其他用户\n"
+                + "· Unknown admin: ComponentInfo{...} —— 包名或类名写错，直接从本页复制命令\n"
+                + "· already set / already a device owner —— 已经设置过，不用重复执行\n"
+                + "· 命令成功但界面仍显示未生效 —— 退出本页再进来（状态在 onResume 刷新）\n\n"
                 + "没有电脑也能用：只激活设备管理员，孩子从系统设置卸载时会先被要求"
-                + "「停用设备管理员」，多一道他搞不定的门槛。";
+                + "「停用设备管理员」，多一道他搞不定的门槛，但挡不住有心人。";
     }
 }

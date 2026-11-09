@@ -31,7 +31,7 @@ public class PinDialog extends Dialog {
 
     /** 管理密码 */
     public PinDialog(Context context, Listener listener) {
-        this(context, "管理密码", new Verifier() {
+        this(context, "请输入管理密码", new Verifier() {
             @Override
             public String check(String in) {
                 return in.equals(Prefs.pin()) ? null : "密码错误，请重试";
@@ -53,6 +53,12 @@ public class PinDialog extends Dialog {
         setCanceledOnTouchOutside(false);
         if (title != null) {
             setTitle(title);
+        }
+        // 主题关掉了系统标题栏，标题实际由布局里的 tvPinTitle 显示，
+        // 否则「请输入卸载码」和「请输入管理密码」都会显示成布局里写死的那一句。
+        TextView tvTitle = (TextView) findViewById(R.id.tvPinTitle);
+        if (tvTitle != null && title != null) {
+            tvTitle.setText(title);
         }
 
         tvDisplay = (TextView) findViewById(R.id.tvPinDisplay);

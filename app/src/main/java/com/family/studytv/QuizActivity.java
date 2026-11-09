@@ -340,7 +340,7 @@ public class QuizActivity extends Activity {
                     + UninstallCode.describeLock(remain) + "后再试");
             return;
         }
-        new PinDialog(this, "家长管理", new PinDialog.Verifier() {
+        new PinDialog(this, "请输入管理密码", new PinDialog.Verifier() {
             @Override
             public String check(String in) {
                 if (in == null || in.length() == 0) {

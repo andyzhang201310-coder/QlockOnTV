@@ -164,7 +164,7 @@ public class SecurityActivity extends Activity {
                     Toast.LENGTH_LONG).show();
             return;
         }
-        new PinDialog(this, "输入卸载码", new PinDialog.Verifier() {
+        new PinDialog(this, "请输入卸载码", new PinDialog.Verifier() {
             @Override
             public String check(String in) {
                 if (in == null || in.length() == 0) {
