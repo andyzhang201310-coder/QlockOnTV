@@ -11,6 +11,6 @@ local.properties
 __pycache__/
 *.pyc
 
-# 发布产物：仅保留 1.7.5 版本，历史包与 archive/ 不入库
+# 发布产物：只保留当前版本，历史包与 archive/ 不入库
 dist/*
-!dist/QlockOnTV-1.7.5-*
+!dist/QlockOnTV-1.7.7-*
