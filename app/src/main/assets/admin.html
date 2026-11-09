@@ -161,10 +161,15 @@
   </div>
   <div class="tip">
     保护分两级：<br>
-    · <b>设备管理员</b>（应用内一键激活）：孩子从系统设置卸载时，会先被要求「停用设备管理员」，普通小孩走不完。<br>
+    · <b>设备管理员</b>（电视端点「开启防卸载」即自动激活，不用去设置里找入口——电视一般没有这一项）：孩子从系统设置卸载时，会先被要求「停用设备管理员」，普通小孩走不完。<br>
     · <b>设备所有者</b>（电脑 adb 执行一次）：系统卸载按钮直接置灰，必须回到电视输入卸载码才能卸载。<br>
-    当前设备的所有者命令：
+    电视拒绝自动激活时，用下面这条命令（不要求电视上没登录账号）：
   </div>
+  <div class="tip" id="activeAdminCmd" style="word-break:break-all;color:#4cc2ff"></div>
+  <div class="btns">
+    <button id="btnCopyActiveCmd">复制基础保护命令</button>
+  </div>
+  <div class="tip">当前设备的所有者命令（彻底锁定，要求电视上没登录账号）：</div>
   <div class="tip" id="ownerCmd" style="word-break:break-all;color:#4cc2ff"></div>
   <div class="btns">
     <button id="btnCopyCmd">复制命令</button>
@@ -326,6 +331,7 @@
     $('swGuard').className = 'switch' + (g ? ' on' : '');
     $('swFactory').className = 'switch' + (state.blockFactoryReset ? ' on' : '');
     $('ownerCmd').textContent = state.deviceOwnerCmd || '';
+    $('activeAdminCmd').textContent = state.activeAdminCmd || '';
   }
 
   // ---- 出题年级（多选）
@@ -464,10 +470,9 @@
     }).catch(function (e) { toast(e.message, 3600); });
   };
 
-  $('btnCopyCmd').onclick = function () {
-    var cmd = (state && state.deviceOwnerCmd) || $('ownerCmd').textContent;
+  function copyText(cmd, okMsg) {
     if (!cmd) { toast('暂未获取到命令'); return; }
-    function done() { toast('已复制，可发到电脑上执行'); }
+    function done() { toast(okMsg || '已复制，可发到电脑上执行'); }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(cmd).then(done).catch(fallback);
     } else {
@@ -483,6 +488,15 @@
       try { document.execCommand('copy'); done(); } catch (e) { toast('请长按上面的命令手动复制', 3000); }
       document.body.removeChild(ta);
     }
+  }
+
+  $('btnCopyCmd').onclick = function () {
+    copyText((state && state.deviceOwnerCmd) || $('ownerCmd').textContent, '已复制，可发到电脑上执行');
+  };
+
+  $('btnCopyActiveCmd').onclick = function () {
+    copyText((state && state.activeAdminCmd) || $('activeAdminCmd').textContent,
+      '已复制，执行后即可获得基础保护');
   };
 
   $('btnTest').onclick = function () {

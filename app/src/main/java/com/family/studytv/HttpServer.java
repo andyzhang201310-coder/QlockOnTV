@@ -688,6 +688,7 @@ public class HttpServer {
             o.put("pinDefault", "1234".equals(Prefs.pin()));
             o.put("uninstallLockMs", Prefs.uninstallLockRemainMs());
             o.put("deviceOwnerCmd", DeviceGuard.adbCommand(ctx));
+            o.put("activeAdminCmd", DeviceGuard.adbActiveAdminCommand(ctx));
         } catch (Throwable ignored) {
         }
         return o;

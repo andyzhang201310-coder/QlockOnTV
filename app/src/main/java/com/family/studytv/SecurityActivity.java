@@ -7,6 +7,8 @@ import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -25,6 +27,15 @@ public class SecurityActivity extends Activity {
 
     private TextView tvGuard;
     private Button btnGuard;
+    /** 是否已经切到系统激活页（用来判断那个页面到底有没有真的起来） */
+    private boolean leftForAdminPage;
+    private final Handler uiHandler = new Handler(Looper.getMainLooper());
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        leftForAdminPage = true;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +74,16 @@ public class SecurityActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        // 已经从系统激活页回来了，那个「页面有没有起来」的兜底就不用再跑
+        uiHandler.removeCallbacks(adminCheck);
+        if (leftForAdminPage) {
+            leftForAdminPage = false;
+            if (Prefs.uninstallGuard() && !DeviceGuard.isAdminActive(this)) {
+                // 用户点了取消，或者系统页什么都没做：别留一个「已开启但没生效」的假开关
+                Prefs.setUninstallGuard(false);
+                Toast.makeText(this, "还没有激活设备管理员，防卸载未开启", Toast.LENGTH_LONG).show();
+            }
+        }
         DeviceGuard.sync(this);
         refreshGuard();
     }
@@ -111,17 +132,21 @@ public class SecurityActivity extends Activity {
             return;
         }
 
+        // 三级策略：静默激活 → 系统确认页 → 都不行就给 adb 命令
+        int r = DeviceGuard.activate(this);
+        if (r == DeviceGuard.ACTIVATE_FAILED) {
+            Prefs.setUninstallGuard(false);
+            refreshGuard();
+            showActivateHelp();
+            return;
+        }
+
         Prefs.setUninstallGuard(true);
 
-        if (!DeviceGuard.isAdminActive(this)) {
-            try {
-                startActivity(DeviceGuard.activateIntent(this));
-                Toast.makeText(this, "请在系统页面点「激活」", Toast.LENGTH_LONG).show();
-            } catch (Throwable e) {
-                Toast.makeText(this, "无法打开系统激活页。Android TV / Sony BRAVIA 的设置里没有「设备管理员」入口，"
-                        + "只能由本页触发；请确认系统未限制本应用启动系统页面，或改用 adb 设为设备所有者", Toast.LENGTH_LONG).show();
-            }
+        if (r == DeviceGuard.ACTIVATE_UI) {
             refreshGuard();
+            Toast.makeText(this, "请在弹出的系统页面点「激活」，回到本页会自动刷新", Toast.LENGTH_LONG).show();
+            watchAdminPage();
             return;
         }
 
@@ -130,8 +155,71 @@ public class SecurityActivity extends Activity {
         if (locked) {
             Toast.makeText(this, "系统卸载已锁定，必须输入卸载码才能卸载", Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "已开启基础保护：卸载前必须先停用设备管理员", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "已开启：设备管理员已就位，孩子卸载前必须先停用它", Toast.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * 系统可能「返回 Activity 存在、实际上根本没显示」（部分电视/精简 ROM 会吞掉这个 intent），
+     * 所以要复查一次：本页没有被切走、且管理员仍然没激活，就直接给出 adb 方案。
+     */
+    private final Runnable adminCheck = new Runnable() {
+        @Override
+        public void run() {
+            if (isFinishing() || leftForAdminPage) {
+                return;
+            }
+            if (DeviceGuard.isAdminActive(SecurityActivity.this)) {
+                refreshGuard();
+                return;
+            }
+            Prefs.setUninstallGuard(false);
+            refreshGuard();
+            new AlertDialog.Builder(SecurityActivity.this)
+                    .setTitle("系统没有打开激活页面")
+                    .setMessage(DeviceGuard.activateHelp(SecurityActivity.this))
+                    .setPositiveButton("复制基础保护命令", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface d, int w) {
+                            copyText("基础保护命令", DeviceGuard.adbActiveAdminCommand(SecurityActivity.this));
+                        }
+                    })
+                    .setNeutralButton("复制彻底锁定命令", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface d, int w) {
+                            copyText("彻底锁定命令", DeviceGuard.adbCommand(SecurityActivity.this));
+                        }
+                    })
+                    .setNegativeButton("知道了", null)
+                    .show();
+        }
+    };
+
+    private void watchAdminPage() {
+        leftForAdminPage = false;
+        uiHandler.removeCallbacks(adminCheck);
+        uiHandler.postDelayed(adminCheck, 2500);
+    }
+
+    /** 电视厂商裁掉了系统激活页时的唯一可行路径：一条 adb 命令 */
+    private void showActivateHelp() {
+        new AlertDialog.Builder(this)
+                .setTitle("这台电视没有「设备管理员」页面")
+                .setMessage(DeviceGuard.activateHelp(this))
+                .setPositiveButton("复制基础保护命令", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        copyText("基础保护命令", DeviceGuard.adbActiveAdminCommand(SecurityActivity.this));
+                    }
+                })
+                .setNeutralButton("复制彻底锁定命令", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        copyText("彻底锁定命令", DeviceGuard.adbCommand(SecurityActivity.this));
+                    }
+                })
+                .setNegativeButton("知道了", null)
+                .show();
     }
 
     private void showOwnerGuide() {
@@ -141,18 +229,18 @@ public class SecurityActivity extends Activity {
                 .setPositiveButton("复制到剪贴板", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface d, int w) {
-                        copyCommand();
+                        copyText("设备所有者命令", DeviceGuard.adbCommand(SecurityActivity.this));
                     }
                 })
                 .setNegativeButton("知道了", null)
                 .show();
     }
 
-    private void copyCommand() {
+    private void copyText(String label, String text) {
         try {
             ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            cm.setPrimaryClip(ClipData.newPlainText("adb", DeviceGuard.adbCommand(this)));
-            Toast.makeText(this, "命令已复制，可发到手机/电脑上粘贴", Toast.LENGTH_LONG).show();
+            cm.setPrimaryClip(ClipData.newPlainText("adb", text));
+            Toast.makeText(this, label + "已复制，可发到电脑上粘贴", Toast.LENGTH_LONG).show();
         } catch (Throwable e) {
             Toast.makeText(this, "复制失败，请手抄命令", Toast.LENGTH_LONG).show();
         }

@@ -215,9 +215,9 @@ public class MainActivity extends Activity {
             warn.append("· 卸载码仍是默认 246810，请尽快改掉\n");
         }
         if (Prefs.uninstallGuard() && !DeviceGuard.isAdminActive(this)) {
-            warn.append("· 防卸载未生效，点「防卸载设置」激活设备管理员\n");
+            warn.append("· 防卸载未生效：进「防卸载设置」点一次「开启防卸载」即可自动激活设备管理员\n");
         } else if (Prefs.uninstallGuard() && !DeviceGuard.isUninstallBlocked(this)) {
-            warn.append("· 防卸载只有基础保护：系统里仍能卸载，进「防卸载设置 → 彻底锁定（需 adb）」按步骤设一次设备所有者\n");
+            warn.append("· 防卸载只有基础保护：系统里仍能卸载，进「防卸载设置 → 彻底锁定（需 adb）」设一次设备所有者\n");
         }
         if ("0.0.0.0".equals(LanUtils.ip())) {
             warn.append("· 电视未连上局域网，请先连 WiFi 或网线\n");
