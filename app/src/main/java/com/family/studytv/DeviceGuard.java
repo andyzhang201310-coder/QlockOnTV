@@ -163,6 +163,8 @@ public final class DeviceGuard {
                 + "③ 电脑执行 adb connect 电视IP:端口（Android 11+ 先 adb pair 电视IP:配对端口）\n"
                 + "④ 电脑执行上面的命令，看到 Success 即成功\n"
                 + "⑤ 重新打开本应用，「设备所有者」会显示已生效\n\n"
+                + "注意：Android TV / Sony BRAVIA 的系统设置里没有「设备管理员」这一项，"
+                + "激活只能从本页「开启防卸载」触发系统弹窗，别去设置里找。\n\n"
                 + "验证：adb shell dpm list-owners，能看到 DeviceOwner 就对了\n\n"
                 + "常见失败：\n"
                 + "· Not allowed to set the device owner because there are already some accounts"

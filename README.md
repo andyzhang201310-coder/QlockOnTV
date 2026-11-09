@@ -238,6 +238,23 @@ Android 10 起系统限制「后台启动界面」（BAL），Android 14/15 收�
 | --- | --- |
 | ![已锁定](docs/screenshots/tv-uninstall-owner.png) | ![输入卸载码](docs/screenshots/tv-uninstall-pin.png) |
 
+### Sony BRAVIA / Android TV 特别说明
+
+Sony 这类机型的**系统设置里没有「设备管理员」这一项**，别在设置里找。Sony 官方帮助指南里「安全和限制（Security & restrictions）」只提供「未知来源应用」和「受限配置文件（Restricted profile）」两项，没有设备管理员列表。所以激活只能走应用内触发：
+
+1. 答题页连按 5 次上键 → 管理密码 → 信息页 → `防卸载设置`
+2. 点「开启防卸载」→ 系统弹出激活页（标题一般是「激活设备管理员？」）
+3. 遥控器方向键移到屏幕底部的「激活」，按 OK
+
+菜单位置参考（用于找开发者和安全设置，不是设备管理员）：
+
+| 机型 | 菜单路径 |
+| --- | --- |
+| Android TV（2015–2020） | 设置 → 设备偏好设置 → 安全和限制 |
+| Google TV（2021 及以后） | 设置 → 隐私 → 安全和限制 |
+
+在 Sony 上设**设备所有者**的现实情况：Bravia 通常已登录 Google 账号，`dpm set-device-owner` 会被账号检查拦下；而按 Sony 官方说明，**删除 Google 账号会让电视恢复出厂设置**。所以想彻底锁定只有一条路：恢复出厂 → 开机向导里跳过 Google 账号 → 装 APK → adb 执行 set-device-owner。否则就停在「基础保护」，它挡得住小孩、挡不住懂行的成年人。
+
 ### 常见报错对照
 
 | 报错 | 原因与处理 |

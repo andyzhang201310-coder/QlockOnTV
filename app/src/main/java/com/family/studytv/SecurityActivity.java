@@ -118,7 +118,8 @@ public class SecurityActivity extends Activity {
                 startActivity(DeviceGuard.activateIntent(this));
                 Toast.makeText(this, "请在系统页面点「激活」", Toast.LENGTH_LONG).show();
             } catch (Throwable e) {
-                Toast.makeText(this, "无法打开设备管理器页面，请到系统设置里手动激活", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "无法打开系统激活页。Android TV / Sony BRAVIA 的设置里没有「设备管理员」入口，"
+                        + "只能由本页触发；请确认系统未限制本应用启动系统页面，或改用 adb 设为设备所有者", Toast.LENGTH_LONG).show();
             }
             refreshGuard();
             return;
