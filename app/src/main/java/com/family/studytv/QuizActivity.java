@@ -6,11 +6,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.LeadingMarginSpan;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -68,6 +72,7 @@ public class QuizActivity extends Activity {
     private TextView tvQuestion;
     private TextView tvFeedback;
     private LinearLayout optionBox;
+    private ScrollView quizScroll;
 
     /** 小孩按 HOME 逃到桌面时把自己拉回来 */
     private final Runnable relaunch = new Runnable() {
@@ -127,6 +132,7 @@ public class QuizActivity extends Activity {
         tvQuestion = (TextView) findViewById(R.id.tvQuestion);
         tvFeedback = (TextView) findViewById(R.id.tvFeedback);
         optionBox = (LinearLayout) findViewById(R.id.optionBox);
+        quizScroll = (ScrollView) findViewById(R.id.quizScroll);
 
         running = true;
         active = this;
@@ -229,7 +235,7 @@ public class QuizActivity extends Activity {
         optionBox.removeAllViews();
         for (int k = 0; k < it.options.size(); k++) {
             Button b = (Button) getLayoutInflater().inflate(R.layout.item_option, optionBox, false);
-            b.setText(letter(k) + "        " + it.options.get(k));
+            b.setText(optionText(b, k, it.options.get(k), null));
             final int choice = k;
             b.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -242,6 +248,34 @@ public class QuizActivity extends Activity {
         if (optionBox.getChildCount() > 0) {
             optionBox.getChildAt(0).requestFocus();
         }
+        scrollToTop();
+    }
+
+    /**
+     * 换行后的行首与 A/B/C 标号后的正文对齐（悬挂缩进），长成语解释不会顶回行首。
+     * 按钮高度由 wrap_content 自行决定，文本不做任何截断。
+     */
+    static CharSequence optionText(Button b, int k, String text, String suffix) {
+        String label = letter(k) + "    ";
+        SpannableString s = new SpannableString(label + text + (suffix == null ? "" : suffix));
+        int indent = (int) b.getPaint().measureText(label);
+        s.setSpan(new LeadingMarginSpan.Standard(0, indent), 0, s.length(),
+                Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        return s;
+    }
+
+    /** 换题后回到顶部，避免上一题滚动位置残留导致看不到题干 */
+    private void scrollToTop() {
+        if (quizScroll == null) {
+            return;
+        }
+        quizScroll.scrollTo(0, 0);
+        quizScroll.post(new Runnable() {
+            @Override
+            public void run() {
+                quizScroll.scrollTo(0, 0);
+            }
+        });
     }
 
     // ------------------------------------------------------------------ 判定
@@ -285,15 +319,15 @@ public class QuizActivity extends Activity {
                 continue;
             }
             Button b = (Button) v;
-            String base = letter(k) + "        " + it.options.get(k);
             if (k == it.answer) {
-                b.setText(base + "        ← 正确答案");
+                b.setText(optionText(b, k, it.options.get(k), "    ← 正确答案"));
                 b.setTextColor(0xFF4ADE80);
                 correctView = b;
             } else if (k == choice) {
-                b.setText(base + "        ← 你选的");
+                b.setText(optionText(b, k, it.options.get(k), "    ← 你选的"));
                 b.setTextColor(0xFFFF6B6B);
             } else {
+                b.setText(optionText(b, k, it.options.get(k), null));
                 b.setTextColor(0xFF6B7688);
             }
             b.setOnClickListener(null);

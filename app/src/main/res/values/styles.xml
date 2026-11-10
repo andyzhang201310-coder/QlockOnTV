@@ -41,12 +41,18 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <!-- 答案高度自适应：允许多行、不省略、不拉伸，长成语解释完整显示 -->
     <style name="QuizOption" parent="TvButton">
         <item name="android:textSize">27sp</item>
-        <item name="android:minHeight">76dp</item>
+        <item name="android:minHeight">72dp</item>
         <item name="android:gravity">center_vertical|start</item>
+        <item name="android:singleLine">false</item>
+        <item name="android:ellipsize">none</item>
+        <item name="android:lineSpacingExtra">4dp</item>
         <item name="android:paddingLeft">32dp</item>
         <item name="android:paddingRight">32dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
     </style>
 
     <style name="KeyButton" parent="TvButton">
