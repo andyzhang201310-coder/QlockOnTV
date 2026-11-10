@@ -32,9 +32,12 @@
   .on{background:rgba(74,222,128,.16);color:var(--green)}
   .off{background:rgba(255,107,107,.16);color:var(--red)}
   label.fl{display:block;color:var(--sub);font-size:13px;margin:12px 0 6px}
-  input[type=text],input[type=number],input[type=password],textarea{
+  .grid2{display:flex;gap:10px}
+  .grid2>div{flex:1;min-width:0}
+  input[type=text],input[type=number],input[type=password],input[type=time],textarea{
     width:100%;background:#0e1726;border:1px solid var(--line);border-radius:10px;
     color:var(--txt);padding:11px 12px;font-size:15px;font-family:inherit;outline:none}
+  input[type=time]{color-scheme:dark}
   input:focus,textarea:focus{border-color:var(--accent)}
   textarea{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.5;height:260px;resize:vertical}
   .btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
@@ -92,6 +95,7 @@
   <div class="row"><span>当前弹窗</span><b id="stQuiz">—</b></div>
   <div class="row"><span>弹题间隔</span><b id="stInterval">—</b></div>
   <div class="row"><span>每次题量</span><b id="stCount">—</b></div>
+  <div class="row"><span>自动弹题</span><b id="stAuto">—</b></div>
   <div class="row"><span>下次弹题</span><b id="stDue">—</b></div>
   <div class="row"><span>题库总数</span><b id="stBank">—</b></div>
   <div class="stat" id="stSubjects"></div>
@@ -106,6 +110,31 @@
   </div>
   <label class="fl">弹题间隔（分钟，1–720）</label>
   <input type="number" id="inInterval" min="1" max="720" value="30">
+  <div class="row" style="margin-top:12px">
+    <span>自动弹题总开关（关掉后永久不再自动弹）</span>
+    <div class="switch on" id="swAutoQuiz"><i></i></div>
+  </div>
+  <div class="tip" style="margin-top:4px">
+    关掉后：到点不弹、开机不弹、待机中的电视也不会被叫醒；「立即弹一次题」仍可手动催。重启、升级都保持关闭，想恢复再打开即可。
+  </div>
+  <div class="row" style="margin-top:10px">
+    <span>免打扰时段（这段时间内绝不弹题、不唤醒电视）</span>
+    <div class="switch" id="swQuiet"><i></i></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <label class="fl">开始</label>
+      <input type="time" id="inQuietStart" value="22:00">
+    </div>
+    <div>
+      <label class="fl">结束</label>
+      <input type="time" id="inQuietEnd" value="07:00">
+    </div>
+  </div>
+  <div class="tip" style="margin-top:4px">
+    跨午夜也可以（如 22:30 → 06:30）。时段内到点的答题会顺延到结束时刻，并且闹钟改为「不唤醒设备」——
+    电视夜里待机不会再自己亮起来；白天开机后会自动补上欠的那一次。
+  </div>
   <label class="fl">每次需要连续答对的题数</label>
   <input type="number" id="inQuizCount" min="1" max="20" value="5">
   <div class="row" style="margin-top:12px">
@@ -270,7 +299,19 @@
     $('stInterval').textContent = '每 ' + state.intervalMinutes + ' 分钟';
     $('stCount').textContent = state.quizCount + ' 题';
     $('stBank').textContent = state.questionCount + ' 题';
-    if (state.pending) {
+    if (!state.autoQuiz) {
+      $('stAuto').innerHTML = '<span class="badge off">已关闭</span>';
+    } else if (state.quietEnabled && state.inQuiet) {
+      $('stAuto').innerHTML = '<span style="color:#ffc857">免打扰中</span>';
+    } else if (state.quietEnabled) {
+      $('stAuto').innerHTML = '<span class="badge on">自动</span> <span style="color:#9fb0c7">' +
+        state.quietStart + '–' + state.quietEnd + ' 免打扰</span>';
+    } else {
+      $('stAuto').innerHTML = '<span class="badge on">自动</span>';
+    }
+    if (!state.autoQuiz) {
+      $('stDue').innerHTML = '<span style="color:#9fb0c7">已关闭自动弹题</span>';
+    } else if (state.pending) {
       $('stDue').innerHTML = '<span style="color:#ffc857">上一轮未完成</span>';
     } else if (on && state.dueAt > 0) {
       var left = Math.max(0, state.dueAt - Date.now());
@@ -291,6 +332,12 @@
 
     $('swEnabled').className = 'switch' + (on ? ' on' : '');
     $('swBoot').className = 'switch' + (state.bootQuiz ? ' on' : '');
+    $('swAutoQuiz').className = 'switch' + (state.autoQuiz ? ' on' : '');
+    $('swQuiet').className = 'switch' + (state.quietEnabled ? ' on' : '');
+    $('inQuietStart').value = state.quietStart || '22:00';
+    $('inQuietEnd').value = state.quietEnd || '07:00';
+    $('inQuietStart').disabled = !state.quietEnabled;
+    $('inQuietEnd').disabled = !state.quietEnabled;
     $('inInterval').value = state.intervalMinutes;
     $('inQuizCount').value = state.quizCount;
     $('inSubjects').value = state.subjects || '';
@@ -394,6 +441,20 @@
     state.bootQuiz = !state.bootQuiz;
     $('swBoot').className = 'switch' + (state.bootQuiz ? ' on' : '');
   };
+  $('swAutoQuiz').onclick = function () {
+    if (!state) { return; }
+    state.autoQuiz = !state.autoQuiz;
+    $('swAutoQuiz').className = 'switch' + (state.autoQuiz ? ' on' : '');
+    toast(state.autoQuiz ? '自动弹题已开启，记得点「保存设置」' : '将永久停止自动弹题，记得点「保存设置」', 3000);
+  };
+  $('swQuiet').onclick = function () {
+    if (!state) { return; }
+    state.quietEnabled = !state.quietEnabled;
+    $('swQuiet').className = 'switch' + (state.quietEnabled ? ' on' : '');
+    $('inQuietStart').disabled = !state.quietEnabled;
+    $('inQuietEnd').disabled = !state.quietEnabled;
+    toast(state.quietEnabled ? '免打扰已开启，记得点「保存设置」' : '免打扰已关闭，记得点「保存设置」', 2600);
+  };
   $('swGuard').onclick = function () {
     if (!state) { return; }
     state.uninstallGuard = !state.uninstallGuard;
@@ -423,6 +484,10 @@
       intervalMinutes: parseInt($('inInterval').value, 10) || 30,
       quizCount: parseInt($('inQuizCount').value, 10) || 5,
       bootQuiz: state ? !!state.bootQuiz : true,
+      autoQuiz: state ? !!state.autoQuiz : true,
+      quietEnabled: state ? !!state.quietEnabled : false,
+      quietStart: $('inQuietStart').value || '22:00',
+      quietEnd: $('inQuietEnd').value || '07:00',
       subjects: $('inSubjects').value || '语文,数学,英语',
       grades: selectedGrades.length ? selectedGrades.join(',') : '1,2,3,4,5,6',
       port: parseInt($('inPort').value, 10) || 8899

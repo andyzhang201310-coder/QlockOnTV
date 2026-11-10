@@ -123,7 +123,7 @@ public class GuardService extends Service {
             startHttpServer();
             updateNotification();
         } else if (ACTION_RESCHEDULE.equals(action)) {
-            Prefs.setDueAt(System.currentTimeMillis() + intervalMs());
+            Prefs.setDueAtAligned(System.currentTimeMillis() + intervalMs());
             scheduleAlarm(this);
             updateNotification();
         } else if (ACTION_TICK.equals(action)) {
@@ -153,22 +153,31 @@ public class GuardService extends Service {
 
     private void bootstrap(boolean fromBoot) {
         long now = System.currentTimeMillis();
-        long due = Prefs.dueAt();
 
-        if (!Prefs.isEnabled()) {
+        // 总开关关掉：一个闹钟都不留，彻底不唤醒待机中的电视
+        if (!Prefs.isEnabled() || !Prefs.autoQuiz()) {
+            scheduleAlarm(this);
             updateNotification();
             return;
         }
 
-        // 1) 上次弹窗没答完（含直接关机逃避）→ 立刻补上
+        boolean quiet = Prefs.inQuietNow();
+
+        // 1) 上次弹窗没答完（含直接关机逃避）→ 立刻补上；免打扰期间顺延到时段结束
         if (Prefs.isPending()) {
+            if (quiet) {
+                Prefs.setDueAtAligned(now);
+                scheduleAlarm(this);
+                updateNotification();
+                return;
+            }
             showSoon(2000);
             return;
         }
 
         // 2) 首次运行：从当前时间起算
-        if (due <= 0) {
-            Prefs.setDueAt(now + intervalMs());
+        if (Prefs.dueAt() <= 0) {
+            Prefs.setDueAtAligned(now + intervalMs());
             scheduleAlarm(this);
             updateNotification();
             return;
@@ -176,12 +185,24 @@ public class GuardService extends Service {
 
         // 3) 开机后立即答题（防止靠关机逃避）
         if (fromBoot && Prefs.bootQuiz()) {
+            if (quiet) {
+                Prefs.setDueAtAligned(now);
+                scheduleAlarm(this);
+                updateNotification();
+                return;
+            }
             showSoon(3000);
             return;
         }
 
         // 4) 已经到点（关机期间欠下的）
-        if (due <= now) {
+        if (Prefs.dueAt() <= now) {
+            if (quiet) {
+                Prefs.setDueAtAligned(now);
+                scheduleAlarm(this);
+                updateNotification();
+                return;
+            }
             showSoon(1500);
             return;
         }
@@ -224,7 +245,11 @@ public class GuardService extends Service {
     }
 
     private void checkDue() {
-        if (!Prefs.isEnabled()) {
+        if (!Prefs.isEnabled() || !Prefs.autoQuiz()) {
+            return;
+        }
+        // 免打扰时段：绝不弹窗（也就不会点亮待机中的电视），到点欠着的留到时段结束再补
+        if (Prefs.inQuietNow()) {
             return;
         }
         long now = System.currentTimeMillis();
@@ -237,7 +262,7 @@ public class GuardService extends Service {
         }
         long due = Prefs.dueAt();
         if (due <= 0) {
-            Prefs.setDueAt(now + intervalMs());
+            Prefs.setDueAtAligned(now + intervalMs());
             scheduleAlarm(this);
             updateNotification();
             return;
@@ -324,7 +349,7 @@ public class GuardService extends Service {
         Prefs.setPending(false);
         long now = System.currentTimeMillis();
         Prefs.setLastPassAt(now);
-        Prefs.setDueAt(now + intervalMs());
+        Prefs.setDueAtAligned(now + intervalMs());
         scheduleAlarm(this);
         updateNotification();
     }
@@ -342,7 +367,7 @@ public class GuardService extends Service {
     public static void applyUnlock(Context c) {
         long now = System.currentTimeMillis();
         Prefs.setPending(false);
-        Prefs.setDueAt(now + Prefs.intervalMinutes() * 60000L);
+        Prefs.setDueAtAligned(now + Prefs.intervalMinutes() * 60000L);
         scheduleAlarm(c.getApplicationContext());
 
         GuardService s = alive;
@@ -363,27 +388,41 @@ public class GuardService extends Service {
         if (am == null) {
             return;
         }
-        long due = Prefs.dueAt();
-        if (due <= 0) {
-            return;
-        }
         PendingIntent pi = PendingIntent.getBroadcast(c, REQ_ALARM,
                 new Intent(c, AlarmReceiver.class), PendingIntent.FLAG_UPDATE_CURRENT);
         try {
             am.cancel(pi);
         } catch (Throwable ignored) {
         }
+
+        // 自动弹窗关掉 / 整体暂停：一个闹钟都不留，别把待机中的电视叫醒
+        if (!Prefs.isEnabled() || !Prefs.autoQuiz()) {
+            return;
+        }
+
+        long raw = Prefs.dueAt();
+        if (raw <= 0) {
+            return;
+        }
+        long fireAt = Prefs.nextAllowedAt(raw);
+        // dueAt 已经顺延过（等于免打扰结束时刻）时也算：那一刻同样不能唤醒待机设备
+        boolean quietPushed = Prefs.duePushed() || fireAt != raw;
+
         try {
-            if (Build.VERSION.SDK_INT >= 23) {
-                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, due, pi);
+            if (quietPushed) {
+                // 免打扰顺延后的这次触发不能用 WAKEUP：清晨待机的电视照样会被点亮。
+                // 用非唤醒闹钟，设备醒着就正常触发，睡着就等下次开机由轮询补上。
+                am.setExact(AlarmManager.RTC, fireAt, pi);
+            } else if (Build.VERSION.SDK_INT >= 23) {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, fireAt, pi);
             } else if (Build.VERSION.SDK_INT >= 19) {
-                am.setExact(AlarmManager.RTC_WAKEUP, due, pi);
+                am.setExact(AlarmManager.RTC_WAKEUP, fireAt, pi);
             } else {
-                am.set(AlarmManager.RTC_WAKEUP, due, pi);
+                am.set(AlarmManager.RTC_WAKEUP, fireAt, pi);
             }
         } catch (Throwable e) {
             try {
-                am.set(AlarmManager.RTC_WAKEUP, due, pi);
+                am.set(AlarmManager.RTC, fireAt, pi);
             } catch (Throwable ignored) {
             }
         }
@@ -418,10 +457,15 @@ public class GuardService extends Service {
         String text;
         if (!Prefs.isEnabled()) {
             text = "已暂停拦截";
+        } else if (!Prefs.autoQuiz()) {
+            text = "自动弹题已关闭（可手动催一次）";
         } else {
             long due = Prefs.dueAt();
             String when = due > 0 ? new SimpleDateFormat("HH:mm", Locale.CHINA).format(new Date(due)) : "--:--";
             text = "下次答题 " + when + " · 每 " + Prefs.intervalMinutes() + " 分钟";
+            if (Prefs.inQuietNow()) {
+                text = "免打扰中，下次 " + when;
+            }
         }
         Intent i = new Intent(this, MainActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

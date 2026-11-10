@@ -438,4 +438,70 @@ public class HttpServerTest {
             QuizActivity.running = false;
         }
     }
+
+    // ---------------------------------------------------------------- 自动弹窗 / 免打扰
+
+    @Test
+    public void settingsPersistAutoQuizAndQuietHours() throws Exception {
+        String cookie = login();
+        String[] r = request("POST", "/api/settings",
+                "{\"autoQuiz\":false,\"quietEnabled\":true,\"quietStart\":\"22:30\",\"quietEnd\":\"06:30\"}",
+                null, cookie);
+        assertEquals("200", r[0]);
+        assertFalse(Prefs.autoQuiz());
+        assertTrue(Prefs.quietEnabled());
+        assertEquals(22 * 60 + 30, Prefs.quietStartMin());
+        assertEquals(6 * 60 + 30, Prefs.quietEndMin());
+
+        String[] st = request("GET", "/api/state", null, null, cookie);
+        assertTrue(st[1].contains("\"autoQuiz\":false"));
+        assertTrue(st[1].contains("\"quietStart\":\"22:30\""));
+        assertTrue(st[1].contains("\"quietEnd\":\"06:30\""));
+
+        // 恢复默认，别影响其它用例
+        request("POST", "/api/settings",
+                "{\"autoQuiz\":true,\"quietEnabled\":false,\"quietStart\":\"22:00\",\"quietEnd\":\"07:00\"}",
+                null, cookie);
+        assertTrue(Prefs.autoQuiz());
+        assertFalse(Prefs.quietEnabled());
+    }
+
+    @Test
+    public void badTimeStringDoesNotPolluteSettings() throws Exception {
+        String cookie = login();
+        Prefs.setQuietRange(22 * 60, 7 * 60);
+        String[] r = request("POST", "/api/settings",
+                "{\"quietEnabled\":true,\"quietStart\":\"99:99\",\"quietEnd\":\"oops\"}",
+                null, cookie);
+        assertEquals("200", r[0]);
+        // 非法时间整条忽略，保持原值，不能把界面写成 00:00
+        assertEquals(22 * 60, Prefs.quietStartMin());
+        assertEquals(7 * 60, Prefs.quietEndMin());
+        Prefs.setQuietEnabled(false);
+    }
+
+    @Test
+    public void dueAtIsPushedOutOfQuietWindow() throws Exception {
+        String cookie = login();
+        // 用「现在前后各一小时」当免打扰，保证当前时刻一定在窗口里
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        int nowMin = c.get(java.util.Calendar.HOUR_OF_DAY) * 60 + c.get(java.util.Calendar.MINUTE);
+        int start = (nowMin - 60 + 1440) % 1440;
+        int end = (nowMin + 60) % 1440;
+        Prefs.setQuietRange(start, end);
+        Prefs.setQuietEnabled(true);
+
+        long before = System.currentTimeMillis();
+        request("POST", "/api/settings", "{\"intervalMinutes\":30}", null, cookie);
+        long due = Prefs.dueAt();
+
+        // 30 分钟后的弹题时间落在免打扰里，必须被推到窗口结束，且比「现在+30 分钟」更晚
+        assertTrue("免打扰期间不能把下次弹题排在自己里面", due >= before + 30 * 60000L);
+        assertTrue("最多只顺延到窗口结束（约 1 小时后）", due <= before + 65 * 60000L);
+        assertTrue("顺延后要打标记，闹钟才会用不唤醒设备的类型", Prefs.duePushed());
+
+        Prefs.setQuietEnabled(false);
+        Prefs.setQuietRange(22 * 60, 7 * 60);
+        Prefs.setDueAtAligned(System.currentTimeMillis() + 30 * 60000L);
+    }
 }

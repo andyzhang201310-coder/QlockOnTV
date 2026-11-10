@@ -332,6 +332,24 @@ public class HttpServer {
                 if (in.has("bootQuiz")) {
                     Prefs.setBootQuiz(in.optBoolean("bootQuiz", true));
                 }
+                // 自动弹窗总开关 + 免打扰时段
+                if (in.has("autoQuiz")) {
+                    Prefs.setAutoQuiz(in.optBoolean("autoQuiz", true));
+                }
+                if (in.has("quietEnabled")) {
+                    Prefs.setQuietEnabled(in.optBoolean("quietEnabled", false));
+                }
+                if (in.has("quietStart") || in.has("quietEnd")) {
+                    int qs = in.has("quietStart")
+                            ? QuietHours.parse(in.optString("quietStart", ""))
+                            : Prefs.quietStartMin();
+                    int qe = in.has("quietEnd")
+                            ? QuietHours.parse(in.optString("quietEnd", ""))
+                            : Prefs.quietEndMin();
+                    if (qs >= 0 && qe >= 0) {
+                        Prefs.setQuietRange(qs, qe);
+                    }
+                }
                 if (in.has("subjects")) {
                     Prefs.setSubjects(in.optString("subjects", Prefs.subjects()));
                 }
@@ -401,8 +419,8 @@ public class HttpServer {
                         portChanged = true;
                     }
                 }
-                // 参数变更后从当前时间重新计时
-                Prefs.setDueAt(System.currentTimeMillis() + Prefs.intervalMinutes() * 60000L);
+                // 参数变更后从当前时间重新计时（落在免打扰时段则顺延到时段结束）
+                Prefs.setDueAtAligned(System.currentTimeMillis() + Prefs.intervalMinutes() * 60000L);
                 Intent i = new Intent(ctx, GuardService.class);
                 i.setAction(portChanged ? GuardService.ACTION_RELOAD : GuardService.ACTION_RESCHEDULE);
                 GuardService.start(ctx, i);
@@ -474,7 +492,7 @@ public class HttpServer {
                 unauthorized(socket);
                 return;
             }
-            Prefs.setDueAt(System.currentTimeMillis() + Prefs.intervalMinutes() * 60000L);
+            Prefs.setDueAtAligned(System.currentTimeMillis() + Prefs.intervalMinutes() * 60000L);
             Intent i = new Intent(ctx, GuardService.class);
             i.setAction(GuardService.ACTION_RESCHEDULE);
             GuardService.start(ctx, i);
@@ -645,6 +663,11 @@ public class HttpServer {
             o.put("intervalMinutes", Prefs.intervalMinutes());
             o.put("quizCount", Prefs.quizCount());
             o.put("bootQuiz", Prefs.bootQuiz());
+            o.put("autoQuiz", Prefs.autoQuiz());
+            o.put("quietEnabled", Prefs.quietEnabled());
+            o.put("quietStart", QuietHours.format(Prefs.quietStartMin()));
+            o.put("quietEnd", QuietHours.format(Prefs.quietEndMin()));
+            o.put("inQuiet", Prefs.inQuietNow());
             o.put("subjects", Prefs.subjects());
             o.put("port", Prefs.port());
             o.put("ip", LanUtils.ip());

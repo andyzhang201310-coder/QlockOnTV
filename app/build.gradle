@@ -13,8 +13,8 @@ android {
         // 关键：targetSdk 保持在 28，避免 Android 10+ 对后台启动 Activity 的拦截，
         // 否则“强制弹窗”在较新的盒子上会被系统静默忽略。
         targetSdk 28
-        versionCode 17
-        versionName "1.7.8"
+        versionCode 18
+        versionName "1.7.9"
         resConfigs "zh", "en"
     }
 

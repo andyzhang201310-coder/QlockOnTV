@@ -34,6 +34,64 @@ public final class Prefs {
         sp().edit().putInt("intervalMin", Math.max(1, Math.min(720, v))).apply();
     }
 
+    // ------------------------------------------------------------ 自动弹窗 / 免打扰
+
+    /**
+     * 自动弹题总开关，默认开启。
+     * 关掉后永久不再自动弹（重启、开机、到点轮询都不弹），只能手动「立即弹一次题」，
+     * 用来在假期/考试周一次性停掉，不用卸载。
+     */
+    public static boolean autoQuiz() {
+        return sp().getBoolean("autoQuiz", true);
+    }
+
+    public static void setAutoQuiz(boolean v) {
+        sp().edit().putBoolean("autoQuiz", v).apply();
+    }
+
+    /** 免打扰时段开关，默认关闭 */
+    public static boolean quietEnabled() {
+        return sp().getBoolean("quietEnabled", false);
+    }
+
+    public static void setQuietEnabled(boolean v) {
+        sp().edit().putBoolean("quietEnabled", v).apply();
+    }
+
+    /** 免打扰开始时间（一天中的分钟数），默认 22:00 */
+    public static int quietStartMin() {
+        return clampMinute(sp().getInt("quietStartMin", 22 * 60));
+    }
+
+    /** 免打扰结束时间（一天中的分钟数），默认 07:00 */
+    public static int quietEndMin() {
+        return clampMinute(sp().getInt("quietEndMin", 7 * 60));
+    }
+
+    public static void setQuietRange(int startMin, int endMin) {
+        sp().edit()
+                .putInt("quietStartMin", clampMinute(startMin))
+                .putInt("quietEndMin", clampMinute(endMin))
+                .apply();
+    }
+
+    private static int clampMinute(int v) {
+        return Math.max(0, Math.min(QuietHours.MINUTES_PER_DAY - 1, v));
+    }
+
+    /** 当前是否处于免打扰时段 */
+    public static boolean inQuietNow() {
+        return quietEnabled() && QuietHours.inQuiet(System.currentTimeMillis(), quietStartMin(), quietEndMin());
+    }
+
+    /** 把时刻顺延到最近的允许弹窗时间（免打扰期间顺延到时段结束） */
+    public static long nextAllowedAt(long ts) {
+        if (!quietEnabled()) {
+            return ts;
+        }
+        return QuietHours.nextAllowedAt(ts, quietStartMin(), quietEndMin());
+    }
+
     /** 每次弹窗需要连续答对的题目数量，默认 5 */
     public static int quizCount() {
         return Math.max(1, Math.min(20, sp().getInt("quizCount", 5)));
@@ -128,7 +186,26 @@ public final class Prefs {
     }
 
     public static void setDueAt(long v) {
-        sp().edit().putLong("dueAt", v).apply();
+        sp().edit().putLong("dueAt", v).putBoolean("duePushed", false).apply();
+    }
+
+    /**
+     * 设置下次弹题时间；如果落在免打扰时段内，自动顺延到时段结束并打标记。
+     *
+     * <p>打标记是为了让闹钟改用「不唤醒设备」的类型：免打扰结束那一刻通常是清晨，
+     * 用 RTC_WAKEUP 会把待机中的电视点亮，正是这次要解决的问题。
+     */
+    public static void setDueAtAligned(long raw) {
+        long aligned = nextAllowedAt(raw);
+        sp().edit()
+                .putLong("dueAt", aligned)
+                .putBoolean("duePushed", aligned != raw)
+                .apply();
+    }
+
+    /** 当前 dueAt 是否因为免打扰被顺延过 */
+    public static boolean duePushed() {
+        return sp().getBoolean("duePushed", false);
     }
 
     public static long lastPassAt() {

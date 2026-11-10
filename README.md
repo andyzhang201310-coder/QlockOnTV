@@ -51,6 +51,7 @@
 | 防卸载 | 设备管理员 + 设备所有者（`setUninstallBlocked`）双层保护，卸载必须输入卸载码；只激活管理员仅有基础保护，彻底锁死需一次 adb，详见「防卸载」章节 |
 | 卸载码提示修正（v1.7.6） | 卸载码对话框此前固定显示「请输入管理密码」，实际校验的是卸载码，家长容易输错；现按调用方显示「请输入卸载码 / 请输入管理密码」 |
 | 激活设备管理员修复（v1.7.8） | 点「开启防卸载」后系统激活页一闪而过/毫无反应：跳转 Intent 误带 `FLAG_ACTIVITY_NEW_TASK`，Android 14+ 的 `DeviceAdminAdd` 会直接 `Cannot start ADD_DEVICE_ADMIN as a new task` 并结束。已改为普通启动，另加静默激活与 adb 命令两级兜底 |
+| 深夜不自动亮屏（v1.7.9） | 后台新增「自动弹题总开关」与「免打扰时段」（支持跨午夜）：关掉总开关后取消所有闹钟，静默期内的闹钟改用不唤醒设备的 `RTC`，电视待机时不会再自己打开，详见「深夜不打扰」章节 |
 | 统一品牌图标（v1.7.2） | 桌面图标、Android TV 横幅、手机管理后台三处共用 `assets/logo.png`；换图跑一次生成脚本即可 |
 
 ## 命名与升级兼容（v1.7.5）
@@ -188,6 +189,42 @@ Android 10 起系统限制「后台启动界面」（BAL），Android 14/15 收�
 老盒子（Android 5–9）没有这个限制，不需要授权。若系统里没有「显示在其他应用上层」设置页，可用 adb 一次性授权：
 
     adb shell appops set com.family.studytv SYSTEM_ALERT_WINDOW allow
+
+## 深夜不打扰：自动弹窗总开关与免打扰时段（v1.7.9）
+
+Sony 电视按遥控器电源键只是**进入待机休眠**，并没有真正断电。到点闹钟用的是 `setExactAndAllowWhileIdle(RTC_WAKEUP)`，会把整机从待机里叫醒，于是半夜电视自己亮屏、还带着答题界面。v1.7.9 把「什么时候可以弹」交给家长在后台控制：
+
+| 后台开关 | 作用 | 落盘位置 |
+| --- | --- | --- |
+| **自动弹题总开关** | 关掉后永久停止自动弹窗：到点不弹、开机不弹、`checkDue()` 直接返回、**所有闹钟被 cancel**，待机中的电视不会被叫醒。重启、升级、换电池都保持关闭；想恢复再打开即可。`立即弹一次题` 仍可手动催 | `autoQuiz` |
+| **免打扰时段** | 例如 `22:30 → 06:30`（支持跨午夜）。时段内绝不弹窗；到点欠下的那次会顺延到时段结束 | `quietEnabled` / `quietStartMin` / `quietEndMin` |
+
+实现上有三个关键点：
+
+1. **时段内不留唤醒闹钟**。`GuardService.scheduleAlarm()` 发现 dueAt 落在免打扰里就把触发时刻推到窗口结束，并把闹钟从 `RTC_WAKEUP` 换成 `RTC`（`setExact`）——设备醒着照常触发，睡着就不唤醒，等下次开机由 15 秒轮询补上。`Prefs.duePushed()` 记录这次顺延，避免「bootstrap 已经把 dueAt 挪到窗口结束、scheduleAlarm 以为它是普通时间」又用回 WAKEUP。
+2. **所有重排路径都走 `Prefs.setDueAtAligned()`**（答题通关、家长「立即解锁」、后台「从现在重新计时」、改参数），保证下次时间永远不会落在免打扰窗口内部。
+3. **兜底不弹**：`checkDue()` 第一行就是 `if (Prefs.inQuietNow()) return;`，即使别处漏判也不会半夜弹。
+
+实测（MuMu / Android 15，`dumpsys alarm`）：
+
+```
+# 免打扰窗口内（09:00–12:00 采的样本）
+dueAt = 12:00:00，duePushed = true
+RTC #5: Alarm{... type 1 ... com.family.studytv}      ← type=RTC，tag *alarm*（不唤醒）
+通知：免打扰中，下次 12:00
+
+# 关掉总开关
+Pending alarm batches 里 com.family.studytv 计数 = 0     ← 一个闹钟都不剩
+
+# 正常时段
+RTC_WAKEUP #4: Alarm{... type 0 ...}                  ← tag *walarm*，到点必弹
+```
+
+时间计算被单独抽成 `QuietHours`（纯函数、无 Android 依赖），跨午夜、整点边界、非法 `"99:99"` 都有单测兜着。
+
+后台就在「参数设置」卡片里，两个开关 + 一对时间框：
+
+![免打扰设置](docs/screenshots/admin-quiet-hours.png)
 
 ## 防卸载（卸载码）
 
@@ -373,16 +410,17 @@ set JAVA_HOME=D:\android-toolchain\jdk-17.0.21+9
 gradle-8.7\bin\gradle.bat :app:testDebugUnitTest
 ```
 
-覆盖内容（共 85 项）：
+覆盖内容（共 101 项）：
 
 - `EntryFlowTest`：首次打开先显示二维码页且只显示一次（按钮变「开始答题」）；之后点图标直接跳答题；只有带 `EXTRA_INFO` 才停留在信息页；信息页不含参数修改控件；安全页可正常渲染。
 - `QuizActivityTest`：5 题全对才关闭并重新计时，且通关后**不打开二维码页**；答错当场标出正确答案再换新题（新题不重复刚答错那套）；揭示期间点击无效；返回键无法退出；打开即标记「未完成」；界面上不存在可见的管理入口；连按 5 次上键才弹密码键盘、输错不弹二维码页、输对才打开信息页且答题页留在下面；只按 4 次、间隔过大、中间夹别的键、长按重复事件都不触发；冷却期内连键盘都不弹；家长「立即解锁」能远程结束答题页。
 - `AdminPinTest`：默认 1234 可进；改码后旧码失效；连错 4 次不锁、第 5 次锁定且正确码也拒绝；改密码顺手清冷却；空输入不放行。
-- `HttpServerTest`：真实起服务，验证**扫码只看到登录页**、密码错误不发 Cookie、登录后可读管理页与状态、未登录访问 `/api/state` 与 `/api/questions` 一律 401、退出登录后旧会话立即失效、连错 5 次锁 30 秒（429）、改密码踢掉其他设备；另有年级设置往返（字符串/数组/去重排序/非法值归一化）、题库替换、空题库拒绝、改卸载码必须带原码（403/400/200 三种分支）、防卸载开关可通过接口改、上报 `pinDefault`、品牌图 `/logo.png` / `/favicon.ico` 未登录即可读取且返回 PNG；新增 `/api/unlock` 必须登录（未登录 401）、解锁后清 `pending` 并从现在重排计时、`/api/state` 上报 `quizRunning`。
+- `HttpServerTest`：真实起服务，验证**扫码只看到登录页**、密码错误不发 Cookie、登录后可读管理页与状态、未登录访问 `/api/state` 与 `/api/questions` 一律 401、退出登录后旧会话立即失效、连错 5 次锁 30 秒（429）、改密码踢掉其他设备；另有年级设置往返（字符串/数组/去重排序/非法值归一化）、题库替换、空题库拒绝、改卸载码必须带原码（403/400/200 三种分支）、防卸载开关可通过接口改、上报 `pinDefault`、品牌图 `/logo.png` / `/favicon.ico` 未登录即可读取且返回 PNG；新增 `/api/unlock` 必须登录（未登录 401）、解锁后清 `pending` 并从现在重排计时、`/api/state` 上报 `quizRunning`。新增：`/api/settings` 落盘 `autoQuiz` / `quietEnabled` / `quietStart` / `quietEnd` 并在 `/api/state` 回显、非法时间字符串整条忽略不污染原值、改参数时 dueAt 若落在免打扰窗口会被推到窗口结束并置 `duePushed`。
 - `QuestionBankTest`：内置题库释放（18000 题、每学科 6000、每年级 3000、每科每年级 1000）、学科轮流出题、只选三年级只出三年级题、多选 1–3 年级、全选覆盖 1–6 年级、选中年级无题时自动回退、`grade` 支持中文/数字/缺省、老题库无 grade 仍可出题、文本/下标两种 answer 写法、非法 JSON 与越界 answer 被拒绝、备份恢复。
 - `UninstallCodeTest`：SHA-256 摘要稳定且不含明文、定长比较、卸载码格式校验、冷却时长分档。
 - `PinDialogTest`：卸载码对话框标题显示「请输入卸载码」、管理密码对话框仍是「请输入管理密码」（防止布局写死的标题再次盖掉调用方文案）。
 - `UninstallPrefsTest`：默认码 246810 生效、改码后默认码失效、连错 5 次锁定且锁定期内正确码也拒绝、成功后计数清零。
+- `QuietHoursTest`：跨午夜窗口（22:00–07:00 的 23:59 / 00:00 / 06:59 在内，07:00 与 21:59 在外）、同日窗口、`start == end` 视为关闭、`HH:mm` 解析与格式化往返、非法 `24:00` / `12:60` / `1230` 被拒、顺延到当天/次日窗口结束、正好卡在结束时刻不再多顺延一天；另有 Prefs 默认值（autoQuiz 开、免打扰关、22:00–07:00）与时段落盘往返。
 - `DeviceGuardTest`：三个激活返回码互不相同；基础保护命令必须是 `dpm set-active-admin`（不能误写成 `set-device-owner`）、彻底锁定命令是 `set-device-owner`；失败说明同时给出两条命令；说明文案里不再出现「只能由本页触发 / 别去设置里找」这类甩锅话；已激活时 `activate()` 直接短路返回成功、未激活时返回已知状态而不抛异常；组件名固定 `com.family.studytv/.StudyDeviceAdmin`。
 
 ## 安装与首次设置
