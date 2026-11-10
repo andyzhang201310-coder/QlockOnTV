@@ -33,24 +33,66 @@ public class QuestionBankTest {
     public void seedBankLoadsAllThreeSubjects() {
         QuestionBank bank = QuestionBank.get();
         bank.ensureSeeded();
-        assertEquals("内置题库为 1-6 年级 × 语数英各 1000 题", 18000, bank.count());
-        assertEquals(Integer.valueOf(6000), bank.countBySubject().get("语文"));
-        assertEquals(Integer.valueOf(6000), bank.countBySubject().get("数学"));
-        assertEquals(Integer.valueOf(6000), bank.countBySubject().get("英语"));
-        assertEquals("每个年级各 3000 题", Integer.valueOf(3000), bank.countByGrade().get(3));
+        assertEquals("内置题库 = 原有 18000 题 + v5 追加 1738 题", 19738, bank.count());
+        assertEquals(Integer.valueOf(6866), bank.countBySubject().get("语文"));
+        assertEquals(Integer.valueOf(6576), bank.countBySubject().get("数学"));
+        assertEquals(Integer.valueOf(6296), bank.countBySubject().get("英语"));
+        assertTrue("每个年级至少还有原有的 3000 题", bank.countByGrade().get(3) >= 3000);
 
-        // 每个年级、每个学科都必须是 1000 题
+        // 原有题库必须逐题保留：每个年级、每个学科恰好 1000 题（id 不以 ext- 开头）
         int[][] perGradeSubject = new int[7][3];
+        int extra = 0;
         for (QuestionBank.Question q : bank.all()) {
+            if (q.id != null && q.id.startsWith("ext-")) {
+                extra++;
+                continue;
+            }
             int idx = "语文".equals(q.subject) ? 0 : ("数学".equals(q.subject) ? 1 : 2);
             perGradeSubject[q.grade][idx]++;
         }
+        assertEquals("v5 追加题数", 1738, extra);
         for (int g = 1; g <= 6; g++) {
             for (int s = 0; s < 3; s++) {
-                assertEquals("年级 " + g + " 学科序号 " + s + " 题量应为 1000",
+                assertEquals("原有题库 年级 " + g + " 学科序号 " + s + " 应仍有 1000 题",
                         1000, perGradeSubject[g][s]);
             }
         }
+    }
+
+    @Test
+    public void extendedQuestionsKeepFormatAndCoverNewTopics() {
+        QuestionBank bank = QuestionBank.get();
+        boolean author = false, sequence = false, plural = false, formula = false;
+        int extra = 0;
+        for (QuestionBank.Question q : bank.all()) {
+            if (q.id == null || !q.id.startsWith("ext-")) {
+                continue;
+            }
+            extra++;
+            assertEquals("新题正确项下标统一为 0（出题时再打乱）", 0, q.answer);
+            assertEquals("新题必须有 4 个选项", 4, q.options.size());
+            assertEquals("新题选项不能重复", 4, new HashSet<String>(q.options).size());
+            assertTrue("新题年级需在 1-6 之间", q.grade >= 1 && q.grade <= 6);
+            assertTrue("新题学科需为语数英", "语文".equals(q.subject)
+                    || "数学".equals(q.subject) || "英语".equals(q.subject));
+            if (q.q.contains("的作者是谁")) {
+                author = true;
+            }
+            if (q.q.contains("等差数列")) {
+                sequence = true;
+            }
+            if (q.q.contains("的复数形式")) {
+                plural = true;
+            }
+            if (q.q.contains("公式") || q.q.contains("怎么求")) {
+                formula = true;
+            }
+        }
+        assertEquals(1738, extra);
+        assertTrue("应包含古诗文作者题", author);
+        assertTrue("应包含等差数列题", sequence);
+        assertTrue("应包含英语名词复数题", plural);
+        assertTrue("应包含数学公式题", formula);
     }
 
     @Test
