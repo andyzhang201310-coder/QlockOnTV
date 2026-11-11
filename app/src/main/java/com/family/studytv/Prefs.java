@@ -203,6 +203,17 @@ public final class Prefs {
                 .apply();
     }
 
+    /**
+     * 规则版顺延：由 Rules 统一算出下一个允许弹题的时刻（含周计划 / 网课 / 豁免），
+     * 这里只负责落盘并保留「被顺延过」标记，闹钟据此降级为非唤醒类型。
+     */
+    public static void setDueAtAlignedTo(long raw, long aligned) {
+        sp().edit()
+                .putLong("dueAt", aligned)
+                .putBoolean("duePushed", aligned != raw)
+                .apply();
+    }
+
     /** 当前 dueAt 是否因为免打扰被顺延过 */
     public static boolean duePushed() {
         return sp().getBoolean("duePushed", false);

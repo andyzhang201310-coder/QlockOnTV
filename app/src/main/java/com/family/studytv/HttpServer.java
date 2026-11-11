@@ -263,12 +263,77 @@ public class HttpServer {
             return;
         }
 
+        if (path.equals("/rules.html") || path.equals("/rules")) {
+            // 没登录同样只给登录页，规则接口也一并要求登录态
+            String asset = authed ? "rules.html" : "login.html";
+            respond(socket, 200, "text/html; charset=utf-8", readAsset(asset).getBytes("UTF-8"));
+            return;
+        }
+
         if (path.equals("/api/state")) {
             if (!authed) {
                 unauthorized(socket);
                 return;
             }
             respondJson(socket, 200, stateJson().toString());
+            return;
+        }
+
+        // ---- 管理规则（参考 StudyOnTV 的 /api/config：GET 读整份、POST 存整份）
+        if (path.equals("/api/rules")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            if (method.equals("GET")) {
+                JSONObject o = new JSONObject();
+                o.put("ok", true);
+                o.put("version", Rules.version(ctx));
+                o.put("config", Rules.get(ctx));
+                o.put("roundsToday", Rules.roundsToday(ctx));
+                o.put("wrongToday", Rules.wrongToday(ctx));
+                o.put("reviewDue", Rules.wrongIds(ctx).size());
+                respondJson(socket, 200, o.toString());
+                return;
+            }
+            if (method.equals("POST") || method.equals("PUT")) {
+                try {
+                    JSONObject in = new JSONObject(body == null || body.trim().length() == 0 ? "{}" : body);
+                    if (in.has("config")) {
+                        in = in.getJSONObject("config");
+                    }
+                    JSONObject cfg = Rules.save(ctx, in);
+                    long now = System.currentTimeMillis();
+                    // 时段规则变了：保留原有计时起点，只把落在禁用时段的那一轮顺延到新的允许时刻
+                    long due = Prefs.dueAt();
+                    long base = due > now ? due : now;
+                    Prefs.setDueAtAlignedTo(base, Rules.alignDue(ctx, base));
+                    GuardService.start(ctx, new Intent(ctx, GuardService.class)
+                            .setAction(GuardService.ACTION_RULE_CHANGED));
+                    JSONObject ok = new JSONObject();
+                    ok.put("ok", true);
+                    ok.put("version", Rules.version(ctx));
+                    ok.put("config", cfg);
+                    respondJson(socket, 200, ok.toString());
+                } catch (Throwable e) {
+                    JSONObject err = new JSONObject();
+                    err.put("ok", false);
+                    err.put("error", String.valueOf(e.getMessage()));
+                    respondJson(socket, 400, err.toString());
+                }
+                return;
+            }
+        }
+
+        if (path.equals("/api/rules/reset") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            Rules.clearWrongPool(ctx);
+            JSONObject ok = new JSONObject();
+            ok.put("ok", true);
+            respondJson(socket, 200, ok.toString());
             return;
         }
 
@@ -418,6 +483,12 @@ public class HttpServer {
                         Prefs.setPort(np);
                         portChanged = true;
                     }
+                }
+                // 首页改的题量 / 间隔 / 科目 / 年级要同步回规则页，
+                // 否则答题页按 Rules.questionCount() 出题时会用回规则里的旧值
+                if (in.has("intervalMinutes") || in.has("quizCount")
+                        || in.has("subjects") || in.has("grades")) {
+                    Rules.syncFromPrefs(ctx);
                 }
                 // 参数变更后从当前时间重新计时（落在免打扰时段则顺延到时段结束）
                 Prefs.setDueAtAligned(System.currentTimeMillis() + Prefs.intervalMinutes() * 60000L);
@@ -678,6 +749,16 @@ public class HttpServer {
             o.put("lastPassAt", Prefs.lastPassAt());
             o.put("serverError", error);
             o.put("now", System.currentTimeMillis());
+
+            // ---- 管理规则摘要（规则页有独立接口，这里只给首页状态卡用）
+            JSONObject rules = Rules.get(ctx);
+            o.put("ruleVersion", Rules.version(ctx));
+            o.put("playMode", rules.optString("playMode", "round"));
+            o.put("scheduleMode", rules.optString("scheduleMode", "control"));
+            o.put("ruleAllowedNow", Rules.quizAllowedAt(rules, System.currentTimeMillis(),
+                    Prefs.quietEnabled(), Prefs.quietStartMin(), Prefs.quietEndMin()));
+            o.put("roundsToday", Rules.roundsToday(ctx));
+            o.put("reviewDue", Rules.wrongIds(ctx).size());
 
             Map<String, Integer> bySubject = QuestionBank.get().countBySubject();
             JSONObject sub = new JSONObject();

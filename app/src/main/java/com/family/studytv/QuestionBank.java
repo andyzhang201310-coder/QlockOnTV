@@ -261,12 +261,21 @@ public final class QuestionBank {
      * 剩余题量不够一组时会自动放宽，绝不因为排除导致出不了题。
      */
     public List<Question> pick(int n, Set<String> excludeIds) {
+        return pick(n, excludeIds, null, null);
+    }
+
+    /**
+     * 规则版抽题：可覆盖年级与科目范围（孩子自己选年级时用），null 沿用后台全局设置。
+     * 任何覆盖都不放宽原有过滤，只是把候选范围缩小。
+     */
+    public List<Question> pick(int n, Set<String> excludeIds,
+                               Set<Integer> gradeOverride, String subjectOverride) {
         List<Question> pool = all();
         if (n <= 0) {
             n = 1;
         }
-        Set<String> allowed = allowedSubjects();
-        Set<Integer> grades = Prefs.gradeSet();
+        Set<String> allowed = subjectOverride == null ? allowedSubjects() : singleSubject(subjectOverride);
+        Set<Integer> grades = gradeOverride == null ? Prefs.gradeSet() : gradeOverride;
 
         Map<String, List<Question>> grouped = group(pool, allowed, grades, excludeIds);
         if (totalCount(grouped) < n) {
@@ -305,6 +314,43 @@ public final class QuestionBank {
             }
             round++;
         }
+        return out;
+    }
+
+    private static Set<String> singleSubject(String s) {
+        Set<String> out = new LinkedHashSet<String>();
+        if (s != null && s.trim().length() > 0) {
+            out.add(s.trim());
+        }
+        return out;
+    }
+
+    /** 按 ID 取题（错题库优先复习用），仍受后台的科目 / 年级范围约束 */
+    public List<Question> byIds(Set<String> ids, int limit) {
+        List<Question> out = new ArrayList<Question>();
+        if (ids == null || ids.isEmpty() || limit <= 0) {
+            return out;
+        }
+        Set<String> left = new LinkedHashSet<String>(ids);
+        Set<String> allowed = allowedSubjects();
+        Set<Integer> grades = Prefs.gradeSet();
+        for (Question q : all()) {
+            if (!left.contains(q.id)) {
+                continue;
+            }
+            if (!allowed.isEmpty() && !allowed.contains(q.subject)) {
+                continue;
+            }
+            if (!grades.isEmpty() && q.grade != 0 && !grades.contains(q.grade)) {
+                continue;
+            }
+            out.add(q);
+            left.remove(q.id);
+            if (out.size() >= limit) {
+                break;
+            }
+        }
+        Collections.shuffle(out);
         return out;
     }
 

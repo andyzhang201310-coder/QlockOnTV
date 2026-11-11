@@ -15,6 +15,8 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.provider.Settings;
 
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -30,6 +32,8 @@ public class GuardService extends Service {
     public static final String ACTION_SHOW_NOW = "com.family.studytv.action.SHOW_NOW";
     public static final String ACTION_RELOAD = "com.family.studytv.action.RELOAD";
     public static final String ACTION_RESCHEDULE = "com.family.studytv.action.RESCHEDULE";
+    /** 规则保存后只重排闹钟，不把计时起点重置为「现在」 */
+    public static final String ACTION_RULE_CHANGED = "com.family.studytv.action.RULE_CHANGED";
     public static final String EXTRA_BOOT = "boot";
 
     private static final String CHANNEL_ID = "guard";
@@ -126,6 +130,9 @@ public class GuardService extends Service {
             Prefs.setDueAtAligned(System.currentTimeMillis() + intervalMs());
             scheduleAlarm(this);
             updateNotification();
+        } else if (ACTION_RULE_CHANGED.equals(action)) {
+            scheduleAlarm(this);
+            updateNotification();
         } else if (ACTION_TICK.equals(action)) {
             checkDue();
         } else {
@@ -149,6 +156,19 @@ public class GuardService extends Service {
         return null;
     }
 
+    // ------------------------------------------------------------------ 规则时段
+
+    /** 此刻是否落在规则允许的弹题时间：免打扰 / 周计划 / 网课 / 大人豁免统一判定 */
+    private static boolean timeAllowed(Context c, long ts) {
+        return Rules.quizAllowedAt(Rules.get(c), ts, Prefs.quietEnabled(),
+                Prefs.quietStartMin(), Prefs.quietEndMin());
+    }
+
+    /** 把时刻顺延到规则允许的最近时刻；本来就允许则原样返回 */
+    private static long alignedDue(Context c, long raw) {
+        return Rules.alignDue(c, raw);
+    }
+
     // ------------------------------------------------------------------ 启动逻辑
 
     private void bootstrap(boolean fromBoot) {
@@ -161,12 +181,14 @@ public class GuardService extends Service {
             return;
         }
 
-        boolean quiet = Prefs.inQuietNow();
+        // 规则里的「可用时段 / 网课 / 大人豁免」与旧的免打扰一起判，语义统一为一句话：
+        // 此刻不允许弹题 → 一律顺延，绝不点亮待机中的电视。
+        boolean quiet = !timeAllowed(this, now);
 
         // 1) 上次弹窗没答完（含直接关机逃避）→ 立刻补上；免打扰期间顺延到时段结束
         if (Prefs.isPending()) {
             if (quiet) {
-                Prefs.setDueAtAligned(now);
+                Prefs.setDueAtAlignedTo(now, alignedDue(this, now));
                 scheduleAlarm(this);
                 updateNotification();
                 return;
@@ -177,7 +199,8 @@ public class GuardService extends Service {
 
         // 2) 首次运行：从当前时间起算
         if (Prefs.dueAt() <= 0) {
-            Prefs.setDueAtAligned(now + intervalMs());
+            long raw = now + intervalMs();
+            Prefs.setDueAtAlignedTo(raw, alignedDue(this, raw));
             scheduleAlarm(this);
             updateNotification();
             return;
@@ -186,7 +209,7 @@ public class GuardService extends Service {
         // 3) 开机后立即答题（防止靠关机逃避）
         if (fromBoot && Prefs.bootQuiz()) {
             if (quiet) {
-                Prefs.setDueAtAligned(now);
+                Prefs.setDueAtAlignedTo(now, alignedDue(this, now));
                 scheduleAlarm(this);
                 updateNotification();
                 return;
@@ -198,7 +221,7 @@ public class GuardService extends Service {
         // 4) 已经到点（关机期间欠下的）
         if (Prefs.dueAt() <= now) {
             if (quiet) {
-                Prefs.setDueAtAligned(now);
+                Prefs.setDueAtAlignedTo(now, alignedDue(this, now));
                 scheduleAlarm(this);
                 updateNotification();
                 return;
@@ -248,10 +271,6 @@ public class GuardService extends Service {
         if (!Prefs.isEnabled() || !Prefs.autoQuiz()) {
             return;
         }
-        // 免打扰时段：绝不弹窗（也就不会点亮待机中的电视），到点欠着的留到时段结束再补
-        if (Prefs.inQuietNow()) {
-            return;
-        }
         long now = System.currentTimeMillis();
         // quizShowing 卡住（界面没成功拉起）时，60 秒后重试
         if (QuizActivity.running) {
@@ -260,9 +279,27 @@ public class GuardService extends Service {
         if (quizShowing && now - lastShowAt < 60000L) {
             return;
         }
+        // 规则禁用时段：绝不弹窗（也就不会点亮待机中的电视），到点欠着的留到允许时刻再补
+        if (!timeAllowed(this, now)) {
+            long due = Prefs.dueAt();
+            if (due > 0 && due <= now) {
+                long aligned = alignedDue(this, now);
+                if (aligned > due) {
+                    Prefs.setDueAtAlignedTo(due, aligned);
+                    scheduleAlarm(this);
+                    updateNotification();
+                }
+            }
+            return;
+        }
+        // 今日弹题轮数用满：今天不再弹，跨天自动恢复（不改动 dueAt）
+        if (!Rules.roundsLeft(this, Rules.get(this))) {
+            return;
+        }
         long due = Prefs.dueAt();
         if (due <= 0) {
-            Prefs.setDueAtAligned(now + intervalMs());
+            long raw = now + intervalMs();
+            Prefs.setDueAtAlignedTo(raw, alignedDue(this, raw));
             scheduleAlarm(this);
             updateNotification();
             return;
@@ -279,6 +316,7 @@ public class GuardService extends Service {
         quizShowing = true;
         lastShowAt = System.currentTimeMillis();
         Prefs.setPending(true);
+        Rules.noteRound(this);   // 每日轮数上限按「实际弹出」计数
         Intent i = new Intent(this, QuizActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -349,7 +387,8 @@ public class GuardService extends Service {
         Prefs.setPending(false);
         long now = System.currentTimeMillis();
         Prefs.setLastPassAt(now);
-        Prefs.setDueAtAligned(now + intervalMs());
+        long raw = now + intervalMs();
+        Prefs.setDueAtAlignedTo(raw, alignedDue(this, raw));
         scheduleAlarm(this);
         updateNotification();
     }
@@ -367,7 +406,8 @@ public class GuardService extends Service {
     public static void applyUnlock(Context c) {
         long now = System.currentTimeMillis();
         Prefs.setPending(false);
-        Prefs.setDueAtAligned(now + Prefs.intervalMinutes() * 60000L);
+        long raw = now + Prefs.intervalMinutes() * 60000L;
+        Prefs.setDueAtAlignedTo(raw, Rules.alignDue(c, raw));
         scheduleAlarm(c.getApplicationContext());
 
         GuardService s = alive;
@@ -404,8 +444,9 @@ public class GuardService extends Service {
         if (raw <= 0) {
             return;
         }
-        long fireAt = Prefs.nextAllowedAt(raw);
-        // dueAt 已经顺延过（等于免打扰结束时刻）时也算：那一刻同样不能唤醒待机设备
+        // 规则（免打扰 / 周计划 / 网课 / 豁免）统一顺延到最近的允许时刻
+        long fireAt = alignedDue(c, raw);
+        // dueAt 已经顺延过（等于禁用时段结束时刻）时也算：那一刻同样不能唤醒待机设备
         boolean quietPushed = Prefs.duePushed() || fireAt != raw;
 
         try {
@@ -463,8 +504,8 @@ public class GuardService extends Service {
             long due = Prefs.dueAt();
             String when = due > 0 ? new SimpleDateFormat("HH:mm", Locale.CHINA).format(new Date(due)) : "--:--";
             text = "下次答题 " + when + " · 每 " + Prefs.intervalMinutes() + " 分钟";
-            if (Prefs.inQuietNow()) {
-                text = "免打扰中，下次 " + when;
+            if (!timeAllowed(this, System.currentTimeMillis())) {
+                text = "规则停用中，下次 " + when;
             }
         }
         Intent i = new Intent(this, MainActivity.class);

@@ -43,11 +43,15 @@
   label.fl{display:block;color:var(--sub);font-size:13px;margin:12px 0 6px}
   .grid2{display:flex;gap:10px}
   .grid2>div{flex:1;min-width:0}
-  input[type=text],input[type=number],input[type=password],input[type=time],textarea{
+  input[type=text],input[type=number],input[type=password],input[type=time],textarea,select{
     width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;
     color:var(--txt);padding:11px 12px;font-size:15px;font-family:inherit;outline:none;transition:.15s}
   input[type=time]{color-scheme:light}
-  input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.10)}
+  select{padding:10px 6px;text-align:center;cursor:pointer}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.10)}
+  .navrule{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .navrule button{flex:0 0 auto;min-width:132px;font-weight:650}
+  .navrule .tip{margin:0;flex:1}
   textarea{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.5;height:260px;resize:vertical}
   .btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
   button{flex:1;min-width:110px;padding:12px 10px;border-radius:11px;border:1px solid var(--line);
@@ -93,6 +97,11 @@
   <button class="logout" id="btnLogout">退出登录</button>
 </div>
 
+<div class="card navrule">
+  <button class="primary" id="navRules">管理规则 →</button>
+  <div class="tip">玩法、时间计划、答题范围、加练与复习，改动自动保存到电视</div>
+</div>
+
 <div class="card" id="pinWarn" style="display:none;border-color:#fed7aa;background:#fff7ed">
   <div style="color:var(--accent);font-size:14px;font-weight:600">管理密码仍是默认的 1234</div>
   <div class="tip" style="margin-top:6px;color:#8a6a3a">
@@ -107,6 +116,7 @@
   <div class="row"><span>弹题间隔</span><b id="stInterval">—</b></div>
   <div class="row"><span>每次题量</span><b id="stCount">—</b></div>
   <div class="row"><span>自动弹题</span><b id="stAuto">—</b></div>
+  <div class="row"><span>管理规则</span><b id="stRules">—</b></div>
   <div class="row"><span>下次弹题</span><b id="stDue">—</b></div>
   <div class="row"><span>题库总数</span><b id="stBank">—</b></div>
   <div class="stat" id="stSubjects"></div>
@@ -134,17 +144,22 @@
   </div>
   <div class="grid2">
     <div>
-      <label class="fl">开始</label>
-      <input type="time" id="inQuietStart" value="22:00">
+      <label class="fl">开始（时 : 分）</label>
+      <div class="grid2" style="gap:6px">
+        <select id="inQuietStartH"></select><select id="inQuietStartM"></select>
+      </div>
     </div>
     <div>
-      <label class="fl">结束</label>
-      <input type="time" id="inQuietEnd" value="07:00">
+      <label class="fl">结束（时 : 分）</label>
+      <div class="grid2" style="gap:6px">
+        <select id="inQuietEndH"></select><select id="inQuietEndM"></select>
+      </div>
     </div>
   </div>
   <div class="tip" style="margin-top:4px">
     跨午夜也可以（如 22:30 → 06:30）。时段内到点的答题会顺延到结束时刻，并且闹钟改为「不唤醒设备」——
-    电视夜里待机不会再自己亮起来；白天开机后会自动补上欠的那一次。
+    电视夜里待机不会再自己亮起来；白天开机后会自动补上欠的那一次。<br>
+    用「时 + 分」两个下拉代替原生时间控件：部分手机 / 电视浏览器点不开原生控件，且每 15 秒的状态刷新会把还没保存的时间冲掉。
   </div>
   <label class="fl">每次需要连续答对的题数</label>
   <input type="number" id="inQuizCount" min="1" max="20" value="5">
@@ -259,6 +274,28 @@
     if (location.search) { history.replaceState(null, '', location.pathname); }
   } catch (e) {}
   var state = null;
+  // 家长正在改免打扰时间时，15 秒一次的状态刷新不能把下拉框冲掉
+  var quietEditing = false;
+
+  function initTimeSelects() {
+    ['StartH', 'EndH', 'StartM', 'EndM'].forEach(function (k) {
+      var sel = $('inQuiet' + k), isHour = k.indexOf('H') > 0, n = isHour ? 24 : 60;
+      for (var i = 0; i < n; i++) {
+        var o = document.createElement('option');
+        o.value = o.textContent = (i < 10 ? '0' : '') + i;
+        sel.appendChild(o);
+      }
+      sel.onchange = function () { quietEditing = true; };
+    });
+  }
+  function setQuietTime(which, hhmm) {
+    var p = /^(\d\d):(\d\d)$/.exec(hhmm || '') || ['', '00', '00'];
+    $('inQuiet' + which + 'H').value = p[1];
+    $('inQuiet' + which + 'M').value = p[2];
+  }
+  function quietValue(which) {
+    return $('inQuiet' + which + 'H').value + ':' + $('inQuiet' + which + 'M').value;
+  }
 
   function toast(msg, ms) {
     var t = $('toast');
@@ -345,10 +382,16 @@
     $('swBoot').className = 'switch' + (state.bootQuiz ? ' on' : '');
     $('swAutoQuiz').className = 'switch' + (state.autoQuiz ? ' on' : '');
     $('swQuiet').className = 'switch' + (state.quietEnabled ? ' on' : '');
-    $('inQuietStart').value = state.quietStart || '22:00';
-    $('inQuietEnd').value = state.quietEnd || '07:00';
-    $('inQuietStart').disabled = !state.quietEnabled;
-    $('inQuietEnd').disabled = !state.quietEnabled;
+    if (!quietEditing) {
+      setQuietTime('Start', state.quietStart || '22:00');
+      setQuietTime('End', state.quietEnd || '07:00');
+    }
+    ['StartH', 'StartM', 'EndH', 'EndM'].forEach(function (k) {
+      $('inQuiet' + k).disabled = !state.quietEnabled;
+    });
+    var modeName = ({ round: '按组闯关', streak: '连续答对', count: '累计答对', practice: '自由练习' })[state.playMode] || '按组闯关';
+    $('stRules').textContent = modeName + ' · 今日 ' + (state.roundsToday || 0) + ' 轮 · '
+      + (state.ruleAllowedNow ? '时段允许' : '时段停用');
     $('inInterval').value = state.intervalMinutes;
     $('inQuizCount').value = state.quizCount;
     $('inSubjects').value = state.subjects || '';
@@ -462,8 +505,9 @@
     if (!state) { return; }
     state.quietEnabled = !state.quietEnabled;
     $('swQuiet').className = 'switch' + (state.quietEnabled ? ' on' : '');
-    $('inQuietStart').disabled = !state.quietEnabled;
-    $('inQuietEnd').disabled = !state.quietEnabled;
+    ['StartH', 'StartM', 'EndH', 'EndM'].forEach(function (k) {
+      $('inQuiet' + k).disabled = !state.quietEnabled;
+    });
     toast(state.quietEnabled ? '免打扰已开启，记得点「保存设置」' : '免打扰已关闭，记得点「保存设置」', 2600);
   };
   $('swGuard').onclick = function () {
@@ -497,8 +541,8 @@
       bootQuiz: state ? !!state.bootQuiz : true,
       autoQuiz: state ? !!state.autoQuiz : true,
       quietEnabled: state ? !!state.quietEnabled : false,
-      quietStart: $('inQuietStart').value || '22:00',
-      quietEnd: $('inQuietEnd').value || '07:00',
+      quietStart: quietValue('Start'),
+      quietEnd: quietValue('End'),
       subjects: $('inSubjects').value || '语文,数学,英语',
       grades: selectedGrades.length ? selectedGrades.join(',') : '1,2,3,4,5,6',
       port: parseInt($('inPort').value, 10) || 8899
@@ -510,6 +554,7 @@
     var np = $('inPinNew').value.trim();
     if (np) { body.pin = np; }
     api('/api/settings', { method: 'POST', body: JSON.stringify(body) }).then(function (r) {
+      quietEditing = false;   // 已落盘，恢复「状态刷新可同步时间」
       if (np) {
         // 服务端会踢掉所有旧会话，并给当前这台设备重发登录态
         if (pin) { pin = np; }
@@ -645,6 +690,10 @@
   };
 
   // ---- 初始化
+  initTimeSelects();
+  $('navRules').onclick = function () {
+    location.href = '/rules.html' + (pin ? '?pin=' + encodeURIComponent(pin) : '');
+  };
   loadState();
   setInterval(loadState, 15000);
 })();

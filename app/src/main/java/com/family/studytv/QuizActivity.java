@@ -23,6 +23,9 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -46,7 +49,7 @@ public class QuizActivity extends Activity {
     /** 当前显示在屏幕上的答题页，供手机后台「立即解锁」远程关闭 */
     private static volatile QuizActivity active = null;
 
-    /** 答错后停留多久再换新题（毫秒），留足看正确答案的时间 */
+    /** 答错后停留多久再换新题（毫秒），留足看正确答案的时间；规则可改 */
     private static final long REVEAL_MS = 4500;
     /** 通关后停留多久自动关闭 */
     private static final long PASS_MS = 900;
@@ -68,6 +71,29 @@ public class QuizActivity extends Activity {
     /** 上一轮答错后被换掉的题，用于下一组尽量避开 */
     private final Set<String> usedIds = new LinkedHashSet<String>();
 
+    // ---- 管理规则（每次进入答题页重新读一次，家长改完规则下一轮即生效）
+    private JSONObject cfg;
+    private String playMode = "round";
+    private double passRatio = 1.0;
+    private boolean shuffleOptions = true;
+    private boolean reviewEnabled = false;
+    private long revealMs = REVEAL_MS;
+    private float fontScale = 1f;
+    private int targetCount = 5;
+
+    /** 玩法计数：round 用组内正确率，streak 用连对数，count 用累计答对数 */
+    private int groupCorrect = 0;
+    private int groupAnswered = 0;
+    private int streak = 0;
+    private int totalCorrect = 0;
+    /** count 模式里答错后要重练的题 */
+    private final Set<String> retryIds = new LinkedHashSet<String>();
+    /** 孩子自己选的年级（childSelectLevel），null = 沿用后台范围 */
+    private Set<Integer> sessionGrades = null;
+    private boolean choosingGrade = false;
+    private float baseQuestionPx = 0f;
+    private float baseOptionPx = 0f;
+
     /** 隐藏手势的计数状态 */
     private int upHits = 0;
     private long lastUpAt = 0;
@@ -83,8 +109,8 @@ public class QuizActivity extends Activity {
     private final Runnable relaunch = new Runnable() {
         @Override
         public void run() {
-            if (passed || managing || isFinishing()) {
-                return;
+            if (passed || managing || isFinishing() || "practice".equals(playMode)) {
+                return;   // 自由练习允许孩子自己退出，不再拉回
             }
             // 屏幕熄了就不用拉回来，避免反复点亮屏幕
             if (!screenOn()) {
@@ -139,13 +165,100 @@ public class QuizActivity extends Activity {
         optionBox = (LinearLayout) findViewById(R.id.optionBox);
         quizScroll = (ScrollView) findViewById(R.id.quizScroll);
 
+        // 字号基准取布局里的原始值，规则里的 fontScale 在这个基础上缩放
+        baseQuestionPx = tvQuestion.getTextSize();
+        Button probe = (Button) getLayoutInflater().inflate(R.layout.item_option, optionBox, false);
+        baseOptionPx = probe.getTextSize();
+
         running = true;
         active = this;
         // 任何进入答题的路径都确保守护服务（含局域网后台）在跑
         GuardService.start(this);
         Prefs.setPending(true);
-        buildSession();
-        show(0);
+        loadRules();
+        if (needsGradeChoice()) {
+            showGradePicker();
+        } else {
+            buildSession();
+            show(0);
+        }
+    }
+
+    /** 每次进入答题页重读规则；家长在后台改完，下一轮弹题就按新规则来 */
+    private void loadRules() {
+        cfg = Rules.get(this);
+        playMode = cfg.optString("playMode", "round");
+        passRatio = Math.max(0.1d, Math.min(1.0d, cfg.optDouble("passRatio", 1.0d)));
+        shuffleOptions = cfg.optBoolean("shuffleOptions", true);
+        reviewEnabled = cfg.optBoolean("reviewEnabled", false);
+        revealMs = cfg.optInt("wrongReviewSeconds", 5) * 1000L;
+        if (revealMs <= 0L) {
+            revealMs = 600L;   // 0 = 不强制停留，但仍留一瞬看反馈
+        }
+        fontScale = cfg.optInt("fontScale", 100) / 100f;
+        targetCount = Rules.questionCount(this, cfg);
+    }
+
+    private List<Integer> allowedLevels() {
+        Set<Integer> g = Prefs.gradeSet();
+        List<Integer> out = new ArrayList<Integer>();
+        for (int i = Prefs.GRADE_MIN; i <= Prefs.GRADE_MAX; i++) {
+            if (g.isEmpty() || g.contains(i)) {
+                out.add(i);
+            }
+        }
+        return out;
+    }
+
+    private boolean needsGradeChoice() {
+        return cfg != null && cfg.optBoolean("childSelectLevel", false)
+                && allowedLevels().size() > 1;
+    }
+
+    /** 「孩子选择年级」：把选项区临时当作年级选择器，选完才开始本轮答题 */
+    private void showGradePicker() {
+        choosingGrade = true;
+        tvProgress.setText("选择年级");
+        tvSubject.setText("管理规则");
+        tvQuestion.setText("今天想做几年级的题？");
+        applyQuestionFont();
+        feedback(0, "");
+        optionBox.removeAllViews();
+        final List<Integer> levels = allowedLevels();
+        for (int k = 0; k < levels.size(); k++) {
+            final int g = levels.get(k);
+            Button b = (Button) getLayoutInflater().inflate(R.layout.item_option, optionBox, false);
+            applyOptionFont(b);
+            b.setText(optionText(b, k, g + " 年级", null));
+            b.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    sessionGrades = new LinkedHashSet<Integer>();
+                    sessionGrades.add(g);
+                    choosingGrade = false;
+                    buildSession();
+                    show(0);
+                }
+            });
+            optionBox.addView(b);
+        }
+        if (optionBox.getChildCount() > 0) {
+            optionBox.getChildAt(0).requestFocus();
+        }
+        scrollToTop();
+    }
+
+    private void applyQuestionFont() {
+        if (baseQuestionPx > 0f) {
+            tvQuestion.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX,
+                    baseQuestionPx * fontScale);
+        }
+    }
+
+    private void applyOptionFont(Button b) {
+        if (baseOptionPx > 0f) {
+            b.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, baseOptionPx * fontScale);
+        }
     }
 
     @Override
@@ -199,12 +312,38 @@ public class QuizActivity extends Activity {
     // ------------------------------------------------------------------ 组题
 
     private void buildSession() {
-        List<QuestionBank.Question> picked;
+        List<QuestionBank.Question> picked = new ArrayList<QuestionBank.Question>();
+        Set<String> seen = new LinkedHashSet<String>();
         try {
-            // usedIds 是上一组题，尽量避开，保证「换一组新题」不是原题重放
-            picked = QuestionBank.get().pick(Prefs.quizCount(), usedIds);
+            // 间隔重复 / 错题重练：一半名额优先给做错过的题，其余照常抽新题
+            if (reviewEnabled || !retryIds.isEmpty()) {
+                Set<String> ids = new LinkedHashSet<String>(retryIds);
+                if (reviewEnabled) {
+                    ids.addAll(Rules.wrongIds(this));
+                }
+                int want = Math.min(targetCount, Math.max(1, targetCount / 2));
+                for (QuestionBank.Question q : QuestionBank.get().byIds(ids, want)) {
+                    if (seen.add(q.id)) {
+                        picked.add(q);
+                    }
+                }
+            }
+            if (picked.size() < targetCount) {
+                Set<String> exclude = new LinkedHashSet<String>(usedIds);
+                for (QuestionBank.Question q : picked) {
+                    exclude.add(q.id);
+                }
+                // sessionGrades 非空时只从孩子选中的年级抽题
+                List<QuestionBank.Question> more = QuestionBank.get()
+                        .pick(targetCount - picked.size(), exclude, sessionGrades, null);
+                for (QuestionBank.Question q : more) {
+                    if (seen.add(q.id)) {
+                        picked.add(q);
+                    }
+                }
+            }
         } catch (Throwable e) {
-            picked = new ArrayList<QuestionBank.Question>();
+            // 题库异常时保留已经抽到的题；空列表由 show() 的 failOpen 兜底
         }
         items.clear();
         usedIds.clear();
@@ -214,16 +353,35 @@ public class QuizActivity extends Activity {
             it.q = q;
             List<String> opts = new ArrayList<String>(q.options);
             String correct = opts.get(q.answer);
-            Collections.shuffle(opts, rnd);          // 每次出题打乱选项，避免死记位置
+            if (shuffleOptions) {
+                Collections.shuffle(opts, rnd);   // 打乱选项，避免死记位置
+            }
             it.options = opts;
             it.answer = opts.indexOf(correct);
             items.add(it);
             usedIds.add(q.id);
         }
+        groupCorrect = 0;
+        groupAnswered = 0;
+        index = 0;
+        retryIds.clear();
     }
 
     private static String letter(int k) {
         return k < LETTERS.length ? LETTERS[k] : String.valueOf(k + 1);
+    }
+
+    private String progressText(int i) {
+        if ("streak".equals(playMode)) {
+            return "连对 " + streak + " / " + targetCount + " 题";
+        }
+        if ("count".equals(playMode)) {
+            return "累计答对 " + totalCorrect + " / " + targetCount + " 题";
+        }
+        if ("practice".equals(playMode)) {
+            return "自由练习 · 第 " + (i + 1) + " 题（按返回键结束）";
+        }
+        return "第 " + (i + 1) + " / " + items.size() + " 题";
     }
 
     private void show(final int i) {
@@ -233,13 +391,15 @@ public class QuizActivity extends Activity {
         }
         index = i;
         final Item it = items.get(i);
-        tvProgress.setText("第 " + (i + 1) + " / " + items.size() + " 题");
-        tvSubject.setText(it.q.subject);
+        tvProgress.setText(progressText(i));
+        tvSubject.setText(it.q.subject + (it.q.grade > 0 ? " · " + it.q.grade + " 年级" : ""));
         tvQuestion.setText(it.q.q);
+        applyQuestionFont();
 
         optionBox.removeAllViews();
         for (int k = 0; k < it.options.size(); k++) {
             Button b = (Button) getLayoutInflater().inflate(R.layout.item_option, optionBox, false);
+            applyOptionFont(b);   // 先定字号，optionText 才能按实际字号算徽标与悬挂缩进
             b.setText(optionText(b, k, it.options.get(k), null));
             final int choice = k;
             b.setOnClickListener(new View.OnClickListener() {
@@ -348,33 +508,76 @@ public class QuizActivity extends Activity {
     // ------------------------------------------------------------------ 判定
 
     private void answer(int choice) {
-        if (busy || passed || index >= items.size()) {
+        if (busy || passed || choosingGrade || index >= items.size()) {
             return;
         }
-        Item it = items.get(index);
+        final Item it = items.get(index);
+        groupAnswered++;
         if (choice == it.answer) {
-            int next = index + 1;
-            if (next >= items.size()) {
-                pass();
-            } else {
-                feedback(0xFF33D17A, "答对了！继续下一题");
-                show(next);
+            groupCorrect++;
+            streak++;
+            totalCorrect++;
+            Rules.clearWrong(this, it.q.id);   // 答对就把这题从错题库移出
+            feedback(0xFF33D17A, "答对了！继续下一题");
+            if ("streak".equals(playMode) && streak >= targetCount) {
+                pass("连对 " + targetCount + " 题，可以继续看电视啦");
+                return;
             }
-        } else {
-            busy = true;
-            revealAnswer(it, choice);
-            feedback(0xFFF2545B, "答错了！正确答案是 " + letter(it.answer)
-                    + "、" + it.options.get(it.answer) + "，看清后换一组新题");
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    busy = false;
-                    buildSession();   // 重新随机抽一组，不重复刚才这套题
-                    show(0);
-                    feedback(0xFF9A9AA2, "新的一组题，答对 5 道才能继续看电视");
-                }
-            }, REVEAL_MS);
+            if ("count".equals(playMode) && totalCorrect >= targetCount) {
+                pass("累计答对 " + targetCount + " 题，可以继续看电视啦");
+                return;
+            }
+            advance();
+            return;
         }
+
+        // 答错：揭示答案 + 记录错题；是否换组由玩法决定
+        busy = true;
+        streak = 0;
+        Rules.noteWrong(this, it.q.id);
+        if ("count".equals(playMode) || reviewEnabled) {
+            retryIds.add(it.q.id);
+        }
+        revealAnswer(it, choice);
+        feedback(0xFFF2545B, "答错了！正确答案是 " + letter(it.answer)
+                + "、" + it.options.get(it.answer) + "，看清答案再继续");
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                busy = false;
+                if ("round".equals(playMode) && passRatio >= 1.0d) {
+                    // 严格模式沿用题锁原有行为：答错就换一组全新的题重来
+                    rebuild("全对才能通关，换一组新题");
+                } else {
+                    advance();
+                }
+            }
+        }, revealMs);
+    }
+
+    /** 答完一题后推进：本组没完就下一题，到组尾按玩法判定是否通关 */
+    private void advance() {
+        if (index + 1 < items.size()) {
+            show(index + 1);
+            return;
+        }
+        if ("round".equals(playMode)) {
+            double ratio = groupAnswered > 0 ? (double) groupCorrect / groupAnswered : 0d;
+            if (ratio + 1e-9 >= passRatio) {
+                pass("这组通过，可以继续看电视啦");
+            } else {
+                rebuild("正确率没达标，再来一组");
+            }
+            return;
+        }
+        // streak / count / practice：换一组继续，累计进度不清零
+        rebuild("");
+    }
+
+    private void rebuild(String msg) {
+        buildSession();   // 重新随机抽一组，尽量不重复刚才这套题
+        show(0);
+        feedback(0xFF9A9AA2, msg);
     }
 
     /** 揭示答案：正确项标绿并加文字，选错项标红，其余变暗，同时锁住点击 */
@@ -413,18 +616,26 @@ public class QuizActivity extends Activity {
     }
 
     private void pass() {
+        pass("全部答对，可以继续看电视啦");
+    }
+
+    private void pass(String msg) {
+        if (passed) {
+            return;
+        }
         passed = true;
         running = false;
         long now = System.currentTimeMillis();
         Prefs.setPending(false);
         Prefs.setLastPassAt(now);
-        Prefs.setDueAt(now + Prefs.intervalMinutes() * 60000L);
+        long raw = now + Prefs.intervalMinutes() * 60000L;
+        Prefs.setDueAtAlignedTo(raw, Rules.alignDue(this, raw));
         try {
             startService(new Intent(this, GuardService.class).setAction(GuardService.ACTION_QUIZ_PASSED));
         } catch (Throwable ignored) {
         }
-        feedback(0xFF33D17A, "全部答对，可以继续看电视啦");
-        Toast.makeText(this, "全部答对！", Toast.LENGTH_SHORT).show();
+        feedback(0xFF33D17A, msg);
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
         // 通关即收工：关掉界面退回电视/桌面，守护服务继续在后台计时
         handler.postDelayed(new Runnable() {
             @Override
@@ -513,7 +724,8 @@ public class QuizActivity extends Activity {
     /** 题库为空时的兜底：不能把电视彻底锁死 */
     private void failOpen() {
         Prefs.setPending(false);
-        Prefs.setDueAt(System.currentTimeMillis() + Prefs.intervalMinutes() * 60000L);
+        long raw = System.currentTimeMillis() + Prefs.intervalMinutes() * 60000L;
+        Prefs.setDueAtAlignedTo(raw, Rules.alignDue(this, raw));
         try {
             startService(new Intent(this, GuardService.class).setAction(GuardService.ACTION_QUIZ_PASSED));
         } catch (Throwable ignored) {
@@ -527,7 +739,11 @@ public class QuizActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_ESCAPE) {
-            feedback(0xFFFFC24A, "答完题才能继续看电视哦");
+            if ("practice".equals(playMode) && !choosingGrade && !passed) {
+                pass("练习结束，可以继续看电视啦");
+            } else {
+                feedback(0xFFFFC24A, "答完题才能继续看电视哦");
+            }
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -573,6 +789,10 @@ public class QuizActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        feedback(0xFFFFC24A, "答完题才能继续看电视哦");
+        if ("practice".equals(playMode) && !choosingGrade && !passed) {
+            pass("练习结束，可以继续看电视啦");
+        } else {
+            feedback(0xFFFFC24A, "答完题才能继续看电视哦");
+        }
     }
 }
