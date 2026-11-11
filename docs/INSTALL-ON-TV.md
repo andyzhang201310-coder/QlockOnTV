@@ -7,7 +7,14 @@
 
 ## 0. 先说结论（最短路径）
 
-在仓库根目录执行：
+先确认手上有一个 APK。仓库不提交安装包（`dist/` 在 `.gitignore` 里），自己打一个：
+
+```bash
+gradle :app:assembleRelease        # 产物 app/build/outputs/apk/release/app-release.apk
+cp app/build/outputs/apk/release/app-release.apk dist/QlockOnTV-1.7.22.apk
+```
+
+或者把别人给你的 APK 用 `--apk <路径>` 指过去。然后在仓库根目录执行：
 
 ```bash
 python tools/tv_install.py --auto --pin <管理密码>
@@ -151,3 +158,4 @@ python tools/tv_install.py --auto --pin <管理密码>
 | 装完后台打不开 | 覆盖安装后进程被杀，重新在电视上打开一次「题锁」，或让脚本跑一次 `am start` |
 | 扫描结果里有 502 | 电脑开着代理，脚本已绕开；手工 curl 时加 `--noproxy "*"` |
 | 版本回读显示 `?` | 没传 `--pin`，或电视改过密码（出厂默认 1234） |
+| 脚本说「找不到 APK」 | 仓库里没有打包产物，先 `gradle :app:assembleRelease`，或用 `--apk` 指定路径 |
