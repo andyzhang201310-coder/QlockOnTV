@@ -264,8 +264,9 @@ public class HttpServer {
         }
 
         if (path.equals("/rules.html") || path.equals("/rules")) {
-            // 没登录同样只给登录页，规则接口也一并要求登录态
-            String asset = authed ? "rules.html" : "login.html";
+            // v1.7.16：管理规则不再是独立页面，统一进 admin.html 的「规则管理」分区。
+            // 旧书签 / 旧二维码仍指向这里，直接回同一份单页，老 hash（#time 等）由页面自己映射。
+            String asset = authed ? "admin.html" : "login.html";
             respond(socket, 200, "text/html; charset=utf-8", readAsset(asset).getBytes("UTF-8"));
             return;
         }
@@ -490,10 +491,24 @@ public class HttpServer {
                         || in.has("subjects") || in.has("grades")) {
                     Rules.syncFromPrefs(ctx);
                 }
-                // 参数变更后从当前时间重新计时（落在免打扰时段则顺延到时段结束）
-                Prefs.setDueAtAligned(System.currentTimeMillis() + Prefs.intervalMinutes() * 60000L);
+                // 管理台改成「改一项就自动保存」后，每次落盘都重置倒计时会让孩子刚放行就重新计时。
+                // keepDue=true 表示只更新参数、保留原有计时起点，仅把落在禁用时段的那一轮顺延。
+                boolean keepDue = in.optBoolean("keepDue", false);
+                if (keepDue) {
+                    long due = Prefs.dueAt();
+                    if (due > 0) {
+                        long aligned = Rules.alignDue(ctx, due);
+                        if (aligned != due) {
+                            Prefs.setDueAtAlignedTo(due, aligned);
+                        }
+                    }
+                } else {
+                    // 参数变更后从当前时间重新计时（落在免打扰时段则顺延到时段结束）
+                    Prefs.setDueAtAligned(System.currentTimeMillis() + Prefs.intervalMinutes() * 60000L);
+                }
                 Intent i = new Intent(ctx, GuardService.class);
-                i.setAction(portChanged ? GuardService.ACTION_RELOAD : GuardService.ACTION_RESCHEDULE);
+                i.setAction(portChanged ? GuardService.ACTION_RELOAD
+                        : (keepDue ? GuardService.ACTION_RULE_CHANGED : GuardService.ACTION_RESCHEDULE));
                 GuardService.start(ctx, i);
                 boolean locked = DeviceGuard.sync(ctx);
 

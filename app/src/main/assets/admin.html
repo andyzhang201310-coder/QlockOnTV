@@ -4,14 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="format-detection" content="telephone=no">
-<title>题锁 · 管理后台</title>
+<title>题锁 · 家长控制台</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <style>
-  /* v1.7.12：家长端改为米白底 + 纯白卡片 + 细边框的浅色管理台，
-     与 TV 端暖橙近黑形成「孩子端沉浸 / 家长端清爽」的分工。 */
+  /* v1.7.16：单页五分区的家长控制台。
+     左侧五项导航各对应右侧一整块内容，点一项只显示那一块（不再有「页 + 本页内容」两层），
+     所有设置改完自动保存，页面不再出现「保存设置」按钮。 */
   :root{
     --bg:#f7f8f5; --card:#ffffff; --line:#e6e8e3; --txt:#1f242b;
-    --sub:#6b7280; --accent:#b45309; --green:#15803d; --red:#dc2626; --amber:#b45309;
+    --sub:#6b7280; --accent:#b45309; --green:#15803d; --red:#dc2626;
     --soft:#f3f5f1; --ink:#20262e; --line-soft:#f0f1ee;
     --shadow:0 4px 18px rgba(24,32,40,.05);
   }
@@ -21,119 +22,180 @@
                      radial-gradient(circle at 94% 10%, rgba(45,150,110,.07), transparent 26%);
     background-attachment:fixed;
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
-    font-size:15px;line-height:1.6;padding:16px 14px 60px}
-  .brand{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-  .brand img{width:54px;height:54px;border-radius:16px;flex:0 0 auto;background:#fff;
-    border:1px solid var(--line);box-shadow:var(--shadow);padding:3px}
-  .brand .who{flex:1;min-width:0}
-  .brand .sub{margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  h1{font-size:18px;margin:0 0 4px;color:var(--txt);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .sub{color:var(--sub);font-size:12.5px;margin-bottom:14px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;
-    box-shadow:var(--shadow)}
-  .card h2{font-size:15px;margin:0 0 12px;color:var(--txt);font-weight:650;
-    padding-left:10px;border-left:3px solid var(--accent)}
-  .row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line-soft)}
-  .row:last-child{border-bottom:none}
-  .row span{color:var(--sub);font-size:13.5px}
-  .row b{font-weight:650;font-size:14px}
-  .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px}
-  .on{background:#e9f7ee;color:var(--green)}
-  .off{background:#fdeeee;color:var(--red)}
-  label.fl{display:block;color:var(--sub);font-size:13px;margin:12px 0 6px}
-  .grid2{display:flex;gap:10px}
-  .grid2>div{flex:1;min-width:0}
-  input[type=text],input[type=number],input[type=password],input[type=time],textarea,select{
-    width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;
-    color:var(--txt);padding:11px 12px;font-size:15px;font-family:inherit;outline:none;transition:.15s}
-  input[type=time]{color-scheme:light}
-  select{padding:10px 6px;text-align:center;cursor:pointer}
-  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.10)}
-  .navrule{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-  .navrule button{flex:0 0 auto;min-width:132px;font-weight:650}
-  .navrule .tip{margin:0;flex:1}
-  textarea{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.5;height:260px;resize:vertical}
-  .btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-  button{flex:1;min-width:110px;padding:12px 10px;border-radius:11px;border:1px solid var(--line);
-    background:#fff;color:var(--txt);font-size:14.5px;font-family:inherit;font-weight:500;transition:.15s}
-  button:active{background:var(--soft)}
-  button.primary{background:var(--ink);border-color:transparent;color:#fff;font-weight:650}
-  button.warn{background:#fff7ed;border-color:#fed7aa;color:var(--accent)}
-  button.unlock{background:#effaf3;border-color:#bbf0cf;color:var(--green);font-weight:650}
-  button.unlock:active{background:#dff3e7}
-  button.logout{flex:0 0 auto;min-width:0;padding:8px 13px;border-radius:10px;
-    font-size:13px;font-weight:500;background:var(--soft);color:var(--sub)}
-  button.logout:active{background:#e9ece6;color:var(--txt)}
-  .switch{position:relative;width:52px;height:29px;border-radius:20px;background:#d9dcd6;transition:.2s}
-  .switch.on{background:#e08a1e}
-  .switch i{position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;background:#fff;
-    box-shadow:0 1px 3px rgba(0,0,0,.18);transition:.2s}
-  .switch.on i{left:26px}
-  .tip{color:var(--sub);font-size:12.5px;line-height:1.7;margin-top:10px}
-  .tip code{background:var(--soft);padding:1px 5px;border-radius:4px;color:var(--accent)}
-  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
-    background:var(--ink);border:1px solid var(--ink);color:#fff;padding:11px 20px;border-radius:24px;
-    font-size:14px;opacity:0;transition:.25s;pointer-events:none;max-width:88%;text-align:center;z-index:99;
-    box-shadow:0 10px 30px rgba(24,32,40,.22)}
-  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .stat{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .chip{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--sub)}
-  .chip b{color:var(--txt)}
-  .grades{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-  .grades button{flex:0 0 auto;min-width:0;padding:9px 13px;border-radius:10px;font-size:13.5px;line-height:1.25}
-  .grades button .gn{display:block;font-size:11px;color:var(--sub);font-weight:400}
-  .grades button.on{background:#e9f7ee;border-color:#bbf0cf;color:var(--green)}
-  .grades button.on .gn{color:#4b8a68}
-
-  /* ---------- v1.7.14 两栏管理台 ----------
-     >=1024: 固定侧栏 238px + 内容区宽屏双列；768-1023: 窄侧栏 + 单列；
-     <768: 侧栏变顶部横滑导航，页签保留在内容区。 */
-  body{padding:0}
+    font-size:15px;line-height:1.6;padding:0}
   .shell{display:flex;min-height:100vh;align-items:flex-start}
-  .sidebar{width:238px;flex:0 0 238px;position:sticky;top:0;height:100vh;
-    background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;
-    padding:20px 14px 14px;z-index:20}
+
+  /* ---------------- 侧栏 ---------------- */
+  .sidebar{width:238px;flex:0 0 238px;position:sticky;top:0;height:100vh;background:#fff;
+    border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 14px 14px;z-index:20}
   .sb-brand{display:flex;align-items:center;gap:10px;padding:0 6px 18px;
-    border-bottom:1px solid var(--line-soft);margin-bottom:10px}
+    border-bottom:1px solid var(--line-soft);margin-bottom:12px}
   .sb-brand img{width:40px;height:40px;border-radius:12px;background:#fff;
     border:1px solid var(--line);padding:2px;flex:0 0 auto}
   .sb-brand b{display:block;font-size:15px;line-height:1.25}
   .sb-brand small{display:block;color:var(--sub);font-size:11.5px}
   .sb-nav{flex:1;overflow-y:auto;overflow-x:hidden}
-  .sb-group{color:var(--sub);font-size:11px;letter-spacing:.08em;padding:12px 10px 5px;font-weight:600}
-  .sb-item{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--txt);
-    font-size:13.5px;padding:9px 10px;border-radius:9px;margin:1px 0;white-space:nowrap}
+  .sb-item{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--txt);
+    font-size:14px;padding:10px 11px;border-radius:10px;margin:2px 0;white-space:nowrap;
+    font-weight:500;cursor:pointer}
   .sb-item:hover{background:var(--soft)}
-  .sb-item.on{background:#fff4e5;color:var(--accent);font-weight:650}
-  .sb-item .ic{width:16px;text-align:center;font-size:14px;opacity:.75;flex:0 0 auto}
-  .sb-item.sub{padding-left:30px;font-size:13px;color:var(--sub)}
-  .sb-item.sub.on{color:var(--accent)}
+  .sb-item .ic{width:17px;text-align:center;font-size:14px;opacity:.7;flex:0 0 auto}
+  .sb-item .tx{overflow:hidden;text-overflow:ellipsis}
+  .sb-item.on{background:var(--ink);color:#fff;font-weight:650}
+  .sb-item.on .ic{opacity:1}
   .sb-foot{border-top:1px solid var(--line-soft);padding-top:12px;margin-top:8px}
   .sb-foot .dev{color:var(--sub);font-size:11.5px;padding:0 6px 8px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sb-foot button{width:100%;min-width:0;padding:9px;font-size:13px;font-weight:500;
     background:var(--soft);border-color:transparent;color:var(--sub)}
+
+  /* ---------------- 内容区 ---------------- */
   .content{flex:1;min-width:0;padding:22px 28px 64px}
-  .page{max-width:1160px;margin:0 auto}
-  .page.narrow{max-width:900px}
+  .page{max-width:1100px;margin:0 auto}
   .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
-  .topbar h1{font-size:20px;margin:0 0 3px}
-  .topbar .sub{margin:0}
+  .topbar h1{font-size:20px;margin:0 0 3px;font-weight:700}
+  .sub{color:var(--sub);font-size:12.5px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tb-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}
   .conn{display:inline-flex;align-items:center;gap:6px;background:#e9f7ee;color:var(--green);
     border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;white-space:nowrap}
   .conn.bad{background:#fdeeee;color:var(--red)}
-  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
-  .cards>.card{margin-bottom:0}
-  .cards>.wide{grid-column:1/-1}
-  .foot-tip{margin-top:18px}
-  .summary .row b{text-align:right;max-width:60%;font-weight:600}
+  .crumb{font-size:12px;color:var(--sub);background:#fff;border:1px solid var(--line);
+    border-radius:20px;padding:4px 11px;white-space:nowrap}
   @media(min-width:768px){
-    .tabs{display:none}
+    .topbar{position:sticky;top:0;z-index:10;background:var(--bg);
+      padding:10px 0;margin:-10px 0 10px;border-bottom:1px solid var(--line-soft)}
   }
+
+  .view{display:none}
+  .view.on{display:block}
+
+  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+  .cards>.wide{grid-column:1/-1}
+  .stack{display:grid;grid-template-columns:1fr;gap:14px;max-width:900px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;
+    box-shadow:var(--shadow)}
+  .card h2{font-size:15px;margin:0 0 12px;color:var(--txt);font-weight:650;
+    padding-left:10px;border-left:3px solid var(--accent)}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:10px 0;border-bottom:1px solid var(--line-soft)}
+  .row:last-child{border-bottom:none}
+  .row>span{color:var(--sub);font-size:13.5px;min-width:0}
+  .row>b{font-weight:650;font-size:14px;text-align:right}
+  .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;white-space:nowrap}
+  .badge.on,.badge.ok{background:#e9f7ee;color:var(--green)}
+  .badge.off,.badge.err{background:#fdeeee;color:var(--red)}
+  .badge.wait{background:#fff5e8;color:var(--accent)}
+  label.fl{display:block;color:var(--sub);font-size:13px;margin:14px 0 6px}
+  .grid2{display:flex;gap:10px}
+  .grid2>div{flex:1;min-width:0}
+  input[type=text],input[type=number],input[type=password],textarea,select{
+    width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;
+    color:var(--txt);padding:10px 12px;font-size:15px;font-family:inherit;outline:none;
+    transition:.15s;min-width:0}
+  select{cursor:pointer}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.10)}
+  textarea{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.5;height:240px;resize:vertical}
+  .btns{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  button{flex:1;min-width:110px;padding:11px 10px;border-radius:11px;border:1px solid var(--line);
+    background:#fff;color:var(--txt);font-size:14.5px;font-family:inherit;font-weight:500;
+    transition:.15s;cursor:pointer}
+  button:active{background:var(--soft)}
+  button.primary{background:var(--ink);border-color:transparent;color:#fff;font-weight:650}
+  button.warn{background:#fff7ed;border-color:#fed7aa;color:var(--accent)}
+  button.unlock{background:#effaf3;border-color:#bbf0cf;color:var(--green);font-weight:650}
+  button.unlock:active{background:#dff3e7}
+  .switch{position:relative;width:52px;height:29px;border-radius:20px;background:#d9dcd6;
+    transition:.2s;flex:0 0 auto;cursor:pointer}
+  .switch.on{background:#e08a1e}
+  .switch i{position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:.2s}
+  .switch.on i{left:26px}
+  .tip{color:var(--sub);font-size:12.5px;line-height:1.75;margin-top:10px}
+  .tip code{background:var(--soft);padding:1px 5px;border-radius:4px;color:var(--accent)}
+  .stat{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chip{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:5px 10px;
+    font-size:12.5px;color:var(--sub)}
+  .chip b{color:var(--txt)}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:11px 14px;background:#fff;border:1px solid var(--line);border-radius:13px;
+    box-shadow:var(--shadow);margin-bottom:14px}
+  .bar .txt{color:var(--sub);font-size:12.5px;flex:1;min-width:0}
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);border:1px solid var(--ink);color:#fff;padding:11px 20px;border-radius:24px;
+    font-size:14px;opacity:0;transition:.25s;pointer-events:none;max-width:88%;text-align:center;
+    z-index:99;box-shadow:0 10px 30px rgba(24,32,40,.22)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ---------------- 规则管理里的四段（内容区分段，不是左侧导航） ---------------- */
+  .seg{display:flex;gap:5px;background:#ecefe9;border:1px solid var(--line);border-radius:13px;
+    padding:5px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;max-width:900px}
+  .seg::-webkit-scrollbar{display:none}
+  .seg button{flex:0 0 auto;min-width:0;border:0;background:transparent;border-radius:9px;
+    padding:9px 14px;font-size:13.5px;color:var(--sub);font-weight:500;white-space:nowrap}
+  .seg button.on{background:#fff;color:var(--txt);font-weight:650;box-shadow:0 1px 5px rgba(24,32,40,.08)}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:14px;
+    box-shadow:var(--shadow);overflow:hidden;max-width:900px}
+  .panel>h2{font-size:15px;margin:0;padding:13px 16px;border-bottom:1px solid var(--line-soft);
+    font-weight:650;padding-left:13px;border-left:3px solid var(--accent)}
+  .panel .desc{color:var(--sub);font-size:12.5px;padding:10px 16px 0;margin:0}
+  .panel .body{padding:4px 16px 12px}
+  .f{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 0;border-bottom:1px solid var(--line-soft)}
+  .f:last-child{border-bottom:0}
+  .f .lbl{min-width:0;flex:1}
+  .f .lbl b{display:block;font-size:14px;font-weight:600}
+  .f .lbl small{display:block;color:var(--sub);font-size:12px;line-height:1.6;margin-top:2px}
+  .f .ctl{flex:0 0 auto;display:flex;align-items:center;gap:6px}
+  .stepper{display:flex;align-items:center;gap:5px}
+  .stepper button{width:31px;height:31px;min-width:0;padding:0;border:1px solid var(--line);
+    border-radius:8px;background:#fff;color:var(--txt);font-size:17px;line-height:1}
+  .stepper input{width:60px;text-align:center;padding:6px 4px}
+  .unit{color:var(--sub);font-size:12.5px;white-space:nowrap}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end;max-width:66%}
+  .cchip{cursor:pointer;user-select:none;border:1px solid var(--line);background:#fff;color:var(--sub);
+    border-radius:9px;padding:6px 10px;font-size:13px;line-height:1.3}
+  .cchip b{color:var(--sub);font-weight:500;font-size:11px;display:block}
+  .cchip.on{background:#fff5e8;border-color:#f4c68c;color:var(--accent)}
+  .cchip.on b{color:#c07a28}
+  .note{background:#fffaf1;border:1px solid #f6e2c3;border-radius:11px;padding:11px 13px;
+    color:#7c5a22;font-size:12.5px;line-height:1.75;margin:12px 0 2px;max-width:900px}
+  .note.gray{background:var(--soft);border-color:var(--line);color:var(--sub)}
+  .tpl{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 4px}
+  .tpl button{flex:0 0 auto;min-width:0;padding:6px 11px;border-radius:8px;border:1px solid var(--line);
+    background:#fff;color:var(--sub);font-size:12.5px}
+  .week-wrap{overflow-x:auto;padding:6px 0 4px;-webkit-overflow-scrolling:touch}
+  .week{min-width:600px}
+  .week-scale{display:flex;justify-content:space-between;color:var(--sub);font-size:11px;
+    margin-left:42px;margin-bottom:4px}
+  .week-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+  .week-row .day{width:36px;flex:0 0 auto;font-size:12px;color:var(--sub);text-align:left;
+    background:transparent;border:0;padding:0;min-width:0}
+  .cells{display:flex;gap:1px;flex:1}
+  .cell{height:18px;flex:1;min-width:9px;border-radius:2px;background:#edf0eb;border:0;padding:0;min-width:9px}
+  .cell.on{background:#e89a35}
+  .cell.hour{border-left:1px solid #dcdfd8}
+  .win{border:1px solid var(--line);border-radius:11px;padding:10px;margin-top:10px;background:#fcfdfb}
+  .win .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .win input[type=text]{flex:1;min-width:110px;padding:7px 9px}
+  .win .del{border:1px solid #f2cccc;background:#fff6f6;color:var(--red);border-radius:8px;
+    padding:6px 10px;font-size:12.5px;flex:0 0 auto;min-width:0}
+  .win .days{display:flex;gap:4px;flex-wrap:wrap;margin:9px 0 7px}
+  .win .days button{width:32px;min-width:0;padding:5px 0;border:1px solid var(--line);border-radius:7px;
+    background:#fff;color:var(--sub);font-size:12.5px;flex:0 0 auto}
+  .win .days button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .win .rng{display:flex;align-items:center;gap:5px;color:var(--sub);font-size:12.5px;flex-wrap:wrap}
+  .win select{padding:5px 6px;font-size:13px;width:auto}
+  .add{margin-top:10px;width:100%;border:1px dashed #d7c6a6;background:#fffaf1;color:var(--accent);
+    border-radius:10px;padding:9px;font-size:13.5px}
+  .hidden{display:none!important}
+
+  /* ---------------- 响应式 ---------------- */
   @media(max-width:1023px){
-    .sidebar{width:196px;flex-basis:196px;padding:16px 10px 12px}
+    .sidebar{width:200px;flex-basis:200px;padding:16px 10px 12px}
     .content{padding:18px 18px 54px}
     .cards{grid-template-columns:1fr}
+    .chips{max-width:100%}
   }
   @media(max-width:767px){
     .shell{display:block}
@@ -143,55 +205,19 @@
     .sb-brand{border:0;margin:0;padding:0;flex:0 0 auto}
     .sb-brand img{width:32px;height:32px}
     .sb-brand b,.sb-brand small{display:none}
-    .sb-nav{display:flex;flex-direction:row;gap:4px;overflow-x:auto;overflow-y:hidden;
-      flex:1;scrollbar-width:none}
+    .sb-nav{display:flex;flex-direction:row;gap:4px;overflow-x:auto;overflow-y:hidden;flex:1;
+      scrollbar-width:none}
     .sb-nav::-webkit-scrollbar{display:none}
-    .sb-group,.sb-item.sub{display:none}
-    .sb-item{flex:0 0 auto;margin:0;padding:7px 11px;font-size:13px}
+    .sb-item{flex:0 0 auto;margin:0;padding:7px 11px;font-size:13px;gap:0}
     .sb-item .ic{display:none}
     .sb-foot{border:0;margin:0;padding:0;flex:0 0 auto}
     .sb-foot .dev{display:none}
     .sb-foot button{width:auto;padding:7px 10px;font-size:12.5px}
     .content{padding:14px 12px 50px}
     .topbar h1{font-size:18px}
-    .tabs{display:flex;overflow-x:auto;gap:4px;padding:4px;scrollbar-width:none}
-    .tabs::-webkit-scrollbar{display:none}
-    .tabs button{flex:0 0 auto;min-width:0;padding:8px 14px}
-  }
-
-
-  /* ---------- v1.7.15 左侧导航与右侧内容一一对应 ---------- */
-  .sb-group.first{padding-top:2px}
-  .sb-item .tx{overflow:hidden;text-overflow:ellipsis}
-  .sb-item.page{font-weight:600}
-  .sb-item.page.on{background:var(--ink);color:#fff}
-  .sb-item.page.on .ic{opacity:1}
-  .sb-item.sec{position:relative;padding-left:29px;font-size:13px;color:var(--sub)}
-  .sb-item.sec::before{content:"";position:absolute;left:15px;top:50%;width:5px;height:5px;
-    margin-top:-2.5px;border-radius:50%;background:#d3d7d0;transition:.15s}
-  .sb-item.sec:hover{color:var(--txt)}
-  .sb-item.sec.on{background:#fff4e5;color:var(--accent);font-weight:650}
-  .sb-item.sec.on::before{background:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.13)}
-  .tb-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}
-  .crumb{font-size:12px;color:var(--sub);background:#fff;border:1px solid var(--line);
-    border-radius:20px;padding:4px 11px;white-space:nowrap}
-  .cards>.card,.panel{scroll-margin-top:88px}
-  @media(min-width:768px){
-    .topbar{position:sticky;top:0;z-index:10;background:var(--bg);
-      padding:10px 0;margin:-10px 0 6px;border-bottom:1px solid var(--line-soft)}
-  }
-  .card.flash{animation:secflash 1.2s ease-out}
-  @keyframes secflash{
-    0%{box-shadow:0 0 0 3px rgba(180,83,9,.38),0 4px 18px rgba(24,32,40,.05)}
-    100%{box-shadow:0 4px 18px rgba(24,32,40,.05)}}
-  @media(max-width:767px){
-    .sb-item.sec{padding-left:11px}
-    .sb-item.sec::before{display:none}
-    .sb-item.sec.first{border-left:1px solid var(--line);margin-left:4px;border-radius:0 9px 9px 0}
-    .tabs{display:none!important}
-    .tb-right{gap:4px}
-    .crumb{font-size:11px;padding:3px 9px}
-    .cards>.card,.panel{scroll-margin-top:66px}
+    .f{flex-wrap:wrap}
+    .f .ctl{width:100%;justify-content:flex-end}
+    .chips{max-width:100%;justify-content:flex-start}
   }
 </style>
 </head>
@@ -203,198 +229,351 @@
     <div><b>题锁</b><small>家长控制台</small></div>
   </div>
   <nav class="sb-nav">
-    <div class="sb-group first">页面</div>
-    <a class="sb-item page on" href="/"><span class="ic">▦</span><span class="tx">管理首页</span></a>
-    <a class="sb-item page" href="/rules.html"><span class="ic">◈</span><span class="tx">管理规则</span></a>
-    <div class="sb-group">本页内容</div>
-    <a class="sb-item sec first on" href="#sec-status" data-sec="sec-status"><span class="tx">运行状态</span></a>
-    <a class="sb-item sec" href="#sec-rules" data-sec="sec-rules"><span class="tx">学习规则</span></a>
-    <a class="sb-item sec" href="#sec-quick" data-sec="sec-quick"><span class="tx">快捷操作</span></a>
-    <a class="sb-item sec" href="#sec-device" data-sec="sec-device"><span class="tx">设备与账号</span></a>
-    <a class="sb-item sec" href="#sec-security" data-sec="sec-security"><span class="tx">防卸载保护</span></a>
-    <a class="sb-item sec" href="#sec-bank" data-sec="sec-bank"><span class="tx">题库编辑</span></a>
+    <a class="sb-item on" href="#status" data-view="status"><span class="ic">◎</span><span class="tx">运行状态</span></a>
+    <a class="sb-item" href="#quick" data-view="quick"><span class="ic">⚡</span><span class="tx">快捷操作</span></a>
+    <a class="sb-item" href="#bank" data-view="bank"><span class="ic">▤</span><span class="tx">题库管理</span></a>
+    <a class="sb-item" href="#rules" data-view="rules"><span class="ic">◈</span><span class="tx">规则管理</span></a>
+    <a class="sb-item" href="#system" data-view="system"><span class="ic">⚙</span><span class="tx">系统设置</span></a>
   </nav>
   <div class="sb-foot">
     <div class="dev" id="sbDevice">正在连接电视…</div>
     <button id="btnLogout">退出登录</button>
   </div>
 </aside>
+
 <div class="content">
 <div class="page">
   <div class="topbar">
-    <div><h1>管理后台</h1><p class="sub" id="subline">正在连接电视…</p></div>
-    <div class="tb-right"><span class="crumb" id="crumb">管理首页 / 运行状态</span><span class="conn" id="connBadge">● 已连接</span></div>
-  </div>
-<div class="cards">
-
-<div class="card wide" id="pinWarn" style="display:none;border-color:#fed7aa;background:#fff7ed">
-  <div style="color:var(--accent);font-size:14px;font-weight:600">管理密码仍是默认的 1234</div>
-  <div class="tip" style="margin-top:6px;color:#8a6a3a">
-    知道这个密码的人都能改题库、关掉拦截。请立刻到「设备与账号 → 管理密码」改成只有你知道的密码。
-  </div>
-</div>
-
-<div class="card" id="sec-status">
-  <h2>运行状态</h2>
-  <div class="row"><span>拦截状态</span><b id="stEnabled">—</b></div>
-  <div class="row"><span>当前弹窗</span><b id="stQuiz">—</b></div>
-  <div class="row"><span>弹题间隔</span><b id="stInterval">—</b></div>
-  <div class="row"><span>每次题量</span><b id="stCount">—</b></div>
-  <div class="row"><span>自动弹题</span><b id="stAuto">—</b></div>
-  <div class="row"><span>管理规则</span><b id="stRules">—</b></div>
-  <div class="row"><span>下次弹题</span><b id="stDue">—</b></div>
-  <div class="row"><span>题库总数</span><b id="stBank">—</b></div>
-  <div class="stat" id="stSubjects"></div>
-  <div id="stErr" class="tip" style="color:var(--red)"></div>
-</div>
-
-<div class="card summary" id="sec-rules">
-  <h2>学习规则</h2>
-  <div class="row"><span>答题玩法</span><b id="sumMode">—</b></div>
-  <div class="row"><span>题量 / 通过正确率</span><b id="sumCount">—</b></div>
-  <div class="row"><span>通关后放行</span><b id="sumReward">—</b></div>
-  <div class="row"><span>出题范围</span><b id="sumScope">—</b></div>
-  <div class="row"><span>时间计划</span><b id="sumTime">—</b></div>
-  <div class="tip" id="sumStat" style="margin-top:8px">—</div>
-  <div class="btns" style="margin-top:6px">
-    <button class="primary" id="btnOpenRules">前往管理规则修改 →</button>
-  </div>
-  <div class="tip" style="margin-top:4px">
-    题量、放行时长、科目、年级、时间计划统一在「管理规则」里设置；本页不再重复提供，改动会自动同步。
-  </div>
-</div>
-
-<div class="card" id="sec-quick">
-  <h2>快捷操作</h2>
-  <div class="btns" style="margin-top:0">
-    <button id="btnTest">立即弹一次题</button>
-    <button id="btnReschedule">从现在重新计时</button>
-  </div>
-  <div class="btns" style="margin-top:10px">
-    <button class="unlock" id="btnUnlock">立即解锁</button>
-  </div>
-  <div class="tip" style="margin-top:6px">
-    「立即解锁」= 家长远程放行：关掉电视上正在显示的答题弹窗，孩子可以正常看电视；下一轮从现在重新计时。
-  </div>
-</div>
-
-<div class="card" id="sec-device">
-  <h2>设备与账号</h2>
-  <div class="row">
-    <span>启用拦截</span>
-    <div class="switch" id="swEnabled"><i></i></div>
-  </div>
-  <div class="row" style="margin-top:12px">
-    <span>自动弹题总开关（关掉后永久不再自动弹）</span>
-    <div class="switch on" id="swAutoQuiz"><i></i></div>
-  </div>
-  <div class="tip" style="margin-top:4px">
-    关掉后：到点不弹、开机不弹、待机中的电视也不会被叫醒；「立即弹一次题」仍可手动催。重启、升级都保持关闭，想恢复再打开即可。
-  </div>
-  <div class="row" style="margin-top:10px">
-    <span>免打扰时段（这段时间内绝不弹题、不唤醒电视）</span>
-    <div class="switch" id="swQuiet"><i></i></div>
-  </div>
-  <div class="grid2">
-    <div>
-      <label class="fl">开始（时 : 分）</label>
-      <div class="grid2" style="gap:6px">
-        <select id="inQuietStartH"></select><select id="inQuietStartM"></select>
-      </div>
-    </div>
-    <div>
-      <label class="fl">结束（时 : 分）</label>
-      <div class="grid2" style="gap:6px">
-        <select id="inQuietEndH"></select><select id="inQuietEndM"></select>
-      </div>
+    <div><h1 id="pageTitle">运行状态</h1><p class="sub" id="subline">正在连接电视…</p></div>
+    <div class="tb-right">
+      <span class="crumb" id="crumb">家长控制台 / 运行状态</span>
+      <span class="conn" id="connBadge">● 已连接</span>
     </div>
   </div>
-  <div class="tip" style="margin-top:4px">
-    跨午夜也可以（如 22:30 → 06:30）。时段内到点的答题会顺延到结束时刻，并且闹钟改为「不唤醒设备」——
-    电视夜里待机不会再自己亮起来；白天开机后会自动补上欠的那一次。<br>
-    用「时 + 分」两个下拉代替原生时间控件：部分手机 / 电视浏览器点不开原生控件，且每 15 秒的状态刷新会把还没保存的时间冲掉。
-  </div>
-  <div class="row" style="margin-top:12px">
-    <span>开机立即弹一次题（防关机逃避）</span>
-    <div class="switch on" id="swBoot"><i></i></div>
-  </div>
-  <label class="fl">管理密码（至少 4 位，留空表示不修改）</label>
-  <input type="password" id="inPinNew" placeholder="留空则不修改">
-  <label class="fl">后台端口（改完需重新扫码，1–65500）</label>
-  <input type="number" id="inPort" min="1024" max="65500" value="8899">
-  <div class="btns">
-    <button class="primary" id="btnSaveSettings">保存设置</button>
-  </div>
-</div>
 
-<div class="card wide" id="sec-security">
-  <h2>防卸载保护</h2>
-  <div class="row"><span>保护状态</span><b id="stGuard">—</b></div>
-  <div class="row"><span>设备管理员</span><b id="stAdmin">—</b></div>
-  <div class="row"><span>设备所有者</span><b id="stOwner">—</b></div>
-  <div class="row"><span>系统卸载锁</span><b id="stBlock">—</b></div>
-  <div class="row"><span>卸载码</span><b id="stCode">—</b></div>
-  <div class="row" style="margin-top:6px">
-    <span>开启防卸载保护</span>
-    <div class="switch on" id="swGuard"><i></i></div>
+  <div class="card" id="pinWarn" style="display:none;border-color:#fed7aa;background:#fff7ed;margin-bottom:14px">
+    <div style="color:var(--accent);font-size:14px;font-weight:600">管理密码仍是默认的 1234</div>
+    <div class="tip" style="margin-top:6px;color:#8a6a3a">
+      知道这个密码的人都能改题库、关掉拦截。请立刻到「系统设置 → 管理密码」改成只有你知道的密码。
+    </div>
   </div>
-  <div class="row">
-    <span>同时禁止「恢复出厂设置」</span>
-    <div class="switch" id="swFactory"><i></i></div>
-  </div>
-  <label class="fl">当前卸载码（出厂默认 246810）</label>
-  <input type="password" id="inOldCode" placeholder="验证身份用">
-  <label class="fl">新卸载码（4–12 位数字或字母，留空表示不修改）</label>
-  <input type="text" id="inNewCode" placeholder="例如 839201">
-  <div class="btns">
-    <button class="primary" id="btnSaveCode">修改卸载码</button>
-  </div>
-  <div class="tip">
-    保护分两级：<br>
-    · <b>设备管理员</b>（电视端点「开启防卸载」即自动激活，不用去设置里找入口——电视一般没有这一项）：孩子从系统设置卸载时，会先被要求「停用设备管理员」，普通小孩走不完。<br>
-    · <b>设备所有者</b>（电脑 adb 执行一次）：系统卸载按钮直接置灰，必须回到电视输入卸载码才能卸载。<br>
-    电视拒绝自动激活时，用下面这条命令（不要求电视上没登录账号）：
-  </div>
-  <div class="tip" id="activeAdminCmd" style="word-break:break-all;color:var(--accent)"></div>
-  <div class="btns">
-    <button id="btnCopyActiveCmd">复制基础保护命令</button>
-  </div>
-  <div class="tip">当前设备的所有者命令（彻底锁定，要求电视上没登录账号）：</div>
-  <div class="tip" id="ownerCmd" style="word-break:break-all;color:var(--accent)"></div>
-  <div class="btns">
-    <button id="btnCopyCmd">复制命令</button>
-  </div>
-</div>
 
-<div class="card wide" id="sec-bank">
-  <h2>题库编辑</h2>
-  <div class="tip" style="margin-top:0">
-    格式：<code>{"questions":[{"subject":"语文","grade":3,"q":"题干","options":["正确","干扰1","干扰2","干扰3"],"answer":0}]}</code><br>
-    <code>grade</code> 是年级（1–6），不写则任何年级都可能出到；<code>answer</code> 是正确选项下标（从 0 开始），程序每次出题会自动打乱选项顺序。
-  </div>
-  <div class="btns">
-    <button id="btnReloadBank">载入当前题库</button>
-    <button id="btnFormat">格式化</button>
-    <button id="btnRestore">恢复上次备份</button>
-  </div>
-  <label class="fl">题库 JSON</label>
-  <textarea id="txtBank" spellcheck="false" placeholder="点击上方「载入当前题库」"></textarea>
-  <div class="btns">
-    <button class="primary" id="btnSaveBank">保存题库</button>
-  </div>
-  <label class="fl">或从网址导入题库（http/https，返回同样格式的 JSON）</label>
-  <input type="text" id="inImportUrl" placeholder="http://192.168.1.10:8000/questions.json">
-  <div class="btns">
-    <button class="warn" id="btnImport">从网址导入</button>
-  </div>
-</div>
+  <!-- ============================ 1. 运行状态 ============================ -->
+  <section class="view on" id="view-status">
+    <div class="cards">
+      <div class="card wide">
+        <h2>运行状态</h2>
+        <div class="row"><span>拦截状态</span><b id="stEnabled">—</b></div>
+        <div class="row"><span>当前弹窗</span><b id="stQuiz">—</b></div>
+        <div class="row"><span>自动弹题</span><b id="stAuto">—</b></div>
+        <div class="row"><span>下次弹题</span><b id="stDue">—</b></div>
+        <div class="row"><span>答题玩法</span><b id="stRules">—</b></div>
+        <div class="row"><span>今日已弹</span><b id="stRounds">—</b></div>
+        <div class="row"><span>错题库</span><b id="stWrong">—</b></div>
+        <div class="row"><span>题库总数</span><b id="stBank">—</b></div>
+        <div class="row"><span>防卸载保护</span><b id="stGuardMini">—</b></div>
+        <div class="stat" id="stSubjects"></div>
+        <div id="stErr" class="tip" style="color:var(--red)"></div>
+      </div>
+    </div>
+    <div class="tip">
+      · 电视和手机必须连接同一个 WiFi / 路由器。<br>
+      · 状态每 15 秒自动刷新一次，无需手动刷新页面。
+    </div>
+  </section>
 
-</div><!-- /.cards -->
-<div class="tip foot-tip">
-  · 电视和手机必须连接同一个 WiFi / 路由器。<br>
-  · 题库支持 2–6 个选项，推荐 4 个。<br>
-  · 登录状态保留 12 小时，超过需重新输入管理密码。
-</div>
+  <!-- ============================ 2. 快捷操作 ============================ -->
+  <section class="view" id="view-quick">
+    <div class="cards">
+      <div class="card">
+        <h2>自动弹题总开关</h2>
+        <div class="row">
+          <span>是否开启自动弹题</span>
+          <div class="switch on" id="swAutoQuiz"><i></i></div>
+        </div>
+        <div class="tip">
+          关掉后：到点不弹、开机不弹、待机中的电视也不会被叫醒；「立即弹一次题」仍可手动催。
+          重启、升级都保持关闭，想恢复再打开即可。开关改完自动保存。
+        </div>
+      </div>
+      <div class="card">
+        <h2>立即操作</h2>
+        <div class="btns" style="margin-top:0">
+          <button id="btnTest">立即弹一次题</button>
+          <button id="btnReschedule">从现在重新计时</button>
+        </div>
+        <div class="btns">
+          <button class="unlock" id="btnUnlock">立即解锁</button>
+        </div>
+        <div class="tip">
+          「立即解锁」= 家长远程放行：关掉电视上正在显示的答题弹窗，孩子可以正常看电视；下一轮从现在重新计时。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 3. 题库管理 ============================ -->
+  <section class="view" id="view-bank">
+    <div class="bar">
+      <div class="txt" id="bankStat">题库共 — 题</div>
+      <span class="badge ok" id="bankBadge">已载入</span>
+    </div>
+    <div class="cards">
+      <div class="card wide">
+        <h2>题库编辑</h2>
+        <div class="tip" style="margin-top:0">
+          格式：<code>{"questions":[{"subject":"语文","grade":3,"q":"题干","options":["正确","干扰1","干扰2","干扰3"],"answer":0}]}</code><br>
+          <code>grade</code> 是年级（1–6），不写则任何年级都可能出到；<code>answer</code> 是正确选项下标（从 0 开始），程序每次出题会自动打乱选项顺序。
+        </div>
+        <div class="btns">
+          <button id="btnReloadBank">载入当前题库</button>
+          <button id="btnFormat">格式化</button>
+          <button id="btnRestore">恢复上次备份</button>
+        </div>
+        <label class="fl">题库 JSON</label>
+        <textarea id="txtBank" spellcheck="false" placeholder="点击上方「载入当前题库」"></textarea>
+        <div class="btns">
+          <button class="primary" id="btnSaveBank">保存题库</button>
+        </div>
+        <div class="tip">
+          题库是数据不是开关：编辑器里的改动点「保存题库」才写入电视（避免半截 JSON 把孩子端出题打断）。
+          其余设置项都是改完即存。
+        </div>
+      </div>
+      <div class="card wide">
+        <h2>从网址导入</h2>
+        <label class="fl" style="margin-top:0">题库地址（http/https，返回同样格式的 JSON）</label>
+        <input type="text" id="inImportUrl" placeholder="http://192.168.1.10:8000/questions.json">
+        <div class="btns">
+          <button class="warn" id="btnImport">从网址导入</button>
+        </div>
+        <div class="stat" id="bankSubjects"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 4. 规则管理 ============================ -->
+  <section class="view" id="view-rules">
+    <div class="bar">
+      <div class="txt" id="statline">规则改动会自动保存到电视</div>
+      <span class="badge ok" id="ruleBadge">已自动保存</span>
+    </div>
+    <div class="seg" id="seg">
+      <button data-tab="task" class="on">任务与解锁</button>
+      <button data-tab="time">时间计划</button>
+      <button data-tab="scope">答题范围</button>
+      <button data-tab="more">奖励与复习</button>
+    </div>
+
+    <!-- ---------- 任务与解锁 ---------- -->
+    <div id="tab-task">
+      <div class="panel">
+        <h2>学习任务</h2>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>玩法</b><small>按组闯关＝一组题达到正确率才放行；连续答对／累计答对适合低年级；自由练习可随时按返回键结束</small></div>
+            <div class="ctl"><select id="playMode">
+              <option value="round">按组闯关</option><option value="streak">连续答对</option>
+              <option value="count">累计答对（错题重练）</option><option value="practice">自由练习</option>
+            </select></div></div>
+          <div class="f"><div class="lbl"><b>每组题量</b><small>「连续答对／累计答对」时是目标题数；答错累计加练会自动加题</small></div>
+            <div class="ctl"><div class="stepper" data-key="questionsPerRound" data-min="1" data-max="100"></div><span class="unit">题</span></div></div>
+          <div class="f" data-when="round"><div class="lbl"><b>通过正确率</b><small>100% 沿用题锁原有「答错换一组重来」；调低后允许错题，一组结束按比例判定</small></div>
+            <div class="ctl"><select id="passRatio">
+              <option value="1">100%（全对）</option><option value="0.9">90%</option>
+              <option value="0.8">80%</option><option value="0.7">70%</option><option value="0.6">60%</option>
+            </select></div></div>
+          <div class="f"><div class="lbl"><b>随机打乱选项</b><small>每次出题打乱 A/B/C/D 顺序，正确答案同步调整</small></div>
+            <div class="ctl"><div class="switch" data-bool="shuffleOptions"><i></i></div></div></div>
+          <div class="f"><div class="lbl"><b>答错后查看解析</b><small>期间不能提前进入下一题；0 表示几乎不停留</small></div>
+            <div class="ctl"><div class="stepper" data-key="wrongReviewSeconds" data-min="0" data-max="300"></div><span class="unit">秒</span></div></div>
+          <div class="f"><div class="lbl"><b>学习页字号</b><small>电视上题干与选项文字一起缩放</small></div>
+            <div class="ctl"><div class="stepper" data-key="fontScale" data-min="75" data-max="200" data-step="5"></div><span class="unit">%</span></div></div>
+          <div class="f"><div class="lbl"><b>启用每日轮数上限</b><small>按「实际弹出答题页」计数，跨天自动清零</small></div>
+            <div class="ctl"><div class="switch" data-bool="roundsLimitEnabled"><i></i></div></div></div>
+          <div class="f" data-when="roundsLimit"><div class="lbl"><b>每天最多弹题</b></div>
+            <div class="ctl"><div class="stepper" data-key="roundsPerDay" data-min="1" data-max="100"></div><span class="unit">轮</span></div></div>
+        </div>
+      </div>
+      <div class="note">参考项目里的「公益视频学习、每日免费时长、每日使用上限、强制休息、剩余时间角标」依赖整机使用时长统计与系统设置拦截层。题锁采用「到点弹出全屏答题页、通关后退回电视继续计时」的模型，不统计别的 App 的观看时长，因此这些规则没有做假开关。对应可用的替代是上面的「每日轮数上限」和「时间计划」。</div>
+    </div>
+
+    <!-- ---------- 时间计划 ---------- -->
+    <div id="tab-time" class="hidden">
+      <div class="panel">
+        <h2>可用时段</h2>
+        <p class="desc">优先级：自动弹题总开关 / 免打扰 ＞ 大人豁免 ＞ 网课时段 ＞ 下面的可用时段。命中前三者一律不弹题，也不会唤醒待机中的电视。</p>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>时段用途</b><small>「只在时段内答题」＝放学后到睡前才管；「时段内自由观看」＝可用时段不弹题，其余时间照常弹</small></div>
+            <div class="ctl"><select id="scheduleMode">
+              <option value="control">只在时段内答题</option><option value="allow">时段内自由观看</option>
+            </select></div></div>
+          <div class="f"><div class="lbl"><b>全天可用</b><small>关掉后按下面的起止时间或按周时段表执行</small></div>
+            <div class="ctl"><div class="switch" data-bool="allDay"><i></i></div></div></div>
+          <div data-when="notAllDay">
+            <div class="f"><div class="lbl"><b>每天起止时间</b><small>可跨午夜；与下面的周计划表取交集</small></div>
+              <div class="ctl" id="windowRange"></div></div>
+            <div class="f" style="display:block">
+              <div class="lbl"><b>按周可用时段</b><small>每格 30 分钟，按住可拖动涂色；点左侧星期名可整行切换</small></div>
+              <div class="tpl" id="weekTpl"></div>
+              <div class="week-wrap"><div class="week" id="week"></div></div>
+              <div class="unit" id="weekStat">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>网课时段与大人豁免</h2>
+        <p class="desc">精确到分钟、可跨午夜、按星期生效。命中期间都不弹题，区别只在取名：网课是孩子上课，豁免是大人看电视。</p>
+        <div class="body">
+          <div class="lbl" style="padding-top:10px"><b>网课时段</b></div>
+          <div id="timePoints"></div>
+          <button class="add" data-add="timePoints">＋ 添加网课时段</button>
+          <div class="lbl" style="padding-top:16px"><b>大人豁免</b></div>
+          <div id="exemptWindows"></div>
+          <button class="add" data-add="exemptWindows">＋ 添加大人豁免</button>
+        </div>
+      </div>
+      <div class="note gray">「系统设置 → 免打扰时段」仍然有效，且优先级最高。这里用「时 + 分」两个下拉选时间，避免部分手机浏览器里原生时间控件点不开、或保存前被状态刷新覆盖。</div>
+    </div>
+
+    <!-- ---------- 答题范围 ---------- -->
+    <div id="tab-scope" class="hidden">
+      <div class="panel">
+        <h2>答题范围</h2>
+        <p class="desc">不选就是全部题目。这里是出题科目 / 年级的唯一入口，改完自动保存并同步给电视。</p>
+        <div class="body">
+          <div class="f" style="display:block"><div class="lbl"><b>科目</b><small>可多选；只从选中的科目抽题</small></div>
+            <div class="chips" id="subjectChips" style="justify-content:flex-start;max-width:none;margin-top:9px"></div></div>
+          <div class="f" style="display:block"><div class="lbl"><b>年级</b><small>可多选；1–6 年级分开管理</small></div>
+            <div class="chips" id="levelChips" style="justify-content:flex-start;max-width:none;margin-top:9px"></div></div>
+          <div class="f"><div class="lbl"><b>孩子选择年级</b><small>每轮开始时让孩子从上面允许的年级里挑一个，进行中的一轮不能切换</small></div>
+            <div class="ctl"><div class="switch" data-bool="childSelectLevel"><i></i></div></div></div>
+        </div>
+      </div>
+      <div class="note gray">题库总量 <b id="bankTotal">—</b> 题。空范围一律回退到全库，绝不会因为筛得太窄导致电视上出不了题。</div>
+    </div>
+
+    <!-- ---------- 奖励与复习 ---------- -->
+    <div id="tab-more" class="hidden">
+      <div class="panel">
+        <h2>奖励时长</h2>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>通过一组后放行</b><small>即「弹题间隔」：答完这轮到下一轮之间的分钟数</small></div>
+            <div class="ctl"><div class="stepper" data-key="sessionMinutes" data-min="1" data-max="720"></div><span class="unit">分钟</span></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>加练与复习</h2>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>答错累计加练</b><small>今天每累计答错 N 题，之后每组多加 M 题；跨天自动清零</small></div>
+            <div class="ctl"><div class="switch" data-bool="extraEnabled"><i></i></div></div></div>
+          <div class="f" data-when="extra"><div class="lbl"><b>累计答错</b></div>
+            <div class="ctl"><div class="stepper" data-key="wrongThreshold" data-min="1" data-max="100"></div><span class="unit">题</span></div></div>
+          <div class="f" data-when="extra"><div class="lbl"><b>每次增加加练</b></div>
+            <div class="ctl"><div class="stepper" data-key="extraQuestions" data-min="1" data-max="100"></div><span class="unit">题</span></div></div>
+          <div class="f"><div class="lbl"><b>间隔重复复习</b><small>优先抽做错过的题，答对后移出错题库；进度跨重启保留</small></div>
+            <div class="ctl"><div class="switch" data-bool="reviewEnabled"><i></i></div></div></div>
+          <div class="f"><div class="lbl"><b>错题库</b><small id="reviewStat">—</small></div>
+            <div class="ctl"><button id="btnClearWrong" style="min-width:0;padding:7px 12px;font-size:13px">清空</button></div></div>
+        </div>
+      </div>
+      <div class="note">「按题目星级奖励」需要题库里的星级字段和按题发放时长，题锁题库是统一奖励，因此统一用上面的「通过一组后放行」。</div>
+    </div>
+  </section>
+
+  <!-- ============================ 5. 系统设置 ============================ -->
+  <section class="view" id="view-system">
+    <div class="bar">
+      <div class="txt">开关与时间改完即自动保存</div>
+      <span class="badge ok" id="sysBadge">已自动保存</span>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <h2>设备与账号</h2>
+        <div class="row">
+          <span>启用拦截</span>
+          <div class="switch" id="swEnabled"><i></i></div>
+        </div>
+        <div class="row">
+          <span>免打扰时段（这段时间内绝不弹题、不唤醒电视）</span>
+          <div class="switch" id="swQuiet"><i></i></div>
+        </div>
+        <div class="grid2">
+          <div>
+            <label class="fl">开始（时 : 分）</label>
+            <div class="grid2" style="gap:6px"><select id="inQuietStartH"></select><select id="inQuietStartM"></select></div>
+          </div>
+          <div>
+            <label class="fl">结束（时 : 分）</label>
+            <div class="grid2" style="gap:6px"><select id="inQuietEndH"></select><select id="inQuietEndM"></select></div>
+          </div>
+        </div>
+        <div class="tip" style="margin-top:6px">
+          跨午夜也可以（如 22:30 → 06:30）。时段内到点的答题会顺延到结束时刻，并且闹钟改为「不唤醒设备」——
+          电视夜里待机不会再自己亮起来；白天开机后会自动补上欠的那一次。<br>
+          用「时 + 分」两个下拉代替原生时间控件：部分手机 / 电视浏览器点不开原生控件，且每 15 秒的状态刷新会把还没保存的时间冲掉。
+        </div>
+        <div class="row" style="margin-top:12px">
+          <span>开机立即弹一次题（防关机逃避）</span>
+          <div class="switch on" id="swBoot"><i></i></div>
+        </div>
+        <label class="fl">管理密码（至少 4 位，留空表示不修改）</label>
+        <input type="password" id="inPinNew" placeholder="输入新密码，离开输入框即自动保存">
+        <label class="fl">后台端口（改完需重新扫码，1–65500）</label>
+        <input type="number" id="inPort" min="1024" max="65500" value="8899">
+        <div class="tip">改端口后电视上的后台会用新端口重启，手机需要用新地址重新打开；其余设置不受影响。</div>
+      </div>
+
+      <div class="card">
+        <h2>防卸载保护</h2>
+        <div class="row"><span>保护状态</span><b id="stGuard">—</b></div>
+        <div class="row"><span>设备管理员</span><b id="stAdmin">—</b></div>
+        <div class="row"><span>设备所有者</span><b id="stOwner">—</b></div>
+        <div class="row"><span>系统卸载锁</span><b id="stBlock">—</b></div>
+        <div class="row"><span>卸载码</span><b id="stCode">—</b></div>
+        <div class="row">
+          <span>开启防卸载保护</span>
+          <div class="switch on" id="swGuard"><i></i></div>
+        </div>
+        <div class="row">
+          <span>同时禁止「恢复出厂设置」</span>
+          <div class="switch" id="swFactory"><i></i></div>
+        </div>
+        <label class="fl">当前卸载码（出厂默认 246810）</label>
+        <input type="password" id="inOldCode" placeholder="验证身份用">
+        <label class="fl">新卸载码（4–12 位数字或字母，留空表示不修改）</label>
+        <input type="text" id="inNewCode" placeholder="例如 839201">
+        <div class="btns">
+          <button class="primary" id="btnSaveCode">修改卸载码</button>
+        </div>
+        <div class="tip">改码要校验原码，所以留成按钮提交；两个开关本身是改完即存。</div>
+      </div>
+
+      <div class="card wide">
+        <h2>保护说明与命令</h2>
+        <div class="tip" style="margin-top:0">
+          保护分两级：<br>
+          · <b>设备管理员</b>（电视端点「开启防卸载」即自动激活，不用去设置里找入口——电视一般没有这一项）：孩子从系统设置卸载时，会先被要求「停用设备管理员」，普通小孩走不完。<br>
+          · <b>设备所有者</b>（电脑 adb 执行一次）：系统卸载按钮直接置灰，必须回到电视输入卸载码才能卸载。<br>
+          电视拒绝自动激活时，用下面这条命令（不要求电视上没登录账号）：
+        </div>
+        <div class="tip" id="activeAdminCmd" style="word-break:break-all;color:var(--accent)"></div>
+        <div class="btns">
+          <button id="btnCopyActiveCmd">复制基础保护命令</button>
+        </div>
+        <div class="tip">当前设备的所有者命令（彻底锁定，要求电视上没登录账号）：</div>
+        <div class="tip" id="ownerCmd" style="word-break:break-all;color:var(--accent)"></div>
+        <div class="btns">
+          <button id="btnCopyCmd">复制命令</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="tip" style="margin-top:18px">
+    · 登录状态保留 12 小时，超过需重新输入管理密码。<br>
+    · 所有开关、时间、规则都是改完自动保存，页面不再有「保存设置」按钮。
+  </div>
 </div><!-- /.page -->
 </div><!-- /.content -->
 </div><!-- /.shell -->
@@ -412,128 +591,11 @@
     if (m) { pin = decodeURIComponent(m[1]).trim(); }
     if (location.search) { history.replaceState(null, '', location.pathname + location.hash); }
   } catch (e) {}
-  var state = null;
-  // 家长正在改免打扰时间时，15 秒一次的状态刷新不能把下拉框冲掉
-  var quietEditing = false;
-  // 内嵌浏览器禁用 Cookie 时，侧栏跳转也要带上 ?pin= 后备凭证；hash 必须留在最后
-  function withPin(href) {
-    if (!pin || href.charAt(0) === '#') { return href; }
-    var i = href.indexOf('#');
-    var base = i >= 0 ? href.slice(0, i) : href;
-    var hash = i >= 0 ? href.slice(i) : '';
-    return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'pin=' + encodeURIComponent(pin) + hash;
-  }
-  Array.prototype.forEach.call(document.querySelectorAll('.sb-item'), function (a) {
-    a.setAttribute('href', withPin(a.getAttribute('href') || ''));
-  });
 
-  // ---- 左侧导航 ↔ 右侧内容一一对应（v1.7.15）----
-  function secName(a) { var t = a && a.querySelector('.tx'); return t ? t.textContent.trim() : ''; }
-  function setCrumb(name) {
-    var page = document.querySelector('.sb-item.page.on');
-    if ($('crumb')) { $('crumb').textContent = (page ? secName(page) : '') + ' / ' + name; }
-  }
-  function revealNav(a) {
-    if (window.innerWidth >= 768) { return; }
-    try { a.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (e) {}
-  }
-  var secLinks = Array.prototype.slice.call(document.querySelectorAll('.sb-item.sec'));
-  var lastPicked = null;
-  var navLockUntil = 0;
-  function setSec(id, flash) {
-    var hit = null;
-    secLinks.forEach(function (a) {
-      var on = a.getAttribute('data-sec') === id;
-      a.classList.toggle('on', on);
-      if (on) { hit = a; }
-    });
-    if (!hit) { return; }
-    setCrumb(secName(hit));
-    if (flash) {
-      navLockUntil = Date.now() + 1400;
-      lastPicked = id;
-      revealNav(hit);
-      var card = document.getElementById(id);
-      if (card) { card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash'); }
-    }
-  }
-  function currentSecByScroll() {
-    var cands = [];
-    secLinks.forEach(function (a) {
-      var el = document.getElementById(a.getAttribute('data-sec'));
-      if (el) { cands.push({ id: a.getAttribute('data-sec'), top: el.getBoundingClientRect().top }); }
-    });
-    if (!cands.length) { return null; }
-    var passed = cands.filter(function (c) { return c.top <= 110; });
-    if (!passed.length) { return cands[0].id; }
-    var last = passed[passed.length - 1];
-    var row = passed.filter(function (c) { return Math.abs(c.top - last.top) < 12; });
-    var pick = row.filter(function (c) { return c.id === lastPicked; })[0] || row[0];
-    return pick.id;
-  }
-  var navTicking = false;
-  var raf = window.requestAnimationFrame || function (f) { setTimeout(f, 16); };
-  window.addEventListener('scroll', function () {
-    if (navTicking) { return; }
-    navTicking = true;
-    raf(function () {
-      navTicking = false;
-      if (Date.now() < navLockUntil) { return; }
-      var id = currentSecByScroll();
-      if (id) { setSec(id, false); }
-    });
-  }, { passive: true });
-  window.addEventListener('hashchange', function () {
-    var id = (location.hash || '').replace('#', '');
-    if (id) { setSec(id, true); }
-  });
-  var initialSec = (location.hash || '').replace('#', '');
-  if (initialSec) { navLockUntil = Date.now() + 1400; }
-  setSec(initialSec || (secLinks[0] ? secLinks[0].getAttribute('data-sec') : ''), false);
-  secLinks.forEach(function (a) {
-    a.addEventListener('click', function (e) {
-      var id = a.getAttribute('data-sec');
-      var el = document.getElementById(id);
-      if (!el) { return; }
-      e.preventDefault();
-      try { history.replaceState(null, '', location.pathname + '#' + id); } catch (err) {}
-      setSec(id, true);
-      try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-      catch (err2) { el.scrollIntoView(); }
-      // 部分 WebView / 内嵌浏览器不执行平滑滚动，用即时定位兜底
-      setTimeout(function () {
-        var top = el.getBoundingClientRect().top;
-        if (top > 180 || top < -40) { el.scrollIntoView(); }
-      }, 300);
-    });
-  });
-  function initTimeSelects() {
-    ['StartH', 'EndH', 'StartM', 'EndM'].forEach(function (k) {
-      var sel = $('inQuiet' + k), isHour = k.indexOf('H') > 0, n = isHour ? 24 : 60;
-      for (var i = 0; i < n; i++) {
-        var o = document.createElement('option');
-        o.value = o.textContent = (i < 10 ? '0' : '') + i;
-        sel.appendChild(o);
-      }
-      sel.onchange = function () { quietEditing = true; };
-    });
-  }
-  function setQuietTime(which, hhmm) {
-    var p = /^(\d\d):(\d\d)$/.exec(hhmm || '') || ['', '00', '00'];
-    $('inQuiet' + which + 'H').value = p[1];
-    $('inQuiet' + which + 'M').value = p[2];
-  }
-  function quietValue(which) {
-    return $('inQuiet' + which + 'H').value + ':' + $('inQuiet' + which + 'M').value;
-  }
-
-  function toast(msg, ms) {
-    var t = $('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._tid);
-    t._tid = setTimeout(function () { t.classList.remove('show'); }, ms || 2200);
-  }
+  var state = null;        // /api/state
+  var cfg = null;          // /api/rules 的 config
+  var quietEditing = false;// 家长正在调免打扰时间时，15 秒刷新不能把下拉框冲掉
+  var bankLoaded = false;
 
   function api(path, opt) {
     opt = opt || {};
@@ -543,7 +605,7 @@
     return fetch(path, opt).then(function (r) {
       return r.text().then(function (txt) {
         var data = null;
-        try { data = txt ? JSON.parse(txt) : {}; } catch (e) { data = { raw: txt }; }
+        try { data = txt ? JSON.parse(txt) : {}; } catch (e2) { data = { raw: txt }; }
         if (r.status === 401) {
           if (!redirecting) {
             redirecting = true;
@@ -558,25 +620,95 @@
     });
   }
 
+  function toast(msg, ms) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tid);
+    t._tid = setTimeout(function () { t.classList.remove('show'); }, ms || 2200);
+  }
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
   function hhmm(ts) {
     if (!ts) { return '—'; }
     var d = new Date(ts);
     return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
   }
+  function setBadge(id, cls, txt) {
+    var b = $(id);
+    if (b) { b.className = 'badge ' + cls; b.textContent = txt; }
+  }
 
+  // ============================================================ 视图切换
+  var VIEWS = { status: '运行状态', quick: '快捷操作', bank: '题库管理', rules: '规则管理', system: '系统设置' };
+  var navItems = Array.prototype.slice.call(document.querySelectorAll('.sb-item'));
+  var curView = 'status';
+
+  // 兼容旧链接：/rules.html#time、/#sec-device 等老 hash 都能落到新分区
+  var LEGACY = {
+    'sec-status': 'status', 'sec-rules': 'rules-task', 'sec-quick': 'quick',
+    'sec-device': 'system', 'sec-security': 'system', 'sec-bank': 'bank',
+    'task': 'rules-task', 'time': 'rules-time', 'scope': 'rules-scope', 'more': 'rules-more'
+  };
+  function normalizeHash(h) {
+    h = String(h || '').replace(/^#/, '');
+    if (LEGACY[h]) { return LEGACY[h]; }
+    if (h.indexOf('rules-') === 0) { return h; }
+    if (VIEWS[h]) { return h; }
+    return 'status';
+  }
+  function revealNav(a) {
+    if (!a || window.innerWidth >= 768) { return; }
+    try { a.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (e) {}
+  }
+  function showView(target, keepScroll) {
+    var parts = String(target || 'status').split('-');
+    var view = VIEWS[parts[0]] ? parts[0] : 'status';
+    var sub = parts[1] || 'task';
+    curView = view;
+    navItems.forEach(function (a) {
+      var on = a.getAttribute('data-view') === view;
+      a.classList.toggle('on', on);
+      if (on) { revealNav(a); }
+    });
+    Object.keys(VIEWS).forEach(function (k) {
+      var el = $('view-' + k);
+      if (el) { el.classList.toggle('on', k === view); }
+    });
+    $('pageTitle').textContent = VIEWS[view];
+    $('crumb').textContent = '家长控制台 / ' + VIEWS[view];
+    if (view === 'rules') { activateTab(sub); }
+    if (view === 'bank' && !bankLoaded) { loadBank(); }
+    try {
+      history.replaceState(null, '', location.pathname + '#' + (view === 'rules' ? 'rules-' + sub : view));
+    } catch (e) {}
+    if (!keepScroll) { window.scrollTo(0, 0); }
+  }
+  navItems.forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      showView(a.getAttribute('data-view'));
+    });
+  });
+  window.addEventListener('hashchange', function () {
+    showView(normalizeHash(location.hash), true);
+  });
+
+  // ============================================================ 运行状态 / 快捷操作 / 系统设置（读状态）
   function render() {
     if (!state) { return; }
-    $('subline').textContent = '已连接 ' + (state.ip || '?') + ':' + (state.port || '') + ' · 题锁 ' + (state.appVersion || '');
+    $('subline').textContent = '已连接 ' + (state.ip || '?') + ':' + (state.port || '') +
+      ' · 题锁 ' + (state.appVersion || '');
     $('pinWarn').style.display = state.pinDefault ? '' : 'none';
+    $('sbDevice').textContent = (state.ip || '?') + ':' + (state.port || '') + ' · ' + (state.appVersion || '');
+    $('connBadge').className = 'conn' + (state.serverError ? ' bad' : '');
+    $('connBadge').textContent = state.serverError ? '● 服务异常' : '● 已连接';
+
     var on = !!state.enabled;
+    // ---- 运行状态
     $('stEnabled').innerHTML = on ? '<span class="badge on">拦截中</span>' : '<span class="badge off">已暂停</span>';
     $('stQuiz').innerHTML = state.quizRunning
       ? '<span style="color:var(--accent)">答题弹窗显示中</span>'
       : '<span style="color:var(--sub)">未弹出</span>';
-    $('stInterval').textContent = '每 ' + state.intervalMinutes + ' 分钟';
-    $('stCount').textContent = state.quizCount + ' 题';
-    $('stBank').textContent = state.questionCount + ' 题';
     if (!state.autoQuiz) {
       $('stAuto').innerHTML = '<span class="badge off">已关闭</span>';
     } else if (state.quietEnabled && state.inQuiet) {
@@ -597,6 +729,15 @@
     } else {
       $('stDue').textContent = '—';
     }
+    var modeName = ({ round: '按组闯关', streak: '连续答对', count: '累计答对', practice: '自由练习' })[state.playMode] || '按组闯关';
+    $('stRules').textContent = modeName;
+    $('stRounds').textContent = (state.roundsToday || 0) + ' 轮 · ' + (state.ruleAllowedNow ? '时段允许' : '时段停用');
+    $('stWrong').textContent = (state.reviewDue || 0) + ' 题在库';
+    $('stBank').textContent = state.questionCount + ' 题';
+    var g = !!state.uninstallGuard;
+    $('stGuardMini').innerHTML = !g ? '<span class="badge off">已关闭</span>'
+      : (state.uninstallBlocked ? '<span class="badge on">已锁定</span>'
+        : (state.isAdminActive ? '<span class="badge on">基础保护</span>' : '<span class="badge off">未生效</span>'));
     var box = $('stSubjects');
     box.innerHTML = '';
     var m = state.countBySubject || {};
@@ -608,9 +749,12 @@
     });
     $('stErr').textContent = state.serverError ? ('服务提示：' + state.serverError) : '';
 
+    // ---- 快捷操作
+    $('swAutoQuiz').className = 'switch' + (state.autoQuiz ? ' on' : '');
+
+    // ---- 系统设置
     $('swEnabled').className = 'switch' + (on ? ' on' : '');
     $('swBoot').className = 'switch' + (state.bootQuiz ? ' on' : '');
-    $('swAutoQuiz').className = 'switch' + (state.autoQuiz ? ' on' : '');
     $('swQuiet').className = 'switch' + (state.quietEnabled ? ' on' : '');
     if (!quietEditing) {
       setQuietTime('Start', state.quietStart || '22:00');
@@ -619,16 +763,9 @@
     ['StartH', 'StartM', 'EndH', 'EndM'].forEach(function (k) {
       $('inQuiet' + k).disabled = !state.quietEnabled;
     });
-    var modeName = ({ round: '按组闯关', streak: '连续答对', count: '累计答对', practice: '自由练习' })[state.playMode] || '按组闯关';
-    $('stRules').textContent = modeName + ' · 今日 ' + (state.roundsToday || 0) + ' 轮 · '
-      + (state.ruleAllowedNow ? '时段允许' : '时段停用');
-    $('inPort').value = state.port;
-    $('sbDevice').textContent = (state.ip || '?') + ':' + (state.port || '') + ' · ' + (state.appVersion || '');
-    $('connBadge').className = 'conn' + (state.serverError ? ' bad' : '');
-    $('connBadge').textContent = state.serverError ? '● 服务异常' : '● 已连接';
+    if (document.activeElement !== $('inPort')) { $('inPort').value = state.port; }
 
     // ---- 防卸载
-    var g = !!state.uninstallGuard;
     if (!g) {
       $('stGuard').innerHTML = '<span class="badge off">已关闭</span>';
     } else if (state.uninstallBlocked) {
@@ -650,8 +787,7 @@
     }
     var codeTxt = state.uninstallPinCustom ? '已自定义' : '<span style="color:var(--accent)">默认 246810</span>';
     if (state.uninstallLockMs > 0) {
-      codeTxt += ' <span style="color:var(--red)">（输错锁定 ' +
-        Math.ceil(state.uninstallLockMs / 1000) + 's）</span>';
+      codeTxt += ' <span style="color:var(--red)">（输错锁定 ' + Math.ceil(state.uninstallLockMs / 1000) + 's）</span>';
     }
     $('stCode').innerHTML = codeTxt;
     $('swGuard').className = 'switch' + (g ? ' on' : '');
@@ -668,41 +804,97 @@
     });
   }
 
-  // 「学习规则」摘要：规则页改完这里 15 秒内自动跟上，不在本页重复提供编辑控件
-  function loadRulesSummary() {
-    return api('/api/rules').then(function (r) {
-      var c = r.config || {};
-      var names = { round: '按组闯关', streak: '连续答对', count: '累计答对', practice: '自由练习' };
-      var subs = (c.quizSubjects && c.quizSubjects.length) ? c.quizSubjects.join('、') : '全部科目';
-      var gs = (c.quizLevels && c.quizLevels.length) ? c.quizLevels.join('、') + ' 年级' : '1–6 年级';
-      $('sumMode').textContent = names[c.playMode] || '按组闯关';
-      $('sumCount').textContent = (c.questionsPerRound || 5) + ' 题 · 正确率 ' +
-        Math.round((c.passRatio || 1) * 100) + '%';
-      $('sumReward').textContent = (c.sessionMinutes || 30) + ' 分钟';
-      $('sumScope').textContent = subs + ' / ' + gs;
-      $('sumTime').textContent = (c.scheduleMode === 'allow' ? '时段内自由观看' : '只在可用时段答题') +
-        ' · ' + (c.allDay ? '全天' : ((c.windowStart || '') + '–' + (c.windowEnd || '')));
-      $('sumStat').textContent = '今日已弹 ' + (r.roundsToday || 0) + ' 轮 · 错题库 ' +
-        (r.reviewDue || 0) + ' 题 · 规则 v' + (r.version || 1);
-    }).catch(function () {});
+  // ============================================================ 系统设置：改完即存
+  var sysTimer = null, sysPending = {};
+  function queueSettings(patch, okMsg) {
+    for (var k in patch) { if (patch.hasOwnProperty(k)) { sysPending[k] = patch[k]; } }
+    setBadge('sysBadge', 'wait', '等待自动保存');
+    clearTimeout(sysTimer);
+    sysTimer = setTimeout(function () { flushSettings(okMsg); }, 500);
+  }
+  function flushSettings(okMsg) {
+    var body = { keepDue: true };   // 只改参数，不重置「下次弹题」的倒计时
+    var any = false;
+    for (var k in sysPending) {
+      if (sysPending.hasOwnProperty(k)) { body[k] = sysPending[k]; any = true; }
+    }
+    if (!any) { return; }
+    sysPending = {};
+    setBadge('sysBadge', 'wait', '正在保存…');
+    api('/api/settings', { method: 'POST', body: JSON.stringify(body) }).then(function (r) {
+      setBadge('sysBadge', 'ok', '已自动保存');
+      if (body.quietStart || body.quietEnd) { quietEditing = false; }  // 已落盘，状态刷新可重新同步时间
+      if (okMsg) { toast(okMsg, 2400); }
+      if (body.pin) {
+        if (pin) { pin = body.pin; }
+        toast('管理密码已更新（其他设备需重新登录）', 3200);
+      }
+      if (body.port && r && r.port && (!state || r.port !== state.port)) {
+        toast('端口已改为 ' + r.port + '，请用新端口重新打开后台', 4600);
+        return;
+      }
+      return loadState();
+    }).catch(function (e) {
+      setBadge('sysBadge', 'err', '保存失败');
+      toast('保存失败：' + e.message, 3400);
+    });
   }
 
-  // ---- 交互
-  $('swEnabled').onclick = function () {
-    if (!state) { return; }
-    state.enabled = !state.enabled;
-    $('swEnabled').className = 'switch' + (state.enabled ? ' on' : '');
-  };
-  $('swBoot').onclick = function () {
-    if (!state) { return; }
-    state.bootQuiz = !state.bootQuiz;
-    $('swBoot').className = 'switch' + (state.bootQuiz ? ' on' : '');
-  };
+  // ============================================================ 快捷操作
   $('swAutoQuiz').onclick = function () {
     if (!state) { return; }
     state.autoQuiz = !state.autoQuiz;
     $('swAutoQuiz').className = 'switch' + (state.autoQuiz ? ' on' : '');
-    toast(state.autoQuiz ? '自动弹题已开启，记得点「保存设置」' : '将永久停止自动弹题，记得点「保存设置」', 3000);
+    queueSettings({ autoQuiz: state.autoQuiz },
+      state.autoQuiz ? '自动弹题已开启（已保存）' : '已永久停止自动弹题（已保存）');
+  };
+  $('btnTest').onclick = function () {
+    api('/api/test', { method: 'POST', body: '{}' }).then(function () {
+      toast('电视端已弹出题目');
+    }).catch(function (e) { toast(e.message, 3200); });
+  };
+  $('btnReschedule').onclick = function () {
+    api('/api/reschedule', { method: 'POST', body: '{}' }).then(function () {
+      toast('已从现在重新计时');
+      return loadState();
+    }).catch(function (e) { toast(e.message, 3200); });
+  };
+  $('btnUnlock').onclick = function () {
+    if (!confirm('立即解锁会关掉电视上正在显示的答题弹窗，孩子可以继续看电视；\n下一轮从现在重新计时。确定放行吗？')) { return; }
+    api('/api/unlock', { method: 'POST', body: '{}' }).then(function () {
+      toast('已解锁，孩子可以继续看电视；下一轮从现在重新计时', 3400);
+      setTimeout(loadState, 700);
+    }).catch(function (e) { toast(e.message, 3200); });
+  };
+
+  // ============================================================ 系统设置：开关与时间
+  function initTimeSelects() {
+    ['StartH', 'EndH', 'StartM', 'EndM'].forEach(function (k) {
+      var sel = $('inQuiet' + k), isHour = k.indexOf('H') > 0, n = isHour ? 24 : 60;
+      for (var i = 0; i < n; i++) {
+        var o = document.createElement('option');
+        o.value = o.textContent = pad(i);
+        sel.appendChild(o);
+      }
+      sel.onchange = function () {
+        quietEditing = true;
+        queueSettings({ quietStart: quietValue('Start'), quietEnd: quietValue('End') }, '免打扰时间已保存');
+      };
+    });
+  }
+  function setQuietTime(which, hh) {
+    var p = /^(\d\d):(\d\d)$/.exec(hh || '') || ['', '00', '00'];
+    $('inQuiet' + which + 'H').value = p[1];
+    $('inQuiet' + which + 'M').value = p[2];
+  }
+  function quietValue(which) {
+    return $('inQuiet' + which + 'H').value + ':' + $('inQuiet' + which + 'M').value;
+  }
+  $('swEnabled').onclick = function () {
+    if (!state) { return; }
+    state.enabled = !state.enabled;
+    $('swEnabled').className = 'switch' + (state.enabled ? ' on' : '');
+    queueSettings({ enabled: state.enabled }, state.enabled ? '拦截已开启（已保存）' : '拦截已暂停（已保存）');
   };
   $('swQuiet').onclick = function () {
     if (!state) { return; }
@@ -711,63 +903,42 @@
     ['StartH', 'StartM', 'EndH', 'EndM'].forEach(function (k) {
       $('inQuiet' + k).disabled = !state.quietEnabled;
     });
-    toast(state.quietEnabled ? '免打扰已开启，记得点「保存设置」' : '免打扰已关闭，记得点「保存设置」', 2600);
+    queueSettings({ quietEnabled: state.quietEnabled, quietStart: quietValue('Start'), quietEnd: quietValue('End') },
+      state.quietEnabled ? '免打扰已开启（已保存）' : '免打扰已关闭（已保存）');
+  };
+  $('swBoot').onclick = function () {
+    if (!state) { return; }
+    state.bootQuiz = !state.bootQuiz;
+    $('swBoot').className = 'switch' + (state.bootQuiz ? ' on' : '');
+    queueSettings({ bootQuiz: state.bootQuiz }, state.bootQuiz ? '开机弹题已开启（已保存）' : '开机弹题已关闭（已保存）');
   };
   $('swGuard').onclick = function () {
     if (!state) { return; }
     state.uninstallGuard = !state.uninstallGuard;
     $('swGuard').className = 'switch' + (state.uninstallGuard ? ' on' : '');
-    toast(state.uninstallGuard ? '已开启，记得点「保存设置」' : '已关闭，记得点「保存设置」', 2600);
+    queueSettings({ uninstallGuard: state.uninstallGuard },
+      state.uninstallGuard ? '防卸载保护已开启（已保存）' : '防卸载保护已关闭（已保存）');
   };
   $('swFactory').onclick = function () {
     if (!state) { return; }
-    if (!state.isDeviceOwner) {
-      toast('需先设置设备所有者才能禁止恢复出厂', 3000);
-      return;
-    }
+    if (!state.isDeviceOwner) { toast('需先设置设备所有者才能禁止恢复出厂', 3000); return; }
     state.blockFactoryReset = !state.blockFactoryReset;
     $('swFactory').className = 'switch' + (state.blockFactoryReset ? ' on' : '');
-    toast('记得点「保存设置」生效', 2200);
+    queueSettings({ blockFactoryReset: state.blockFactoryReset }, '已自动保存');
   };
-
-  $('btnSaveSettings').onclick = function () {
-    var body = {
-      enabled: state ? !!state.enabled : true,
-      bootQuiz: state ? !!state.bootQuiz : true,
-      autoQuiz: state ? !!state.autoQuiz : true,
-      quietEnabled: state ? !!state.quietEnabled : false,
-      quietStart: quietValue('Start'),
-      quietEnd: quietValue('End'),
-      port: parseInt($('inPort').value, 10) || 8899
-    };
-    if (state) {
-      body.uninstallGuard = !!state.uninstallGuard;
-      body.blockFactoryReset = !!state.blockFactoryReset;
-    }
-    var np = $('inPinNew').value.trim();
-    if (np) { body.pin = np; }
-    api('/api/settings', { method: 'POST', body: JSON.stringify(body) }).then(function (r) {
-      quietEditing = false;   // 已落盘，恢复「状态刷新可同步时间」
-      if (np) {
-        // 服务端会踢掉所有旧会话，并给当前这台设备重发登录态
-        if (pin) { pin = np; }
-        $('inPinNew').value = '';
-        toast('设置已保存，管理密码已更新（其他设备需重新登录）', 3200);
-        return loadState();
-      }
-      toast('设置已保存');
-      return loadState();
-    }).catch(function (e) { toast(e.message, 3200); });
+  $('inPinNew').onchange = function () {
+    var v = $('inPinNew').value.trim();
+    if (!v) { return; }
+    if (v.length < 4) { toast('管理密码至少 4 位，未保存', 3000); return; }
+    $('inPinNew').value = '';
+    queueSettings({ pin: v }, '管理密码已更新');
   };
-
-  $('btnLogout').onclick = function () {
-    api('/api/logout', { method: 'POST', body: '{}' }).then(function () {
-      location.replace('/');
-    }).catch(function () {
-      location.replace('/');
-    });
+  $('inPort').onchange = function () {
+    var v = parseInt($('inPort').value, 10);
+    if (isNaN(v) || v < 1024 || v > 65500) { toast('端口需在 1024–65500 之间，未保存', 3200); return; }
+    if (state && v === state.port) { return; }
+    queueSettings({ port: v }, '端口已保存');
   };
-
   $('btnSaveCode').onclick = function () {
     var nv = $('inNewCode').value.trim();
     var ov = $('inOldCode').value.trim();
@@ -775,7 +946,7 @@
     if (!ov) { toast('请先填写当前卸载码（出厂默认 246810）'); return; }
     api('/api/settings', {
       method: 'POST',
-      body: JSON.stringify({ uninstallPin: nv, oldUninstallPin: ov })
+      body: JSON.stringify({ uninstallPin: nv, oldUninstallPin: ov, keepDue: true })
     }).then(function () {
       $('inNewCode').value = '';
       $('inOldCode').value = '';
@@ -783,15 +954,12 @@
       return loadState();
     }).catch(function (e) { toast(e.message, 3600); });
   };
-
   function copyText(cmd, okMsg) {
     if (!cmd) { toast('暂未获取到命令'); return; }
     function done() { toast(okMsg || '已复制，可发到电脑上执行'); }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(cmd).then(done).catch(fallback);
-    } else {
-      fallback();
-    }
+    } else { fallback(); }
     function fallback() {
       var ta = document.createElement('textarea');
       ta.value = cmd;
@@ -803,93 +971,476 @@
       document.body.removeChild(ta);
     }
   }
-
   $('btnCopyCmd').onclick = function () {
     copyText((state && state.deviceOwnerCmd) || $('ownerCmd').textContent, '已复制，可发到电脑上执行');
   };
-
   $('btnCopyActiveCmd').onclick = function () {
-    copyText((state && state.activeAdminCmd) || $('activeAdminCmd').textContent,
-      '已复制，执行后即可获得基础保护');
+    copyText((state && state.activeAdminCmd) || $('activeAdminCmd').textContent, '已复制，执行后即可获得基础保护');
+  };
+  $('btnLogout').onclick = function () {
+    api('/api/logout', { method: 'POST', body: '{}' }).then(function () {
+      location.replace('/');
+    }).catch(function () { location.replace('/'); });
   };
 
-  $('btnTest').onclick = function () {
-    api('/api/test', { method: 'POST', body: '{}' }).then(function () {
-      toast('电视端已弹出题目');
-    }).catch(function (e) { toast(e.message, 3200); });
-  };
-
-  $('btnReschedule').onclick = function () {
-    api('/api/reschedule', { method: 'POST', body: '{}' }).then(function () {
-      toast('已从现在重新计时');
-      return loadState();
-    }).catch(function (e) { toast(e.message, 3200); });
-  };
-
-  $('btnUnlock').onclick = function () {
-    if (!confirm('立即解锁会关掉电视上正在显示的答题弹窗，孩子可以继续看电视；\n下一轮从现在重新计时。确定放行吗？')) { return; }
-    api('/api/unlock', { method: 'POST', body: '{}' }).then(function () {
-      toast('已解锁，孩子可以继续看电视；下一轮从现在重新计时', 3400);
-      // 关界面在主线程异步收尾，稍等一下再刷新「当前弹窗」状态
-      setTimeout(loadState, 700);
-    }).catch(function (e) { toast(e.message, 3200); });
-  };
-
+  // ============================================================ 题库管理
   function loadBank() {
-    api('/api/questions').then(function (data) {
+    setBadge('bankBadge', 'wait', '正在载入…');
+    return api('/api/questions').then(function (data) {
       $('txtBank').value = JSON.stringify(data, null, 2);
-      toast('已载入 ' + ((data.questions || []).length) + ' 题');
-    }).catch(function (e) { toast(e.message, 3200); });
+      bankLoaded = true;
+      var n = (data.questions || []).length;
+      $('bankStat').textContent = '题库共 ' + n + ' 题';
+      setBadge('bankBadge', 'ok', '已载入');
+      renderBankSubjects(data.questions || []);
+      toast('已载入 ' + n + ' 题');
+    }).catch(function (e) {
+      setBadge('bankBadge', 'err', '载入失败');
+      toast(e.message, 3200);
+    });
   }
-
+  function renderBankSubjects(list) {
+    var box = $('bankSubjects');
+    box.innerHTML = '';
+    var sub = {}, grade = {};
+    list.forEach(function (q) {
+      if (q && q.subject) { sub[q.subject] = (sub[q.subject] || 0) + 1; }
+      if (q && q.grade) { grade[q.grade] = (grade[q.grade] || 0) + 1; }
+    });
+    Object.keys(sub).forEach(function (k) {
+      var d = document.createElement('div');
+      d.className = 'chip';
+      d.innerHTML = k + ' <b>' + sub[k] + '</b>';
+      box.appendChild(d);
+    });
+    Object.keys(grade).sort().forEach(function (k) {
+      var d = document.createElement('div');
+      d.className = 'chip';
+      d.innerHTML = k + ' 年级 <b>' + grade[k] + '</b>';
+      box.appendChild(d);
+    });
+  }
   $('btnReloadBank').onclick = loadBank;
-
   $('btnFormat').onclick = function () {
     try {
       var obj = JSON.parse($('txtBank').value);
       $('txtBank').value = JSON.stringify(obj, null, 2);
+      setBadge('bankBadge', 'ok', '已格式化，未保存');
       toast('已格式化');
     } catch (e) { toast('JSON 格式有误：' + e.message, 3000); }
   };
-
   $('btnSaveBank').onclick = function () {
     var txt = $('txtBank').value.trim();
     if (!txt) { toast('题库内容为空'); return; }
-    try { JSON.parse(txt); } catch (e) { toast('JSON 格式有误：' + e.message, 3200); return; }
+    var obj;
+    try { obj = JSON.parse(txt); } catch (e) { toast('JSON 格式有误：' + e.message, 3200); return; }
+    setBadge('bankBadge', 'wait', '正在保存…');
     api('/api/questions', { method: 'POST', body: JSON.stringify({ json: txt }) }).then(function (r) {
+      setBadge('bankBadge', 'ok', '已保存 ' + r.count + ' 题');
+      $('bankStat').textContent = '题库共 ' + r.count + ' 题';
+      renderBankSubjects((obj && obj.questions) || []);
       toast('题库已保存，共 ' + r.count + ' 题');
+      bankLoaded = true;
       return loadState();
-    }).catch(function (e) { toast(e.message, 3600); });
+    }).catch(function (e) {
+      setBadge('bankBadge', 'err', '保存失败');
+      toast(e.message, 3600);
+    });
   };
-
   $('btnRestore').onclick = function () {
     if (!confirm('确定恢复到上一次保存前的题库吗？')) { return; }
     api('/api/restore', { method: 'POST', body: '{}' }).then(function () {
       toast('已恢复备份');
-      loadBank();
-      return loadState();
+      return loadBank().then(loadState);
     }).catch(function (e) { toast(e.message, 3200); });
   };
-
   $('btnImport').onclick = function () {
     var url = $('inImportUrl').value.trim();
     if (!url) { toast('请填写网址'); return; }
     toast('正在从网址导入…', 4000);
     api('/api/import', { method: 'POST', body: JSON.stringify({ url: url }) }).then(function (r) {
       toast('导入成功，共 ' + r.count + ' 题');
-      loadBank();
-      return loadState();
+      return loadBank().then(loadState);
     }).catch(function (e) { toast(e.message, 4000); });
   };
 
-  // ---- 初始化
+  // ============================================================ 规则管理（改完 0.7 秒自动保存）
+  function arr(k) { return (cfg && Array.isArray(cfg[k])) ? cfg[k] : []; }
+  var DAYS = ['一', '二', '三', '四', '五', '六', '日'];
+  function two(n) { return (n < 10 ? '0' : '') + n; }
+  function HH(h, mi) { return two(h) + ':' + two(mi); }
+  function hours() { var a = []; for (var i = 0; i < 24; i++) { a.push(two(i)); } return a; }
+  function mins() { var a = []; for (var i = 0; i < 60; i++) { a.push(two(i)); } return a; }
+  function minutesOf(s) { var p = /^(\d\d):(\d\d)$/.exec(s || ''); return p ? (+p[1]) * 60 + (+p[2]) : -1; }
+  function ones() { var s = ''; for (var i = 0; i < 48; i++) { s += '1'; } return s; }
+  function emptyDay() { var s = ''; for (var i = 0; i < 48; i++) { s += '0'; } return s; }
+  function range(a, b) {
+    var out = [], x = minutesOf(a), y = minutesOf(b);
+    for (var i = 0; i < 48; i++) {
+      var t = i * 30;
+      out.push((x < y ? (t >= x && t < y) : (t >= x || t < y)) ? '1' : '0');
+    }
+    return out.join('');
+  }
+  function build(wd, we) { var a = []; for (var i = 0; i < 7; i++) { a.push(i < 5 ? wd : we); } return a; }
+  var TPL = [
+    ['上学日', function () { return build(range('18:30', '20:30'), range('09:00', '20:00')); }],
+    ['每天', function () { return build(range('18:30', '20:30'), range('18:30', '20:30')); }],
+    ['只在周末', function () { return build(emptyDay(), range('09:00', '20:00')); }],
+    ['全天', function () { var a = []; for (var i = 0; i < 7; i++) { a.push(ones()); } return a; }],
+    ['清空', function () { var a = []; for (var i = 0; i < 7; i++) { a.push(emptyDay()); } return a; }]
+  ];
+
+  function initSteppers() {
+    Array.prototype.forEach.call(document.querySelectorAll('.stepper'), function (box) {
+      var key = box.dataset.key, min = +box.dataset.min, max = +box.dataset.max, step = +(box.dataset.step || 1);
+      var dec = document.createElement('button'), inp = document.createElement('input'), inc = document.createElement('button');
+      dec.type = 'button'; inc.type = 'button'; dec.textContent = '−'; inc.textContent = '+';
+      inp.type = 'number'; inp.min = min; inp.max = max; inp.step = step; inp.setAttribute('aria-label', key);
+      box.appendChild(dec); box.appendChild(inp); box.appendChild(inc);
+      box._inp = inp; box._key = key; box._min = min; box._max = max; box._step = step;
+      function set(v, commit) {
+        v = Math.min(max, Math.max(min, isNaN(v) ? min : v));
+        inp.value = v;
+        if (commit && cfg && cfg[key] !== v) { cfg[key] = v; changed(); }
+      }
+      dec.onclick = function () { set((parseInt(inp.value, 10) || min) - step, true); };
+      inc.onclick = function () { set((parseInt(inp.value, 10) || min) + step, true); };
+      inp.onchange = function () {
+        var v = parseInt(inp.value, 10);
+        if (!isNaN(v) && v >= min && v <= max && cfg[key] !== v) { cfg[key] = v; changed(); }
+      };
+      inp.onblur = function () { set(parseInt(inp.value, 10), true); };
+      box._set = set;
+    });
+  }
+  function syncSteppers() {
+    if (!cfg) { return; }
+    Array.prototype.forEach.call(document.querySelectorAll('.stepper'), function (box) {
+      if (box._inp && document.activeElement !== box._inp) { box._inp.value = cfg[box._key]; }
+    });
+  }
+  function initControls() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-bool]'), function (sw) {
+      sw.onclick = function () {
+        if (!cfg) { return; }
+        cfg[sw.dataset.bool] = !cfg[sw.dataset.bool];
+        syncBool(); conditional(); changed();
+      };
+    });
+    ['playMode', 'passRatio', 'scheduleMode'].forEach(function (id) {
+      $(id).onchange = function () {
+        if (!cfg) { return; }
+        cfg[id] = id === 'passRatio' ? parseFloat($(id).value) : $(id).value;
+        conditional(); changed();
+      };
+    });
+    Array.prototype.forEach.call($('seg').children, function (b) {
+      b.onclick = function () { showView('rules-' + b.dataset.tab, true); };
+    });
+    $('btnClearWrong').onclick = function () {
+      if (!confirm('清空错题库后，间隔重复复习会重新开始。确定吗？')) { return; }
+      api('/api/rules/reset', { method: 'POST', body: '{}' }).then(function () {
+        toast('错题库已清空');
+        loadRulesStats();
+      }).catch(function (e) { toast(e.message, 3000); });
+    };
+  }
+  function syncBool() {
+    if (!cfg) { return; }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-bool]'), function (sw) {
+      sw.className = 'switch' + (cfg[sw.dataset.bool] ? ' on' : '');
+    });
+  }
+  function syncSelects() {
+    if (!cfg) { return; }
+    $('playMode').value = cfg.playMode || 'round';
+    $('scheduleMode').value = cfg.scheduleMode || 'control';
+    var opts = Array.prototype.map.call($('passRatio').options, function (o) { return +o.value; });
+    var best = opts[0], r = +cfg.passRatio || 1;
+    opts.forEach(function (v) { if (Math.abs(v - r) < Math.abs(best - r)) { best = v; } });
+    $('passRatio').value = best;
+    if (+$('passRatio').value !== r) { cfg.passRatio = +$('passRatio').value; }
+  }
+  function conditional() {
+    if (!cfg) { return; }
+    var show = {
+      round: (cfg.playMode === 'round'),
+      roundsLimit: !!cfg.roundsLimitEnabled,
+      notAllDay: !cfg.allDay,
+      extra: !!cfg.extraEnabled
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-when]'), function (el) {
+      el.classList.toggle('hidden', !show[el.dataset.when]);
+    });
+  }
+  var TABS = ['task', 'time', 'scope', 'more'];
+  function activateTab(name) {
+    if (TABS.indexOf(name) < 0) { name = 'task'; }
+    Array.prototype.forEach.call($('seg').children, function (x) {
+      x.className = x.dataset.tab === name ? 'on' : '';
+    });
+    TABS.forEach(function (t) {
+      var el = $('tab-' + t);
+      if (el) { el.classList.toggle('hidden', t !== name); }
+    });
+    if (name === 'time' && cfg) { renderWeek(); }
+  }
+
+  // ---------- 时间选择（时 + 分两个下拉，替代点不开的原生控件）
+  function timePicker(id, value, onPick) {
+    var wrap = document.createElement('span');
+    wrap.style.cssText = 'display:inline-flex;align-items:center;gap:4px';
+    var hs = document.createElement('select'), ms = document.createElement('select');
+    hs.setAttribute('aria-label', id + ' 小时'); ms.setAttribute('aria-label', id + ' 分钟');
+    hours().forEach(function (h) { var o = document.createElement('option'); o.value = o.textContent = h; hs.appendChild(o); });
+    mins().forEach(function (mi) { var o = document.createElement('option'); o.value = o.textContent = mi; ms.appendChild(o); });
+    var p = /^(\d\d):(\d\d)$/.exec(value || '') || ['', '00', '00'];
+    hs.value = p[1]; ms.value = p[2];
+    function fire() { onPick(hs.value + ':' + ms.value); }
+    hs.onchange = fire; ms.onchange = fire;
+    wrap.appendChild(hs); wrap.appendChild(document.createTextNode(':')); wrap.appendChild(ms);
+    return wrap;
+  }
+  function renderWindowRange() {
+    var box = $('windowRange');
+    box.innerHTML = '';
+    box.appendChild(timePicker('start', cfg.windowStart, function (v) { cfg.windowStart = v; changed(); }));
+    var t = document.createElement('span'); t.className = 'unit'; t.textContent = ' 至 ';
+    box.appendChild(t);
+    box.appendChild(timePicker('end', cfg.windowEnd, function (v) { cfg.windowEnd = v; changed(); }));
+  }
+
+  // ---------- 周计划 48 格
+  var painting = null;
+  function renderWeek() {
+    var slots = arr('weekSlots'), box = $('week');
+    if (slots.length !== 7) {
+      slots = [];
+      for (var i0 = 0; i0 < 7; i0++) { slots.push(ones()); }
+      cfg.weekSlots = slots;
+    }
+    box.innerHTML = '';
+    var scale = document.createElement('div');
+    scale.className = 'week-scale';
+    [0, 6, 12, 18, 24].forEach(function (h) {
+      var s = document.createElement('span'); s.textContent = two(h) + ':00'; scale.appendChild(s);
+    });
+    box.appendChild(scale);
+    var total = 0;
+    slots.forEach(function (day, d) {
+      var row = document.createElement('div'); row.className = 'week-row';
+      var lab = document.createElement('button'); lab.className = 'day'; lab.type = 'button';
+      lab.textContent = '周' + DAYS[d];
+      lab.onclick = function () {
+        var has = cfg.weekSlots[d].indexOf('1') >= 0;
+        cfg.weekSlots[d] = has ? emptyDay() : range('18:30', '20:00');
+        renderWeek(); changed();
+      };
+      row.appendChild(lab);
+      var cells = document.createElement('div'); cells.className = 'cells';
+      for (var i = 0; i < 48; i++) {
+        (function (slot) {
+          var c = document.createElement('button');
+          c.type = 'button';
+          c.className = 'cell' + (day.charAt(slot) === '1' ? ' on' : '') + (slot % 2 === 0 ? ' hour' : '');
+          c.title = '周' + DAYS[d] + ' ' + HH(Math.floor(slot / 2), slot % 2 ? 30 : 0);
+          c.setAttribute('aria-label', c.title);
+          c.dataset.d = d; c.dataset.s = slot;
+          c.onpointerdown = function (e) {
+            e.preventDefault();
+            painting = day.charAt(slot) === '1' ? '0' : '1';
+            setCell(d, slot, painting);
+          };
+          c.onpointerenter = function () { if (painting) { setCell(d, slot, painting); } };
+          cells.appendChild(c);
+        })(i);
+      }
+      row.appendChild(cells); box.appendChild(row);
+      for (var k = 0; k < 48; k++) { if (day.charAt(k) === '1') { total++; } }
+    });
+    $('weekStat').textContent = '每周共 ' + (total / 2) + ' 小时可用';
+  }
+  function setCell(d, s, v) {
+    var chars = cfg.weekSlots[d].split('');
+    if (chars[s] === v) { return; }
+    chars[s] = v;
+    cfg.weekSlots[d] = chars.join('');
+    var el = $('week').querySelector('[data-d="' + d + '"][data-s="' + s + '"]');
+    if (el) { el.className = 'cell' + (v === '1' ? ' on' : '') + (s % 2 === 0 ? ' hour' : ''); }
+    changed();
+  }
+  document.addEventListener('pointerup', function () { painting = null; });
+  document.addEventListener('pointercancel', function () { painting = null; });
+  function renderTpl() {
+    var box = $('weekTpl');
+    box.innerHTML = '';
+    TPL.forEach(function (t) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = t[0];
+      b.onclick = function () { cfg.weekSlots = t[1](); renderWeek(); changed(); };
+      box.appendChild(b);
+    });
+  }
+
+  // ---------- 网课时段 / 大人豁免
+  function newId() { return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function renderWindows(kind) {
+    var box = $(kind);
+    box.innerHTML = '';
+    var list = arr(kind);
+    if (!list.length) {
+      var p = document.createElement('div');
+      p.className = 'unit'; p.style.marginTop = '8px';
+      p.textContent = '还没有设置，点下面按钮添加。';
+      box.appendChild(p);
+      return;
+    }
+    list.forEach(function (w, idx) {
+      var card = document.createElement('div'); card.className = 'win';
+      var top = document.createElement('div'); top.className = 'top';
+      var name = document.createElement('input');
+      name.type = 'text'; name.value = w.name || ''; name.placeholder = '名称，例如 网课 / 大人时间';
+      name.onchange = function () { w.name = name.value.trim() || '未命名'; changed(); };
+      var del = document.createElement('button');
+      del.className = 'del'; del.type = 'button'; del.textContent = '删除';
+      del.onclick = function () { list.splice(idx, 1); renderWindows(kind); changed(); };
+      top.appendChild(name); top.appendChild(del); card.appendChild(top);
+      var days = document.createElement('div'); days.className = 'days';
+      var ds = w.days || [];
+      DAYS.forEach(function (n, d) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.textContent = n;
+        b.className = ds.indexOf(d) >= 0 ? 'on' : '';
+        b.onclick = function () {
+          var i = ds.indexOf(d);
+          if (i >= 0) { ds.splice(i, 1); } else { ds.push(d); ds.sort(function (a, c) { return a - c; }); }
+          w.days = ds;
+          b.className = ds.indexOf(d) >= 0 ? 'on' : '';
+          changed();
+        };
+        days.appendChild(b);
+      });
+      card.appendChild(days);
+      var rng = document.createElement('div'); rng.className = 'rng';
+      rng.appendChild(document.createTextNode('从 '));
+      rng.appendChild(timePicker(kind + 's' + idx, w.start, function (v) { w.start = v; changed(); }));
+      rng.appendChild(document.createTextNode(' 到 '));
+      rng.appendChild(timePicker(kind + 'e' + idx, w.end, function (v) { w.end = v; changed(); }));
+      rng.appendChild(document.createTextNode(' （可跨午夜，按开始那天的星期）'));
+      card.appendChild(rng);
+      box.appendChild(card);
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-add]'), function (b) {
+    b.onclick = function () {
+      if (!cfg) { return; }
+      var kind = b.dataset.add;
+      arr(kind).push({ id: newId(), name: kind === 'timePoints' ? '网课' : '大人时间', days: [0, 1, 2, 3, 4], start: '19:00', end: '20:00' });
+      renderWindows(kind); changed();
+    };
+  });
+
+  // ---------- 答题范围
+  function renderScope() {
+    if (!cfg) { return; }
+    var sub = $('subjectChips');
+    sub.innerHTML = '';
+    var counts = (state && state.countBySubject) || {};
+    var names = Object.keys(counts).sort();
+    names.forEach(function (n) {
+      var c = document.createElement('div');
+      var picked = arr('quizSubjects').map(String).indexOf(n) >= 0;
+      c.className = 'cchip' + (picked ? ' on' : '');
+      c.innerHTML = n + ' <b>' + counts[n] + ' 题</b>';
+      c.onclick = function () { toggleScope('quizSubjects', n); renderScope(); };
+      sub.appendChild(c);
+    });
+    if (!names.length) { sub.innerHTML = '<span class="unit">题库里还没有科目</span>'; }
+    var lv = $('levelChips');
+    lv.innerHTML = '';
+    var gc = (state && state.countByGrade) || {};
+    for (var g = 1; g <= 6; g++) {
+      (function (gg) {
+        var picked = arr('quizLevels').map(String).indexOf(String(gg)) >= 0;
+        var c = document.createElement('div');
+        c.className = 'cchip' + (picked ? ' on' : '');
+        c.innerHTML = gg + ' 年级 <b>' + (gc[String(gg)] || 0) + ' 题</b>';
+        c.onclick = function () { toggleScope('quizLevels', String(gg)); renderScope(); };
+        lv.appendChild(c);
+      })(g);
+    }
+    $('bankTotal').textContent = state ? state.questionCount : '—';
+  }
+  function toggleScope(k, v) {
+    var list = arr(k).map(String), i = list.indexOf(String(v));
+    if (i >= 0) { list.splice(i, 1); } else { list.push(String(v)); }
+    cfg[k] = list;
+    changed();
+  }
+
+  // ---------- 自动保存（0.7 秒防抖；输入中不打断）
+  var saveTimer = null, saving = false, failedSig = '';
+  function changed() {
+    conditional();
+    setBadge('ruleBadge', 'wait', '等待自动保存');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveRules, 700);
+  }
+  function saveRules() {
+    if (!cfg || saving) { return; }
+    var sig = JSON.stringify(cfg);
+    if (sig === failedSig) { return; }
+    saving = true;
+    setBadge('ruleBadge', 'wait', '正在保存…');
+    api('/api/rules', { method: 'POST', body: JSON.stringify({ config: cfg }) }).then(function (r) {
+      saving = false; failedSig = '';
+      setBadge('ruleBadge', 'ok', '已自动保存');
+      if (r && r.config) {
+        cfg = r.config;    // 服务端会夹取非法值，回灌一次
+        syncSteppers(); syncBool(); syncSelects(); conditional();
+      }
+      loadRulesStats();
+    }).catch(function (e) {
+      saving = false; failedSig = sig;
+      setBadge('ruleBadge', 'err', '保存失败');
+      toast('保存失败：' + e.message, 3200);
+    });
+  }
+  function loadRulesStats() {
+    return api('/api/state').then(function (s) {
+      state = s;
+      render();
+      $('statline').textContent = '今日已弹 ' + (s.roundsToday || 0) + ' 轮 · 错题库 ' +
+        (s.reviewDue || 0) + ' 题 · 此刻' + (s.ruleAllowedNow ? '允许' : '不') + '弹题';
+      $('reviewStat').textContent = '已记录 ' + (s.reviewDue || 0) + ' 道错题，今日答错 ' + (s.wrongToday || 0) + ' 次';
+    }).catch(function () {});
+  }
+  function renderRules() {
+    syncBool(); syncSelects(); syncSteppers(); conditional();
+    renderWindowRange(); renderTpl(); renderWeek();
+    renderWindows('timePoints'); renderWindows('exemptWindows'); renderScope();
+  }
+
+  // ============================================================ 初始化
   initTimeSelects();
-  $('btnOpenRules').onclick = function () {
-    location.href = '/rules.html' + (pin ? '?pin=' + encodeURIComponent(pin) : '');
-  };
+  initSteppers();
+  initControls();
+  api('/api/rules').then(function (r) {
+    cfg = r.config;
+    renderRules();
+    loadRulesStats();
+    $('statline').textContent = '今日已弹 ' + (r.roundsToday || 0) + ' 轮 · 错题库 ' + (r.reviewDue || 0) + ' 题';
+    showView(normalizeHash(location.hash));
+  }).catch(function (e) {
+    toast('读取规则失败：' + e.message, 4000);
+    showView(normalizeHash(location.hash));
+  });
   loadState();
-  loadRulesSummary();
-  setInterval(function () { loadState(); loadRulesSummary(); }, 15000);
+  setInterval(function () {
+    loadState();
+    if (curView === 'rules') { loadRulesStats(); }
+  }, 15000);
 })();
 </script>
 </body>
