@@ -189,6 +189,9 @@
   .add{margin-top:10px;width:100%;border:1px dashed #d7c6a6;background:#fffaf1;color:var(--accent);
     border-radius:10px;padding:9px;font-size:13.5px}
   .hidden{display:none!important}
+  /* 通栏卡片里的输入框 / 按钮不必拉满整行，避免 1100px 宽的单行输入框 */
+  .stack>.card .fl+input{max-width:520px}
+  .stack>.card .win input[type=text]{max-width:520px}
 
   /* ---------------- 响应式 ---------------- */
   @media(max-width:1023px){
@@ -284,16 +287,20 @@
 
   <!-- ============================ 2. 快捷操作 ============================ -->
   <section class="view" id="view-quick">
-    <div class="cards">
+    <div class="cards" style="align-items:stretch">
       <div class="card">
-        <h2>自动弹题总开关</h2>
+        <h2>开关</h2>
+        <div class="row">
+          <span>启用拦截</span>
+          <div class="switch on" id="swEnabled"><i></i></div>
+        </div>
         <div class="row">
           <span>是否开启自动弹题</span>
           <div class="switch on" id="swAutoQuiz"><i></i></div>
         </div>
-        <div class="tip">
-          关掉后：到点不弹、开机不弹、待机中的电视也不会被叫醒；「立即弹一次题」仍可手动催。
-          重启、升级都保持关闭，想恢复再打开即可。开关改完自动保存。
+        <div class="row">
+          <span>开机立即弹一次题（防关机逃避）</span>
+          <div class="switch on" id="swBoot"><i></i></div>
         </div>
       </div>
       <div class="card">
@@ -309,6 +316,12 @@
           「立即解锁」= 家长远程放行：关掉电视上正在显示的答题弹窗，孩子可以正常看电视；下一轮从现在重新计时。
         </div>
       </div>
+    </div>
+    <div class="tip">
+      · <b>启用拦截</b>：总开关，关掉后电视上完全不弹题、也不拦任何东西，只保留后台与远程控制；<br>
+      · <b>是否开启自动弹题</b>：关掉后到点不弹、待机中的电视也不会被叫醒，「立即弹一次题」仍可手动催；<br>
+      · <b>开机立即弹一次题</b>：孩子关机逃避后一开机就先答题，重启、升级都保持该设置。<br>
+      三个开关改完自动保存，也都不会重置「下次弹题」倒计时。
     </div>
   </section>
 
@@ -400,8 +413,26 @@
     <!-- ---------- 时间计划 ---------- -->
     <div id="tab-time" class="hidden">
       <div class="panel">
+        <h2>免打扰时段</h2>
+        <p class="desc">优先级最高：命中期间绝不弹题，并且闹钟改为「不唤醒设备」——电视夜里待机不会自己亮起来，白天开机后会自动补上欠的那一次。</p>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>开启免打扰</b><small>关掉后按下面的可用时段 / 周计划正常执行</small></div>
+            <div class="ctl"><div class="switch" id="swQuiet"><i></i></div></div></div>
+          <div class="f"><div class="lbl"><b>免打扰起止</b><small>可跨午夜（如 22:30 → 06:30）；时段内到点的答题顺延到结束时刻</small></div>
+            <div class="ctl" style="gap:4px">
+              <select id="inQuietStartH" style="width:auto;padding:8px 6px;font-size:14px"></select>
+              <span class="unit">:</span>
+              <select id="inQuietStartM" style="width:auto;padding:8px 6px;font-size:14px"></select>
+              <span class="unit" style="margin:0 4px">至</span>
+              <select id="inQuietEndH" style="width:auto;padding:8px 6px;font-size:14px"></select>
+              <span class="unit">:</span>
+              <select id="inQuietEndM" style="width:auto;padding:8px 6px;font-size:14px"></select>
+            </div></div>
+        </div>
+      </div>
+      <div class="panel">
         <h2>可用时段</h2>
-        <p class="desc">优先级：自动弹题总开关 / 免打扰 ＞ 大人豁免 ＞ 网课时段 ＞ 下面的可用时段。命中前三者一律不弹题，也不会唤醒待机中的电视。</p>
+        <p class="desc">优先级：免打扰 ＞ 大人豁免 ＞ 网课时段 ＞ 下面的可用时段；自动弹题总开关关掉时一律不弹。命中前三者都不会唤醒待机中的电视。</p>
         <div class="body">
           <div class="f"><div class="lbl"><b>时段用途</b><small>「只在时段内答题」＝放学后到睡前才管；「时段内自由观看」＝可用时段不弹题，其余时间照常弹</small></div>
             <div class="ctl"><select id="scheduleMode">
@@ -433,7 +464,7 @@
           <button class="add" data-add="exemptWindows">＋ 添加大人豁免</button>
         </div>
       </div>
-      <div class="note gray">「系统设置 → 免打扰时段」仍然有效，且优先级最高。这里用「时 + 分」两个下拉选时间，避免部分手机浏览器里原生时间控件点不开、或保存前被状态刷新覆盖。</div>
+      <div class="note gray">时间类规则都在这一个分段里了（免打扰 / 可用时段 / 周计划 / 网课 / 大人豁免），系统设置里不再重复一份。全部用「时 + 分」两个下拉选时间，避免部分手机浏览器里原生时间控件点不开、或被 15 秒状态刷新覆盖。</div>
     </div>
 
     <!-- ---------- 答题范围 ---------- -->
@@ -484,38 +515,14 @@
   <!-- ============================ 5. 系统设置 ============================ -->
   <section class="view" id="view-system">
     <div class="bar">
-      <div class="txt">开关与时间改完即自动保存</div>
+      <div class="txt">密码与端口改完即自动保存</div>
       <span class="badge ok" id="sysBadge">已自动保存</span>
     </div>
-    <div class="cards">
+    <div class="stack">
       <div class="card">
-        <h2>设备与账号</h2>
-        <div class="row">
-          <span>启用拦截</span>
-          <div class="switch" id="swEnabled"><i></i></div>
-        </div>
-        <div class="row">
-          <span>免打扰时段（这段时间内绝不弹题、不唤醒电视）</span>
-          <div class="switch" id="swQuiet"><i></i></div>
-        </div>
-        <div class="grid2">
-          <div>
-            <label class="fl">开始（时 : 分）</label>
-            <div class="grid2" style="gap:6px"><select id="inQuietStartH"></select><select id="inQuietStartM"></select></div>
-          </div>
-          <div>
-            <label class="fl">结束（时 : 分）</label>
-            <div class="grid2" style="gap:6px"><select id="inQuietEndH"></select><select id="inQuietEndM"></select></div>
-          </div>
-        </div>
-        <div class="tip" style="margin-top:6px">
-          跨午夜也可以（如 22:30 → 06:30）。时段内到点的答题会顺延到结束时刻，并且闹钟改为「不唤醒设备」——
-          电视夜里待机不会再自己亮起来；白天开机后会自动补上欠的那一次。<br>
-          用「时 + 分」两个下拉代替原生时间控件：部分手机 / 电视浏览器点不开原生控件，且每 15 秒的状态刷新会把还没保存的时间冲掉。
-        </div>
-        <div class="row" style="margin-top:12px">
-          <span>开机立即弹一次题（防关机逃避）</span>
-          <div class="switch on" id="swBoot"><i></i></div>
+        <h2>管理密码与端口</h2>
+        <div class="tip" style="margin-top:0">
+          拦截开关、开机弹题、免打扰时段已分别归到「快捷操作」与「规则管理 → 时间计划」，这里只留账号与网络。
         </div>
         <label class="fl">管理密码（至少 4 位，留空表示不修改）</label>
         <input type="password" id="inPinNew" placeholder="输入新密码，离开输入框即自动保存">
@@ -544,7 +551,7 @@
         <label class="fl">新卸载码（4–12 位数字或字母，留空表示不修改）</label>
         <input type="text" id="inNewCode" placeholder="例如 839201">
         <div class="btns">
-          <button class="primary" id="btnSaveCode">修改卸载码</button>
+          <button class="primary" id="btnSaveCode" style="max-width:280px">修改卸载码</button>
         </div>
         <div class="tip">改码要校验原码，所以留成按钮提交；两个开关本身是改完即存。</div>
       </div>
@@ -559,12 +566,12 @@
         </div>
         <div class="tip" id="activeAdminCmd" style="word-break:break-all;color:var(--accent)"></div>
         <div class="btns">
-          <button id="btnCopyActiveCmd">复制基础保护命令</button>
+          <button id="btnCopyActiveCmd" style="max-width:280px">复制基础保护命令</button>
         </div>
         <div class="tip">当前设备的所有者命令（彻底锁定，要求电视上没登录账号）：</div>
         <div class="tip" id="ownerCmd" style="word-break:break-all;color:var(--accent)"></div>
         <div class="btns">
-          <button id="btnCopyCmd">复制命令</button>
+          <button id="btnCopyCmd" style="max-width:280px">复制命令</button>
         </div>
       </div>
     </div>
@@ -808,11 +815,15 @@
     });
   }
 
-  // ============================================================ 系统设置：改完即存
+  // ============================================================ 参数类设置：改完即存
   var sysTimer = null, sysPending = {};
+  // 免打扰时段搬到了「规则管理 → 时间计划」，所以在规则页保存时用规则徽标，别让反馈落到隐藏的系统设置上
+  function sysBadgeId() {
+    return (curView && curView.indexOf('rules') === 0) ? 'ruleBadge' : 'sysBadge';
+  }
   function queueSettings(patch, okMsg) {
     for (var k in patch) { if (patch.hasOwnProperty(k)) { sysPending[k] = patch[k]; } }
-    setBadge('sysBadge', 'wait', '等待自动保存');
+    setBadge(sysBadgeId(), 'wait', '等待自动保存');
     clearTimeout(sysTimer);
     sysTimer = setTimeout(function () { flushSettings(okMsg); }, 500);
   }
@@ -824,9 +835,10 @@
     }
     if (!any) { return; }
     sysPending = {};
-    setBadge('sysBadge', 'wait', '正在保存…');
+    var badge = sysBadgeId();
+    setBadge(badge, 'wait', '正在保存…');
     api('/api/settings', { method: 'POST', body: JSON.stringify(body) }).then(function (r) {
-      setBadge('sysBadge', 'ok', '已自动保存');
+      setBadge(badge, 'ok', '已自动保存');
       if (body.quietStart || body.quietEnd) { quietEditing = false; }  // 已落盘，状态刷新可重新同步时间
       if (okMsg) { toast(okMsg, 2400); }
       if (body.pin) {
@@ -839,7 +851,7 @@
       }
       return loadState();
     }).catch(function (e) {
-      setBadge('sysBadge', 'err', '保存失败');
+      setBadge(badge, 'err', '保存失败');
       toast('保存失败：' + e.message, 3400);
     });
   }
