@@ -102,7 +102,7 @@
 
   .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
   .cards>.wide{grid-column:1/-1}
-  .stack{display:grid;grid-template-columns:1fr;gap:14px}
+  .stack{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
     padding:16px 18px;box-shadow:var(--shadow)}
@@ -237,6 +237,56 @@
     color:#4a5b45;border-radius:9px;padding:9px;font-size:12.5px}
   .add:hover{background:#f4f7ec}
   .hidden{display:none!important}
+
+  /* ---------------- 题库管理：分页列表 / 单题编辑 / 备份（v1.7.20） ---------------- */
+  .qfilter{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 2px}
+  .qfilter select,.qfilter input{flex:1 1 130px;width:auto;min-width:0}
+  .qfilter button{flex:0 0 auto;min-width:0;padding:8px 14px;font-size:12.5px}
+  .qlist{margin-top:8px;border-top:1px solid var(--line-soft)}
+  .qrow{display:flex;align-items:flex-start;gap:10px;padding:11px 0;
+    border-bottom:1px solid var(--line-soft)}
+  .qrow .meta{flex:0 0 auto;display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+  .qtag{display:inline-block;background:var(--soft);border:1px solid var(--line);
+    border-radius:6px;padding:1px 7px;font-size:11.5px;color:var(--txt2);
+    white-space:nowrap;line-height:1.7}
+  .qtag.qid{background:transparent;border-color:transparent;color:var(--sub);font-size:10.5px}
+  .qrow .body{flex:1;min-width:0;font-size:13px;line-height:1.65;color:var(--txt);
+    word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden}
+  .qrow .ops{flex:0 0 auto;display:flex;gap:6px}
+  .qrow .ops button{flex:0 0 auto;min-width:0;padding:5px 10px;font-size:12px}
+  .qrow .ops button.del{background:#fbf0ef;border-color:#ecd6d4;color:var(--red)}
+  .qempty{color:var(--sub);font-size:12.5px;padding:18px 0;text-align:center}
+  .pager{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+  .pager button{flex:0 0 auto;min-width:0;padding:7px 14px;font-size:12.5px}
+  .pager button[disabled]{opacity:.45;cursor:default}
+  .pager .info{color:var(--sub);font-size:12.5px;font-variant-numeric:tabular-nums}
+  textarea.qtext{font-family:inherit;font-size:13.5px;height:78px;background:var(--card);
+    line-height:1.65;padding:10px 12px}
+  .opts .opt{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+  .opts .opt input[type=radio]{flex:0 0 auto;width:16px;height:16px;margin:0;
+    accent-color:#1f2b24;cursor:pointer}
+  .opts .opt input[type=text]{flex:1;min-width:0}
+  .opts .opt .mark{flex:0 0 auto;color:var(--sub);font-size:12px;width:14px}
+  .opts .opt .rm{flex:0 0 auto;min-width:0;max-width:none;width:28px;height:32px;padding:0;
+    font-size:15px;line-height:1;color:var(--sub);background:var(--card);
+    border:1px solid var(--line);border-radius:7px}
+  .opts .opt .rm:hover{background:#fbf0ef;border-color:#ecd6d4;color:var(--red)}
+  .baklist{margin-top:10px}
+  .bakrow{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;color:var(--txt2)}
+  .bakrow:last-child{border-bottom:0}
+  .bakrow .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  .bakrow .ops{flex:0 0 auto;display:flex;gap:6px}
+  .bakrow .ops button{flex:0 0 auto;min-width:0;padding:3px 9px;font-size:11.5px}
+  details summary{cursor:pointer;color:var(--txt2);font-size:13.5px;font-weight:600;
+    list-style:none;padding:1px 0}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"▸";color:var(--sub);margin-right:7px;display:inline-block;
+    transition:transform .15s}
+  details[open] summary::before{transform:rotate(90deg)}
+  details textarea{margin-top:10px}
   /* 通栏卡片里的输入框 / 按钮不必拉满整行，避免 1100px 宽的单行输入框 */
   .stack>.card .fl+input{max-width:520px}
   .stack>.card .win input[type=text]{max-width:520px}
@@ -259,7 +309,7 @@
   @media(max-width:1023px){
     .sidebar{width:198px;flex-basis:198px;padding:14px 9px 10px}
     .content{padding:18px 18px 54px}
-    .cards{grid-template-columns:1fr}
+    .cards{grid-template-columns:minmax(0,1fr)}
     .chips{max-width:100%}
   }
   @media(max-width:767px){
@@ -292,6 +342,18 @@
     .panel .body{padding:2px 14px 10px}
     .panel>h2{padding:13px 14px 11px}
     .panel .desc{padding:10px 14px 0}
+    .qfilter select,.qfilter input{flex:1 1 100%}
+    .qfilter button{flex:1 1 100%;max-width:none}
+    .qrow{flex-wrap:wrap}
+    .qrow .body{flex:1 1 100%;order:3}
+    .qrow .ops{margin-left:auto}
+    .pager button{flex:1 1 0;max-width:none}
+    .pager .info{flex:0 0 auto;font-size:11.5px}
+    /* 18 个「科目 · 年级」芯片在手机上单行横滑，不占掉半屏 */
+    #bankSubjects{flex-wrap:nowrap;min-width:0;overflow-x:auto;overflow-y:hidden;
+      scrollbar-width:none;padding-bottom:7px}
+    #bankSubjects::-webkit-scrollbar{display:none}
+    #bankSubjects .chip{flex:0 0 auto}
   }
 </style>
 </head>
@@ -405,38 +467,119 @@
   <section class="view" id="view-bank">
     <div class="bar">
       <div class="txt" id="bankStat">题库共 — 题</div>
-      <span class="badge ok" id="bankBadge">已载入</span>
+      <span class="badge ok" id="bankBadge">已连接</span>
     </div>
-    <div class="cards">
-      <div class="card wide">
-        <h2>题库编辑</h2>
+    <div class="stack">
+
+      <!-- ---------- 3.1 题目列表（分页，不整份加载） ---------- -->
+      <div class="card">
+        <h2>题目列表</h2>
         <div class="tip" style="margin-top:0">
-          格式：<code>{"questions":[{"subject":"语文","grade":3,"q":"题干","options":["正确","干扰1","干扰2","干扰3"],"answer":0}]}</code><br>
-          <code>grade</code> 是年级（1–6），不写则任何年级都可能出到；<code>answer</code> 是正确选项下标（从 0 开始），程序每次出题会自动打乱选项顺序。
+          只有当前这一页的题会被取到手机上，翻页 / 搜索 / 改筛选都在服务端完成，不再一次载入几兆 JSON。
         </div>
-        <div class="btns">
-          <button id="btnReloadBank">载入当前题库</button>
-          <button id="btnFormat">格式化</button>
-          <button id="btnRestore">恢复上次备份</button>
+        <div class="qfilter">
+          <select id="fSubject"><option value="">全部科目</option></select>
+          <select id="fGrade">
+            <option value="-1">全部年级</option>
+            <option value="0">未标年级</option>
+            <option value="1">1 年级</option>
+            <option value="2">2 年级</option>
+            <option value="3">3 年级</option>
+            <option value="4">4 年级</option>
+            <option value="5">5 年级</option>
+            <option value="6">6 年级</option>
+          </select>
+          <input type="text" id="fKw" placeholder="搜题干 / 题号">
+          <button id="btnSearch">搜索</button>
         </div>
-        <label class="fl">题库 JSON</label>
-        <textarea id="txtBank" spellcheck="false" placeholder="点击上方「载入当前题库」"></textarea>
-        <div class="btns">
-          <button class="primary" id="btnSaveBank">保存题库</button>
-        </div>
-        <div class="tip">
-          题库是数据不是开关：编辑器里的改动点「保存题库」才写入电视（避免半截 JSON 把孩子端出题打断）。
-          其余设置项都是改完即存。
+        <div class="stat" id="bankSubjects"></div>
+        <div class="qlist" id="qList"></div>
+        <div class="pager">
+          <button id="btnPrev">上一页</button>
+          <span class="info" id="pageInfo">—</span>
+          <button id="btnNext">下一页</button>
         </div>
       </div>
-      <div class="card wide">
-        <h2>从网址导入</h2>
-        <label class="fl" style="margin-top:0">题库地址（http/https，返回同样格式的 JSON）</label>
+
+      <!-- ---------- 3.2 新增 / 编辑单题 ---------- -->
+      <div class="card">
+        <h2 id="editTitle">新增题目</h2>
+        <div class="grid2">
+          <div>
+            <label class="fl">科目</label>
+            <input type="text" id="qSubject" list="subjectList" placeholder="语文 / 数学 / 英语">
+            <datalist id="subjectList"></datalist>
+          </div>
+          <div>
+            <label class="fl">年级</label>
+            <select id="qGrade">
+              <option value="1">1 年级</option>
+              <option value="2">2 年级</option>
+              <option value="3">3 年级</option>
+              <option value="4">4 年级</option>
+              <option value="5">5 年级</option>
+              <option value="6">6 年级</option>
+              <option value="0">不限年级（通用题）</option>
+            </select>
+          </div>
+        </div>
+        <label class="fl">题干</label>
+        <textarea id="qText" class="qtext" spellcheck="false"
+          placeholder="例：「鹅，鹅，鹅」的下一句是？"></textarea>
+        <label class="fl">选项（点左边的圆点选中正确答案，至少 2 个；右侧 × 可删掉多余的选项）</label>
+        <div class="opts" id="optBox"></div>
+        <div class="btns">
+          <button id="btnAddOpt">加一个选项</button>
+        </div>
+        <div class="btns">
+          <button class="primary" id="btnSaveQ">保存到题库</button>
+          <button id="btnResetQ">清空 / 取消编辑</button>
+        </div>
+        <div class="tip">
+          保存即写入电视题库，下一轮弹题就会出到；改动前的题库会自动进备份位（保留最近 8 份），改错了能一键回退。
+        </div>
+      </div>
+
+      <!-- ---------- 3.3 备份与恢复 ---------- -->
+      <div class="card">
+        <h2>备份与恢复</h2>
+        <div class="btns" style="margin-top:0">
+          <button class="primary" id="btnBackupNow">立即备份</button>
+          <button id="btnExport">下载题库 JSON</button>
+        </div>
+        <div class="btns">
+          <button id="btnRestore">恢复上次改动前</button>
+          <button id="btnBuiltin">恢复内置题库</button>
+        </div>
+        <div class="baklist" id="bakList"></div>
+        <div class="tip">
+          「立即备份」把当前题库另存一份到电视里（最多留 8 份）；「下载题库 JSON」把整份题库存到你自己的手机上；
+          「恢复内置题库」用安装包自带的那份覆盖（自带题库带年级，可用来修「年级丢失」）。
+        </div>
+        <label class="fl">从网址导入（整份覆盖）</label>
         <input type="text" id="inImportUrl" placeholder="http://192.168.1.10:8000/questions.json">
         <div class="btns">
           <button class="warn" id="btnImport">从网址导入</button>
         </div>
-        <div class="stat" id="bankSubjects"></div>
+      </div>
+
+      <!-- ---------- 3.4 高级：整份 JSON（默认折叠，点了才载入） ---------- -->
+      <div class="card">
+        <details id="advBox">
+          <summary>高级：整份 JSON 编辑（约 5 MB，载入较慢，一般不需要）</summary>
+          <div class="tip">
+            格式：<code>{"questions":[{"subject":"语文","grade":3,"q":"题干","options":["正确","干扰"],"answer":0}]}</code><br>
+            <code>answer</code> 是正确选项下标（从 0 开始），程序每次出题会自动打乱选项顺序。
+          </div>
+          <div class="btns">
+            <button id="btnReloadBank">载入当前题库</button>
+            <button id="btnFormat">格式化</button>
+          </div>
+          <textarea id="txtBank" spellcheck="false" placeholder="点上面「载入当前题库」"></textarea>
+          <div class="btns">
+            <button class="primary" id="btnSaveBank">保存整份题库</button>
+          </div>
+        </details>
       </div>
     </div>
   </section>
@@ -678,7 +821,6 @@
   var state = null;        // /api/state
   var cfg = null;          // /api/rules 的 config
   var quietEditing = false;// 家长正在调免打扰时间时，15 秒刷新不能把下拉框冲掉
-  var bankLoaded = false;
 
   function api(path, opt) {
     opt = opt || {};
@@ -760,7 +902,7 @@
     $('pageTitle').textContent = VIEWS[view];
     $('crumb').textContent = '家长控制台 / ' + VIEWS[view];
     if (view === 'rules') { activateTab(sub); }
-    if (view === 'bank' && !bankLoaded) { loadBank(); }
+    if (view === 'bank') { openBank(); }
     try {
       history.replaceState(null, '', location.pathname + '#' + (view === 'rules' ? 'rules-' + sub : view));
     } catch (e) {}
@@ -831,6 +973,8 @@
       box.appendChild(d);
     });
     $('stErr').textContent = state.serverError ? ('服务提示：' + state.serverError) : '';
+    // 题库页的「科目 · 年级」题量跟着状态刷新（首次进页面时 state 可能还没到）
+    renderBankSubjects();
 
     // ---- 快捷操作
     $('swAutoQuiz').className = 'switch' + (state.autoQuiz ? ' on' : '');
@@ -1075,85 +1219,418 @@
     }).catch(function () { location.replace('/'); });
   };
 
-  // ============================================================ 题库管理
-  function loadBank() {
-    setBadge('bankBadge', 'wait', '正在载入…');
-    return api('/api/questions').then(function (data) {
-      $('txtBank').value = JSON.stringify(data, null, 2);
-      bankLoaded = true;
-      var n = (data.questions || []).length;
-      $('bankStat').textContent = '题库共 ' + n + ' 题';
-      setBadge('bankBadge', 'ok', '已载入');
-      renderBankSubjects(data.questions || []);
-      toast('已载入 ' + n + ' 题');
+  // ============================================================ 题库管理（v1.7.20：分页浏览 + 单题增删改 + 备份）
+  // 不再把整份 5 MB JSON 拉进页面：一次只取 20 条，翻页 / 搜索 / 筛选都由服务端做。
+  var bankPage = 0, bankSize = 20, bankTotal = 0, bankRows = [], bankEditId = '';
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function fmtSize(n) {
+    n = +n || 0;
+    if (n <= 0) { return '0 KB'; }
+    if (n < 1048576) { return Math.max(1, Math.round(n / 1024)) + ' KB'; }
+    return (n / 1048576).toFixed(1) + ' MB';
+  }
+  function fmtTime(ts) {
+    if (!ts) { return '—'; }
+    var d = new Date(ts);
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
+      pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  // 「科目 · 3年级」，未标年级时只显示科目
+  function qLabel(q) {
+    if (!q) { return ''; }
+    if (q.grade > 0) { return q.subject + ' · ' + q.grade + '年级'; }
+    return q.subject || '综合';
+  }
+
+  function openBank() {
+    loadBankMeta();
+    loadBankPage();
+    renderBankSubjects();
+    // 选项编辑器首屏就要有 4 个空位，否则「加一个选项」下面是一片空白
+    if (!$('optBox').children.length) { renderOpts(null, 0); }
+  }
+
+  // 总览：题量 / 文件大小 / 备份列表
+  function loadBankMeta() {
+    return api('/api/bank/backups').then(function (d) {
+      $('bankStat').textContent = '题库共 ' + d.count + ' 题 · ' + fmtSize(d.size);
+      renderBankBackups(d.items || []);
     }).catch(function (e) {
-      setBadge('bankBadge', 'err', '载入失败');
+      setBadge('bankBadge', 'err', '读取失败');
+    });
+  }
+
+  function loadBankPage() {
+    var qs = '?subject=' + encodeURIComponent($('fSubject').value) +
+      '&grade=' + encodeURIComponent($('fGrade').value) +
+      '&q=' + encodeURIComponent($('fKw').value.trim()) +
+      '&offset=' + (bankPage * bankSize) + '&limit=' + bankSize;
+    setBadge('bankBadge', 'wait', '读取中…');
+    return api('/api/bank/list' + qs).then(function (d) {
+      bankRows = d.items || [];
+      bankTotal = d.total || 0;
+      renderBankList();
+      $('bankStat').textContent = '题库共 ' + d.allCount + ' 题 · 当前筛选 ' + bankTotal + ' 题';
+      setBadge('bankBadge', 'ok', '第 ' + (bankPage + 1) + ' 页');
+    }).catch(function (e) {
+      setBadge('bankBadge', 'err', '读取失败');
       toast(e.message, 3200);
     });
   }
-  function renderBankSubjects(list) {
-    var box = $('bankSubjects');
+
+  function renderBankList() {
+    var box = $('qList');
     box.innerHTML = '';
-    var sub = {}, grade = {};
-    list.forEach(function (q) {
-      if (q && q.subject) { sub[q.subject] = (sub[q.subject] || 0) + 1; }
-      if (q && q.grade) { grade[q.grade] = (grade[q.grade] || 0) + 1; }
+    if (!bankRows.length) {
+      box.innerHTML = '<div class="qempty">这一页没有题目，换个筛选条件或关键词试试</div>';
+      updatePager();
+      return;
+    }
+    bankRows.forEach(function (q, i) {
+      var row = document.createElement('div');
+      row.className = 'qrow';
+      row.innerHTML =
+        '<div class="meta"><span class="qtag">' + esc(qLabel(q)) + '</span>' +
+        '<span class="qtag qid">' + esc(q.id) + '</span></div>' +
+        '<div class="body">' + esc(q.q) + '</div>' +
+        '<div class="ops">' +
+        '<button data-act="edit" data-i="' + i + '">编辑</button>' +
+        '<button class="del" data-act="del" data-i="' + i + '">删除</button>' +
+        '</div>';
+      box.appendChild(row);
     });
-    Object.keys(sub).forEach(function (k) {
+    updatePager();
+  }
+
+  function updatePager() {
+    var pages = Math.max(1, Math.ceil(bankTotal / bankSize));
+    $('pageInfo').textContent = '第 ' + (bankPage + 1) + ' / ' + pages + ' 页 · 共 ' + bankTotal + ' 题';
+    $('btnPrev').disabled = bankPage <= 0;
+    $('btnNext').disabled = bankPage + 1 >= pages;
+  }
+
+  function rowOf(el, cls) {
+    while (el && el !== document) {
+      if (el.className && String(el.className).indexOf(cls) >= 0) { return el; }
+      el = el.parentNode;
+    }
+    return null;
+  }
+  $('qList').onclick = function (e) {
+    var b = rowOf(e.target, 'qrow') ? e.target : null;
+    while (b && b.tagName !== 'BUTTON') { b = b.parentNode; }
+    if (!b) { return; }
+    var q = bankRows[+b.getAttribute('data-i')];
+    if (!q) { return; }
+    if (b.getAttribute('data-act') === 'edit') { fillEditor(q); } else { removeQuestion(q); }
+  };
+
+  // ---------- 单题编辑器
+  var OPT_LETTERS = 'ABCDEF';
+  function renderOpts(values, answer) {
+    var box = $('optBox');
+    box.innerHTML = '';
+    var list = (values && values.length >= 2) ? values.slice(0, 6) : ['', '', '', ''];
+    list.forEach(function (v, i) {
       var d = document.createElement('div');
-      d.className = 'chip';
-      d.innerHTML = k + ' <b>' + sub[k] + '</b>';
-      box.appendChild(d);
-    });
-    Object.keys(grade).sort().forEach(function (k) {
-      var d = document.createElement('div');
-      d.className = 'chip';
-      d.innerHTML = k + ' 年级 <b>' + grade[k] + '</b>';
+      d.className = 'opt';
+      d.innerHTML = '<input type="radio" name="qopt" value="' + i + '"' +
+        (i === answer ? ' checked' : '') + '>' +
+        '<span class="mark">' + OPT_LETTERS.charAt(i) + '</span>' +
+        '<input type="text" spellcheck="false" value="' + esc(v) + '">' +
+        '<button type="button" class="rm" title="删掉这个选项">×</button>';
       box.appendChild(d);
     });
   }
-  $('btnReloadBank').onclick = loadBank;
-  $('btnFormat').onclick = function () {
-    try {
-      var obj = JSON.parse($('txtBank').value);
-      $('txtBank').value = JSON.stringify(obj, null, 2);
-      setBadge('bankBadge', 'ok', '已格式化，未保存');
-      toast('已格式化');
-    } catch (e) { toast('JSON 格式有误：' + e.message, 3000); }
+  function optValues() {
+    var out = [];
+    Array.prototype.forEach.call($('optBox').querySelectorAll('input[type=text]'), function (i) {
+      out.push(i.value);
+    });
+    return out;
+  }
+  function pickAnswer() {
+    var r = document.querySelector('#optBox input[name=qopt]:checked');
+    return r ? +r.value : -1;
+  }
+  function fillEditor(q) {
+    bankEditId = q.id || '';
+    $('editTitle').textContent = '编辑题目 · ' + qLabel(q);
+    $('qSubject').value = q.subject || '';
+    $('qGrade').value = String(q.grade || 0);
+    $('qText').value = q.q || '';
+    renderOpts(q.options || null, q.answer || 0);
+    try { $('editTitle').scrollIntoView({ block: 'center' }); } catch (e) {}
+    toast('已载入，改完点「保存到题库」');
+  }
+  function resetEditor() {
+    bankEditId = '';
+    $('editTitle').textContent = '新增题目';
+    $('qText').value = '';
+    var sub = $('fSubject').value;
+    $('qSubject').value = sub || '语文';
+    var g = +$('fGrade').value;
+    $('qGrade').value = String(g > 0 ? g : 3);
+    renderOpts(null, 0);
+  }
+  $('btnAddOpt').onclick = function () {
+    var vals = optValues();
+    if (vals.length >= 6) { toast('最多 6 个选项'); return; }
+    vals.push('');
+    renderOpts(vals, pickAnswer());
   };
-  $('btnSaveBank').onclick = function () {
-    var txt = $('txtBank').value.trim();
-    if (!txt) { toast('题库内容为空'); return; }
-    var obj;
-    try { obj = JSON.parse(txt); } catch (e) { toast('JSON 格式有误：' + e.message, 3200); return; }
+  // 删掉某一个选项（至少留 2 个），正确答案下标跟着挪
+  $('optBox').onclick = function (e) {
+    var b = e.target;
+    if (!b || b.tagName !== 'BUTTON') { return; }
+    var rows = $('optBox').querySelectorAll('.opt');
+    if (rows.length <= 2) { toast('至少保留 2 个选项'); return; }
+    var idx = Array.prototype.indexOf.call(rows, b.parentNode);
+    if (idx < 0) { return; }
+    var vals = optValues();
+    var ans = pickAnswer();
+    vals.splice(idx, 1);
+    if (ans === idx) { ans = 0; } else if (ans > idx) { ans -= 1; }
+    renderOpts(vals, ans < 0 ? 0 : ans);
+  };
+  $('btnResetQ').onclick = function () {
+    resetEditor();
+    toast('已清空');
+  };
+
+  $('btnSaveQ').onclick = function () {
+    var subject = $('qSubject').value.trim();
+    var grade = +$('qGrade').value;
+    var text = $('qText').value.trim();
+    var opts = optValues();
+    var answer = pickAnswer();
+    if (!subject) { toast('请填科目'); $('qSubject').focus(); return; }
+    if (!text) { toast('请填题干'); $('qText').focus(); return; }
+    for (var i = 0; i < opts.length; i++) {
+      if (!opts[i].trim()) { toast('第 ' + OPT_LETTERS.charAt(i) + ' 个选项是空的，填上或删掉再保存'); return; }
+    }
+    if (opts.length < 2) { toast('至少要有 2 个选项'); return; }
+    if (answer < 0) { toast('点选项左边的圆点选中正确答案'); return; }
+
+    var wasEdit = !!bankEditId;
+    var payload = {
+      id: bankEditId, subject: subject, grade: grade, q: text,
+      options: opts, answer: answer
+    };
     setBadge('bankBadge', 'wait', '正在保存…');
-    api('/api/questions', { method: 'POST', body: JSON.stringify({ json: txt }) }).then(function (r) {
-      setBadge('bankBadge', 'ok', '已保存 ' + r.count + ' 题');
-      $('bankStat').textContent = '题库共 ' + r.count + ' 题';
-      renderBankSubjects((obj && obj.questions) || []);
-      toast('题库已保存，共 ' + r.count + ' 题');
-      bankLoaded = true;
-      return loadState();
+    api('/api/bank/save', { method: 'POST', body: JSON.stringify(payload) }).then(function (r) {
+      setBadge('bankBadge', 'ok', '已保存');
+      toast(wasEdit ? '已保存修改' : '已新增 1 题，共 ' + r.count + ' 题');
+      resetEditor();
+      if (!wasEdit && !$('fKw').value.trim()) {
+        // 新题排在最后，直接翻到最后一页让家长看到
+        bankPage = Math.max(0, Math.ceil((bankTotal + 1) / bankSize) - 1);
+      }
+      return loadBankPage().then(loadBankMeta).then(loadState);
     }).catch(function (e) {
       setBadge('bankBadge', 'err', '保存失败');
       toast(e.message, 3600);
     });
   };
+
+  function removeQuestion(q) {
+    if (!confirm('删除这道题？删掉后不能再恢复（除非用备份回退）。\n\n' +
+      qLabel(q) + '\n' + q.q)) { return; }
+    setBadge('bankBadge', 'wait', '正在删除…');
+    api('/api/bank/delete', { method: 'POST', body: JSON.stringify({ id: q.id }) })
+      .then(function (r) {
+        toast('已删除，剩余 ' + r.count + ' 题');
+        if (bankEditId === q.id) { resetEditor(); }
+        if (bankRows.length === 1 && bankPage > 0) { bankPage--; }
+        return loadBankPage().then(loadBankMeta).then(loadState);
+      }).catch(function (e) {
+        setBadge('bankBadge', 'err', '删除失败');
+        toast(e.message, 3600);
+      });
+  }
+
+  // ---------- 筛选 / 翻页
+  function searchBank() {
+    bankPage = 0;
+    loadBankPage();
+  }
+  $('btnSearch').onclick = searchBank;
+  $('fSubject').onchange = searchBank;
+  $('fGrade').onchange = searchBank;
+  $('fKw').onkeydown = function (e) { if (e.key === 'Enter' || e.keyCode === 13) { searchBank(); } };
+  $('btnPrev').onclick = function () { if (bankPage > 0) { bankPage--; loadBankPage(); } };
+  $('btnNext').onclick = function () {
+    if ((bankPage + 1) * bankSize < bankTotal) { bankPage++; loadBankPage(); }
+  };
+
+  // 科目下拉 / 输入提示跟着题库里的实际科目走
+  function fillSubjectOptions() {
+    var names = Object.keys((state && state.countBySubject) || {}).sort();
+    var sel = $('fSubject');
+    if (!sel || !names.length) { return; }
+    if (sel.getAttribute('data-names') !== names.join(',')) {
+      var cur = sel.value;
+      var html = '<option value="">全部科目</option>';
+      names.forEach(function (n) { html += '<option value="' + esc(n) + '">' + esc(n) + '</option>'; });
+      sel.innerHTML = html;
+      sel.setAttribute('data-names', names.join(','));
+      sel.value = cur && names.indexOf(cur) >= 0 ? cur : '';
+    }
+    var dl = $('subjectList');
+    if (dl) {
+      dl.innerHTML = names.map(function (n) {
+        return '<option value="' + esc(n) + '"></option>';
+      }).join('');
+    }
+  }
+
+  // 科目 · 年级 的题量，点一下直接筛过去
+  function renderBankSubjects() {
+    fillSubjectOptions();
+    var box = $('bankSubjects');
+    if (!box) { return; }
+    var counts = (state && state.countBySubjectGrade) || {};
+    var keys = Object.keys(counts);
+    if (!keys.length) { box.innerHTML = ''; return; }
+    box.innerHTML = '';
+    keys.sort(function (a, b) { return counts[b] - counts[a]; }).forEach(function (k) {
+      var d = document.createElement('div');
+      d.className = 'chip';
+      d.style.cursor = 'pointer';
+      d.innerHTML = esc(k) + ' <b>' + counts[k] + '</b>';
+      d.onclick = function () {
+        var m = /^(.*) · (\d)年级$/.exec(k);
+        if (m) {
+          $('fSubject').value = m[1];
+          $('fGrade').value = m[2];
+        } else {
+          $('fSubject').value = k;
+          $('fGrade').value = '0';
+        }
+        $('fKw').value = '';
+        try { $('qList').scrollIntoView({ block: 'start' }); } catch (e) {}
+        searchBank();
+      };
+      box.appendChild(d);
+    });
+  }
+
+  // ---------- 备份与恢复
+  function renderBankBackups(items) {
+    var box = $('bakList');
+    box.innerHTML = '';
+    if (!items || !items.length) {
+      box.innerHTML = '<div class="qempty">还没有备份，点「立即备份」存一份</div>';
+      return;
+    }
+    items.forEach(function (b) {
+      var row = document.createElement('div');
+      row.className = 'bakrow';
+      row.innerHTML = '<span class="nm">' + esc(fmtTime(b.at)) + ' · ' + fmtSize(b.size) + '</span>' +
+        '<span class="ops"><button data-bak="restore">恢复</button>' +
+        '<button data-bak="del">删除</button></span>';
+      row.querySelector('[data-bak=restore]').onclick = function () { restoreBackupFile(b); };
+      row.querySelector('[data-bak=del]').onclick = function () { deleteBackupFile(b); };
+      box.appendChild(row);
+    });
+  }
+  $('btnBackupNow').onclick = function () {
+    setBadge('bankBadge', 'wait', '正在备份…');
+    api('/api/bank/backup', { method: 'POST', body: '{}' }).then(function (d) {
+      setBadge('bankBadge', 'ok', '已备份');
+      toast('已备份 ' + fmtSize((d.backup || {}).size));
+      renderBankBackups(d.items || []);
+    }).catch(function (e) {
+      setBadge('bankBadge', 'err', '备份失败');
+      toast(e.message, 3200);
+    });
+  };
+  function restoreBackupFile(b) {
+    if (!confirm('用 ' + fmtTime(b.at) + ' 这份备份覆盖当前题库？')) { return; }
+    api('/api/bank/restore-file', { method: 'POST', body: JSON.stringify({ name: b.name }) })
+      .then(function (r) {
+        toast('已恢复，共 ' + r.count + ' 题');
+        resetEditor();
+        return loadBankPage().then(loadBankMeta).then(loadState).then(renderBankSubjects);
+      }).catch(function (e) { toast(e.message, 3400); });
+  }
+  function deleteBackupFile(b) {
+    if (!confirm('删除这份备份？')) { return; }
+    api('/api/bank/delete-backup', { method: 'POST', body: JSON.stringify({ name: b.name }) })
+      .then(function (d) { toast('已删除'); renderBankBackups(d.items || []); })
+      .catch(function (e) { toast(e.message, 3200); });
+  }
+  $('btnExport').onclick = function () {
+    var url = '/api/bank/export' + (pin ? '?pin=' + encodeURIComponent(pin) : '');
+    toast('正在下载题库 JSON…');
+    window.location.href = url;
+  };
   $('btnRestore').onclick = function () {
-    if (!confirm('确定恢复到上一次保存前的题库吗？')) { return; }
+    if (!confirm('恢复到上一次改动前的题库？（每次保存前的自动备份）')) { return; }
     api('/api/restore', { method: 'POST', body: '{}' }).then(function () {
-      toast('已恢复备份');
-      return loadBank().then(loadState);
+      toast('已恢复上一次改动前的题库');
+      resetEditor();
+      return loadBankPage().then(loadBankMeta).then(loadState).then(renderBankSubjects);
     }).catch(function (e) { toast(e.message, 3200); });
+  };
+  $('btnBuiltin').onclick = function () {
+    if (!confirm('用安装包内置题库覆盖当前题库？\n\n内置题库带年级信息（会显示成「语文 · 3年级」）。\n你自己加过的题会被覆盖，当前题库会先进备份。')) { return; }
+    api('/api/bank/restore-builtin', { method: 'POST', body: '{}' }).then(function (r) {
+      toast('已恢复内置题库，共 ' + r.count + ' 题');
+      resetEditor();
+      return loadBankPage().then(loadBankMeta).then(loadState).then(renderBankSubjects);
+    }).catch(function (e) { toast(e.message, 3400); });
   };
   $('btnImport').onclick = function () {
     var url = $('inImportUrl').value.trim();
     if (!url) { toast('请填写网址'); return; }
+    if (!confirm('从网址导入会整份覆盖当前题库，继续？')) { return; }
     toast('正在从网址导入…', 4000);
     api('/api/import', { method: 'POST', body: JSON.stringify({ url: url }) }).then(function (r) {
       toast('导入成功，共 ' + r.count + ' 题');
-      return loadBank().then(loadState);
+      resetEditor();
+      return loadBankPage().then(loadBankMeta).then(loadState).then(renderBankSubjects);
     }).catch(function (e) { toast(e.message, 4000); });
+  };
+
+  // ---------- 高级：整份 JSON（折叠里，点了才载入）
+  $('btnReloadBank').onclick = function () {
+    setBadge('bankBadge', 'wait', '正在载入整份题库…');
+    api('/api/questions').then(function (data) {
+      $('txtBank').value = JSON.stringify(data, null, 2);
+      setBadge('bankBadge', 'ok', '已载入');
+      toast('已载入整份题库（' + (data.questions || []).length + ' 题）');
+    }).catch(function (e) {
+      setBadge('bankBadge', 'err', '载入失败');
+      toast(e.message, 3200);
+    });
+  };
+  $('btnFormat').onclick = function () {
+    try {
+      var obj = JSON.parse($('txtBank').value);
+      $('txtBank').value = JSON.stringify(obj, null, 2);
+      toast('已格式化（未保存）');
+    } catch (e) { toast('JSON 格式有误：' + e.message, 3000); }
+  };
+  $('btnSaveBank').onclick = function () {
+    var txt = $('txtBank').value.trim();
+    if (!txt) { toast('题库内容为空'); return; }
+    try { JSON.parse(txt); } catch (e) { toast('JSON 格式有误：' + e.message, 3200); return; }
+    if (!confirm('整份覆盖题库？会先自动备份当前题库。')) { return; }
+    setBadge('bankBadge', 'wait', '正在保存…');
+    api('/api/questions', { method: 'POST', body: JSON.stringify({ json: txt }) }).then(function (r) {
+      setBadge('bankBadge', 'ok', '已保存 ' + r.count + ' 题');
+      toast('题库已保存，共 ' + r.count + ' 题');
+      return loadBankPage().then(loadBankMeta).then(loadState).then(renderBankSubjects);
+    }).catch(function (e) {
+      setBadge('bankBadge', 'err', '保存失败');
+      toast(e.message, 3600);
+    });
   };
 
   // ============================================================ 规则管理（改完 0.7 秒自动保存）

@@ -11,11 +11,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -168,6 +171,17 @@ public final class QuestionBank {
         return map;
     }
 
+    /** 按「科目 · 年级」统计，例：语文 · 3年级 → 1133 */
+    public Map<String, Integer> countBySubjectGrade() {
+        Map<String, Integer> map = new LinkedHashMap<String, Integer>();
+        for (Question q : all()) {
+            String key = q.label();
+            Integer v = map.get(key);
+            map.put(key, v == null ? 1 : v + 1);
+        }
+        return map;
+    }
+
     public String rawJson() {
         synchronized (lock) {
             if (rawCache == null) {
@@ -245,6 +259,396 @@ public final class QuestionBank {
                 return false;
             }
         }
+    }
+
+    // ---------------------------------------------------------------- 单题增删改（v1.7.20）
+    //
+    // 后台不再把整份 JSON 灌进页面（5 MB 解析 + 渲染要好几秒），改成按页取、按题存：
+    // 每次只改动 JSON 里的一颗子树，再整份原子写回，旧文件先进备份位。
+
+    /** 题库文件大小（字节） */
+    public long size() {
+        synchronized (lock) {
+            return file.exists() ? file.length() : 0;
+        }
+    }
+
+    public long modifiedAt() {
+        synchronized (lock) {
+            return file.exists() ? file.lastModified() : 0;
+        }
+    }
+
+    /** 手工备份目录 files/bank-backups */
+    public File backupDir() {
+        File d = new File(App.get().getFilesDir(), "bank-backups");
+        if (!d.exists()) {
+            d.mkdirs();
+        }
+        return d;
+    }
+
+    /**
+     * 分页查询。
+     *
+     * @param subject 科目，空字符串表示不限
+     * @param grade   -1 不限年级；0 只看未标年级；1–6 指定年级
+     * @param keyword 题干 / id 模糊匹配，空表示不筛
+     */
+    public List<Question> query(String subject, int grade, String keyword, int offset, int limit) {
+        List<Question> hits = filter(subject, grade, keyword);
+        int from = Math.max(0, offset);
+        if (from >= hits.size()) {
+            return new ArrayList<Question>();
+        }
+        int to = limit <= 0 ? hits.size() : Math.min(hits.size(), from + limit);
+        return new ArrayList<Question>(hits.subList(from, to));
+    }
+
+    public int queryCount(String subject, int grade, String keyword) {
+        return filter(subject, grade, keyword).size();
+    }
+
+    private List<Question> filter(String subject, int grade, String keyword) {
+        String sub = subject == null ? "" : subject.trim();
+        String kw = keyword == null ? "" : keyword.trim().toLowerCase(Locale.US);
+        List<Question> out = new ArrayList<Question>();
+        for (Question q : all()) {
+            if (sub.length() > 0 && !sub.equals(q.subject)) {
+                continue;
+            }
+            if (grade >= 0 && q.grade != grade) {
+                continue;
+            }
+            if (kw.length() > 0) {
+                String qq = q.q == null ? "" : q.q.toLowerCase(Locale.US);
+                String id = q.id == null ? "" : q.id.toLowerCase(Locale.US);
+                if (!qq.contains(kw) && !id.contains(kw)) {
+                    continue;
+                }
+            }
+            out.add(q);
+        }
+        return out;
+    }
+
+    /** 按 id 取题，取不到返回 null */
+    public Question byId(String id) {
+        if (id == null || id.trim().length() == 0) {
+            return null;
+        }
+        String want = id.trim();
+        for (Question q : all()) {
+            if (want.equals(q.id)) {
+                return q;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 新增或修改一道题（id 已存在则替换）。返回落盘后的题目。
+     * 题库不允许被改成空，改完仍是整份原子写入，旧文件自动进备份位。
+     */
+    public Question saveOne(String id, String subject, int grade, String q,
+                            List<String> options, int answer, int index) throws Exception {
+        final String sub = subject == null ? "" : subject.trim();
+        final String text = q == null ? "" : q.trim();
+        if (sub.length() == 0) {
+            throw new Exception("请填写科目");
+        }
+        if (text.length() == 0) {
+            throw new Exception("请填写题干");
+        }
+        if (options == null || options.size() < 2) {
+            throw new Exception("至少要有 2 个选项");
+        }
+        List<String> opts = new ArrayList<String>();
+        for (int i = 0; i < options.size(); i++) {
+            String s = options.get(i) == null ? "" : options.get(i).trim();
+            if (s.length() == 0) {
+                throw new Exception("第 " + (i + 1) + " 个选项为空");
+            }
+            opts.add(s);
+        }
+        if (answer < 0 || answer >= opts.size()) {
+            throw new Exception("请选择正确答案");
+        }
+        if (grade < 0 || grade > 6) {
+            throw new Exception("年级只能是 1–6");
+        }
+
+        synchronized (lock) {
+            JSONObject root = rootLocked();
+            JSONArray arr = root.optJSONArray("questions");
+            if (arr == null) {
+                arr = new JSONArray();
+                root.put("questions", arr);
+            }
+            String useId = id == null ? "" : id.trim();
+            int idx = indexOf(arr, useId, index);
+            if (useId.length() == 0 || useId.charAt(0) == '#') {
+                useId = newId(arr, sub, grade);
+            }
+
+            JSONObject item = new JSONObject();
+            item.put("id", useId);
+            item.put("subject", sub);
+            if (grade > 0) {
+                item.put("grade", grade);
+            }
+            item.put("q", text);
+            JSONArray oa = new JSONArray();
+            for (String s : opts) {
+                oa.put(s);
+            }
+            item.put("options", oa);
+            item.put("answer", answer);
+
+            if (idx >= 0) {
+                arr.put(idx, item);
+            } else {
+                arr.put(item);
+            }
+            writeRootLocked(root);
+            return new Question(useId, sub, grade, text, opts, answer);
+        }
+    }
+
+    /** 删除一道题；返回是否真的删掉了 */
+    public boolean deleteOne(String id, int index) throws Exception {
+        synchronized (lock) {
+            JSONObject root = rootLocked();
+            JSONArray arr = root.optJSONArray("questions");
+            if (arr == null) {
+                return false;
+            }
+            int idx = indexOf(arr, id == null ? "" : id.trim(), index);
+            if (idx < 0) {
+                return false;
+            }
+            if (arr.length() <= 1) {
+                throw new Exception("这是题库里最后一道题，删掉就没题可出了");
+            }
+            JSONArray next = new JSONArray();
+            for (int i = 0; i < arr.length(); i++) {
+                if (i != idx) {
+                    next.put(arr.get(i));
+                }
+            }
+            root.put("questions", next);
+            writeRootLocked(root);
+            return true;
+        }
+    }
+
+    /** 导出整份题库（备份下载用） */
+    public String exportJson() {
+        return rawJson();
+    }
+
+    // ---------------- 备份 ----------------
+
+    /** 立即做一份带时间的备份，返回该备份的信息 */
+    public JSONObject backupNow() throws Exception {
+        synchronized (lock) {
+            if (!file.exists() || file.length() < 32) {
+                throw new Exception("题库文件不存在，无法备份");
+            }
+            String text = readFile(file);
+            String name = "bank-" + stamp() + ".json";
+            atomicWrite(new File(backupDir(), name), text);
+            pruneBackups(8);
+            JSONObject o = new JSONObject();
+            o.put("name", name);
+            o.put("size", text.getBytes("UTF-8").length);
+            o.put("count", count());
+            o.put("at", System.currentTimeMillis());
+            return o;
+        }
+    }
+
+    /** 备份列表（新的在前） */
+    public JSONArray backups() {
+        JSONArray out = new JSONArray();
+        File[] fs = backupDir().listFiles();
+        if (fs == null) {
+            return out;
+        }
+        List<File> list = new ArrayList<File>();
+        for (File f : fs) {
+            String n = f.getName();
+            if (n.startsWith("bank-") && n.endsWith(".json")) {
+                list.add(f);
+            }
+        }
+        Collections.sort(list, new java.util.Comparator<File>() {
+            @Override
+            public int compare(File a, File b) {
+                return Long.compare(b.lastModified(), a.lastModified());
+            }
+        });
+        for (File f : list) {
+            JSONObject o = new JSONObject();
+            try {
+                o.put("name", f.getName());
+                o.put("size", f.length());
+                o.put("at", f.lastModified());
+            } catch (Throwable ignored) {
+            }
+            out.put(o);
+        }
+        return out;
+    }
+
+    /** 用某份手工备份覆盖当前题库 */
+    public void restoreBackupFile(String name) throws Exception {
+        File f = safeBackupFile(name);
+        if (f == null || !f.exists()) {
+            throw new Exception("备份不存在");
+        }
+        String text = readFile(f);
+        parse(text);
+        synchronized (lock) {
+            if (file.exists()) {
+                try {
+                    atomicWrite(backup, readFile(file));
+                } catch (Throwable ignored) {
+                }
+            }
+            atomicWrite(file, text);
+            cache = null;
+            rawCache = null;
+            reloadLocked();
+        }
+        Prefs.setBankCustom(true);
+    }
+
+    public boolean deleteBackupFile(String name) {
+        File f = safeBackupFile(name);
+        return f != null && f.exists() && f.delete();
+    }
+
+    /** 用内置题库覆盖当前题库（内置题库带年级，可用来修「年级丢失」） */
+    public int restoreBuiltin() throws Exception {
+        String asset = readAsset();
+        if (asset == null) {
+            throw new Exception("内置题库不可用");
+        }
+        List<Question> parsed = parse(asset);
+        synchronized (lock) {
+            if (file.exists()) {
+                try {
+                    String cur = readFile(file);
+                    atomicWrite(backup, cur);
+                    atomicWrite(new File(backupDir(), "bank-" + stamp() + ".json"), cur);
+                    pruneBackups(8);
+                } catch (Throwable ignored) {
+                }
+            }
+            atomicWrite(file, asset);
+            cache = parsed;
+            rawCache = asset;
+        }
+        // 换回内置题库后，以后内置题库升级可以继续自动跟上
+        Prefs.setBankCustom(false);
+        return parsed.size();
+    }
+
+    private File safeBackupFile(String name) {
+        if (name == null) {
+            return null;
+        }
+        String n = name.trim();
+        if (!n.startsWith("bank-") || !n.endsWith(".json") || n.length() > 64) {
+            return null;
+        }
+        if (!n.matches("[A-Za-z0-9._-]+")) {
+            return null;
+        }
+        return new File(backupDir(), n);
+    }
+
+    private void pruneBackups(int keep) {
+        JSONArray all = backups();
+        for (int i = keep; i < all.length(); i++) {
+            JSONObject o = all.optJSONObject(i);
+            if (o != null) {
+                File f = safeBackupFile(o.optString("name", ""));
+                if (f != null && f.exists()) {
+                    f.delete();
+                }
+            }
+        }
+    }
+
+    private static String stamp() {
+        return new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(new Date());
+    }
+
+    // ---------------- 内部工具 ----------------
+
+    /** 取整份 JSON 根对象（数组形式的老题库自动包成 {"questions":[...]}） */
+    private JSONObject rootLocked() throws Exception {
+        String text = rawJson();
+        String t = text == null ? "" : text.trim();
+        if (t.length() == 0) {
+            throw new Exception("题库为空");
+        }
+        if (t.charAt(0) == '[') {
+            JSONObject o = new JSONObject();
+            o.put("version", 1);
+            o.put("questions", new JSONArray(t));
+            return o;
+        }
+        return new JSONObject(t);
+    }
+
+    /** 写回整份题库：旧文件先备份，再原子写入，缓存同步刷新 */
+    private void writeRootLocked(JSONObject root) throws Exception {
+        JSONArray arr = root.optJSONArray("questions");
+        root.put("count", arr == null ? 0 : arr.length());
+        String json = root.toString();
+        if (file.exists() && file.length() > 32) {
+            try {
+                atomicWrite(backup, readFile(file));
+            } catch (Throwable ignored) {
+            }
+        }
+        atomicWrite(file, json);
+        rawCache = json;
+        try {
+            cache = parse(json);
+        } catch (Throwable e) {
+            cache = null;
+        }
+        Prefs.setBankCustom(true);
+    }
+
+    private static int indexOf(JSONArray arr, String id, int fallback) {
+        if (id != null && id.length() > 0 && id.charAt(0) != '#') {
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject o = arr.optJSONObject(i);
+                if (o != null && id.equals(o.optString("id", ""))) {
+                    return i;
+                }
+            }
+        }
+        // 没有 id 的老题：后台用 "#序号" 传回来，序号越界就不动
+        if (fallback >= 0 && fallback < arr.length()) {
+            return fallback;
+        }
+        return -1;
+    }
+
+    private static String newId(JSONArray arr, String subject, int grade) {
+        String base = "u" + (grade > 0 ? grade : 0) + "-" + System.currentTimeMillis();
+        String id = base;
+        int n = 1;
+        while (indexOf(arr, id, -1) >= 0) {
+            id = base + "-" + (n++);
+        }
+        return id;
     }
 
     // ---------------------------------------------------------------- 抽题
@@ -607,6 +1011,11 @@ public final class QuestionBank {
 
         public Question(String id, String subject, String q, List<String> options, int answer) {
             this(id, subject, 0, q, options, answer);
+        }
+
+        /** 展示用的「科目 · 年级」，未标年级时只显示科目 */
+        public String label() {
+            return grade > 0 ? subject + " · " + grade + "年级" : subject;
         }
     }
 }

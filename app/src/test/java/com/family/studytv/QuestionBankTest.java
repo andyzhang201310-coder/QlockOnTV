@@ -2,6 +2,7 @@ package com.family.studytv;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -11,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -267,6 +269,122 @@ public class QuestionBankTest {
         } finally {
             // save() 会自动备份原题库，这里还原，避免影响同一 JVM 里的后续用例
             QuestionBank.get().restoreBackup();
+        }
+    }
+
+    // ---------------------------------------------------------------- v1.7.20 单题增删改
+
+    @Test
+    public void saveOneAddsEditsAndDeletesOneQuestion() throws Exception {
+        QuestionBank bank = QuestionBank.get();
+        String original = bank.exportJson();
+        try {
+            int before = bank.count();
+            QuestionBank.Question added = bank.saveOne("", "语文", 3, "测试题干：下一句是什么？",
+                    Arrays.asList("对", "错"), 0, -1);
+            assertEquals("题库 +1", before + 1, bank.count());
+            assertEquals("新增题自动带年级标签", "语文 · 3年级", added.label());
+            assertEquals("语文 · 3年级", bank.byId(added.id).label());
+
+            bank.saveOne(added.id, "数学", 4, "改过的题干", Arrays.asList("A", "B", "C"), 1, -1);
+            QuestionBank.Question edited = bank.byId(added.id);
+            assertNotNull(edited);
+            assertEquals("数学 · 4年级", edited.label());
+            assertEquals("改过的题干", edited.q);
+            assertEquals(3, edited.options.size());
+            assertEquals(1, edited.answer);
+            assertEquals("编辑不应改变题量", before + 1, bank.count());
+
+            assertTrue(bank.deleteOne(added.id, -1));
+            assertEquals("删除后题量复原", before, bank.count());
+            assertNull(bank.byId(added.id));
+        } finally {
+            bank.save(original);
+        }
+    }
+
+    @Test
+    public void saveOneRejectsBadInput() throws Exception {
+        QuestionBank bank = QuestionBank.get();
+        String original = bank.exportJson();
+        try {
+            try {
+                bank.saveOne("", "语文", 3, "题干", Arrays.asList("只有一个"), 0, -1);
+                fail("少于 2 个选项必须拒绝");
+            } catch (Exception expected) {
+            }
+            try {
+                bank.saveOne("", "语文", 3, "题干", Arrays.asList("A", "B"), 5, -1);
+                fail("答案下标越界必须拒绝");
+            } catch (Exception expected) {
+            }
+            try {
+                bank.saveOne("", "", 3, "题干", Arrays.asList("A", "B"), 0, -1);
+                fail("空科目必须拒绝");
+            } catch (Exception expected) {
+            }
+        } finally {
+            bank.save(original);
+        }
+    }
+
+    @Test
+    public void queryFiltersBySubjectGradeAndKeyword() throws Exception {
+        QuestionBank bank = QuestionBank.get();
+        List<QuestionBank.Question> page = bank.query("语文", 3, "", 0, 5);
+        assertEquals(5, page.size());
+        for (QuestionBank.Question q : page) {
+            assertEquals("语文", q.subject);
+            assertEquals(3, q.grade);
+        }
+        int total = bank.queryCount("语文", 3, "");
+        assertTrue("三年级语文至少 1000 题", total >= 1000);
+        assertTrue("分页不能超过总数", bank.query("语文", 3, "", total + 10, 5).isEmpty());
+        // 关键词
+        List<QuestionBank.Question> hit = bank.query("", -1, "拼音", 0, 3);
+        assertTrue("关键词应能搜到拼音题", hit.size() > 0);
+        assertTrue("关键词过滤后题量应少于全库", bank.queryCount("", -1, "拼音") < bank.count());
+    }
+
+    @Test
+    public void deleteOneRefusesToEmptyTheBank() throws Exception {
+        QuestionBank bank = QuestionBank.get();
+        String original = bank.exportJson();
+        try {
+            bank.save("{\"questions\":[{\"id\":\"only\",\"subject\":\"数学\",\"q\":\"1+1=?\","
+                    + "\"options\":[\"2\",\"3\"],\"answer\":0}]}");
+            try {
+                bank.deleteOne("only", -1);
+                fail("最后一道题不能删");
+            } catch (Exception expected) {
+            }
+            assertEquals(1, bank.count());
+        } finally {
+            bank.save(original);
+        }
+    }
+
+    @Test
+    public void backupNowAndRestoreFileRoundTrip() throws Exception {
+        QuestionBank bank = QuestionBank.get();
+        String original = bank.exportJson();
+        try {
+            int before = bank.count();
+            org.json.JSONObject bak = bank.backupNow();
+            String name = bak.optString("name", "");
+            assertTrue("备份文件名形如 bank-*.json", name.startsWith("bank-") && name.endsWith(".json"));
+            assertTrue("备份应该出现在列表里", bank.backups().length() >= 1);
+
+            bank.deleteOne("g1-chinese-01", -1);
+            assertEquals(before - 1, bank.count());
+
+            bank.restoreBackupFile(name);
+            assertEquals("恢复备份后题量复原", before, bank.count());
+            assertNotNull(bank.byId("g1-chinese-01"));
+
+            assertTrue(bank.deleteBackupFile(name));
+        } finally {
+            bank.save(original);
         }
     }
 }

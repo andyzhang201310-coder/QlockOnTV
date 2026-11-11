@@ -141,7 +141,7 @@ public class HttpServerTest {
         assertEquals("200", r[0]);
         assertTrue("没登录只能看到登录页", r[1].contains("请输入电视上设置的管理密码"));
         assertTrue("登录页要能提交密码", r[1].contains("/api/login"));
-        assertFalse("登录前不能看到管理内容", r[1].contains("题库编辑"));
+        assertFalse("登录前不能看到管理内容", r[1].contains("题目列表"));
         assertFalse("登录前不能看到防卸载区", r[1].contains("防卸载保护"));
     }
 
@@ -150,7 +150,7 @@ public class HttpServerTest {
         String cookie = login();
         String[] r = request("GET", "/", null, null, cookie);
         assertEquals("200", r[0]);
-        assertTrue("登录后进入管理页", r[1].contains("题库编辑"));
+        assertTrue("登录后进入管理页", r[1].contains("题目列表"));
         assertTrue("管理页应有防卸载卡片", r[1].contains("防卸载保护"));
         assertTrue("管理页应展示设备所有者命令", r[1].contains("deviceOwnerCmd"));
         assertTrue("管理页要有退出登录", r[1].contains("退出登录"));
@@ -192,17 +192,17 @@ public class HttpServerTest {
         assertEquals("退出后旧会话立即失效", "401",
                 request("GET", "/api/state", null, null, cookie)[0]);
         assertFalse("退出后回到登录页",
-                request("GET", "/", null, null, cookie)[1].contains("题库编辑"));
+                request("GET", "/", null, null, cookie)[1].contains("题目列表"));
     }
 
     @Test
     public void pinQueryFallbackWorksForCookieLessBrowsers() throws Exception {
         String[] ok = request("GET", "/?pin=1234", null, null);
         assertEquals("200", ok[0]);
-        assertTrue("禁用 Cookie 的浏览器靠 ?pin= 进管理页", ok[1].contains("题库编辑"));
+        assertTrue("禁用 Cookie 的浏览器靠 ?pin= 进管理页", ok[1].contains("题目列表"));
 
         String[] bad = request("GET", "/?pin=0000", null, null);
-        assertFalse("密码不对时仍是登录页", bad[1].contains("题库编辑"));
+        assertFalse("密码不对时仍是登录页", bad[1].contains("题目列表"));
     }
 
     @Test

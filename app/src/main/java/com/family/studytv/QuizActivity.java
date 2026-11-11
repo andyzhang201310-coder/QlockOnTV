@@ -392,7 +392,8 @@ public class QuizActivity extends Activity {
         index = i;
         final Item it = items.get(i);
         tvProgress.setText(progressText(i));
-        tvSubject.setText(it.q.subject + (it.q.grade > 0 ? " · " + it.q.grade + " 年级" : ""));
+        // 标签显示「科目 · 年级」，让孩子和家长一眼看出是哪个年级的题（未标年级时只显示科目）
+        tvSubject.setText(it.q.label());
         tvQuestion.setText(it.q.q);
         applyQuestionFont();
 

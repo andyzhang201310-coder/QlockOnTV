@@ -15,6 +15,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -376,6 +377,207 @@ public class HttpServer {
                 }
                 return;
             }
+        }
+
+        // ---- 题库：分页浏览 / 单题增删改 / 备份（v1.7.20）
+        // 后台不再一次拉整份 5 MB JSON 进页面，改成按页取 20 条；改动只提交单题。
+        if (path.equals("/api/bank/list") && method.equals("GET")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                String sub = params.get("subject") == null ? "" : params.get("subject").trim();
+                int grade = intOf(params.get("grade"), -1);
+                String kw = params.get("q") == null ? "" : params.get("q").trim();
+                int offset = Math.max(0, intOf(params.get("offset"), 0));
+                int limit = intOf(params.get("limit"), 20);
+                if (limit <= 0 || limit > 200) {
+                    limit = 20;
+                }
+                List<QuestionBank.Question> items =
+                        QuestionBank.get().query(sub, grade, kw, offset, limit);
+                int total = QuestionBank.get().queryCount(sub, grade, kw);
+
+                JSONArray arr = new JSONArray();
+                for (QuestionBank.Question q : items) {
+                    arr.put(questionJson(q));
+                }
+                JSONObject o = new JSONObject();
+                o.put("ok", true);
+                o.put("total", total);
+                o.put("offset", offset);
+                o.put("limit", limit);
+                o.put("allCount", QuestionBank.get().count());
+                o.put("items", arr);
+                respondJson(socket, 200, o.toString());
+            } catch (Throwable e) {
+                respondError(socket, e);
+            }
+            return;
+        }
+
+        if (path.equals("/api/bank/save") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                JSONObject in = new JSONObject(body == null || body.trim().length() == 0 ? "{}" : body);
+                JSONArray oa = in.optJSONArray("options");
+                List<String> opts = new ArrayList<String>();
+                if (oa != null) {
+                    for (int i = 0; i < oa.length(); i++) {
+                        opts.add(oa.optString(i, ""));
+                    }
+                }
+                QuestionBank.Question q = QuestionBank.get().saveOne(
+                        in.optString("id", ""),
+                        in.optString("subject", ""),
+                        in.optInt("grade", 0),
+                        in.optString("q", ""),
+                        opts,
+                        in.optInt("answer", -1),
+                        intOf(in.optString("index", "-1"), -1));
+                JSONObject o = new JSONObject();
+                o.put("ok", true);
+                o.put("question", questionJson(q));
+                o.put("count", QuestionBank.get().count());
+                respondJson(socket, 200, o.toString());
+            } catch (Throwable e) {
+                respondError(socket, e);
+            }
+            return;
+        }
+
+        if (path.equals("/api/bank/delete") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                JSONObject in = new JSONObject(body == null || body.trim().length() == 0 ? "{}" : body);
+                boolean ok = QuestionBank.get().deleteOne(
+                        in.optString("id", ""), intOf(in.optString("index", "-1"), -1));
+                JSONObject o = new JSONObject();
+                o.put("ok", ok);
+                o.put("count", QuestionBank.get().count());
+                if (!ok) {
+                    o.put("error", "没找到这道题，可能已被删除");
+                }
+                respondJson(socket, ok ? 200 : 400, o.toString());
+            } catch (Throwable e) {
+                respondError(socket, e);
+            }
+            return;
+        }
+
+        if (path.equals("/api/bank/backup") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                JSONObject item = QuestionBank.get().backupNow();
+                JSONObject o = new JSONObject();
+                o.put("ok", true);
+                o.put("backup", item);
+                o.put("items", QuestionBank.get().backups());
+                respondJson(socket, 200, o.toString());
+            } catch (Throwable e) {
+                respondError(socket, e);
+            }
+            return;
+        }
+
+        if (path.equals("/api/bank/backups") && method.equals("GET")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                JSONObject o = new JSONObject();
+                o.put("ok", true);
+                o.put("items", QuestionBank.get().backups());
+                o.put("size", QuestionBank.get().size());
+                o.put("modified", QuestionBank.get().modifiedAt());
+                o.put("count", QuestionBank.get().count());
+                respondJson(socket, 200, o.toString());
+            } catch (Throwable e) {
+                respondError(socket, e);
+            }
+            return;
+        }
+
+        if (path.equals("/api/bank/restore-file") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                JSONObject in = new JSONObject(body == null || body.trim().length() == 0 ? "{}" : body);
+                QuestionBank.get().restoreBackupFile(in.optString("name", ""));
+                JSONObject o = new JSONObject();
+                o.put("ok", true);
+                o.put("count", QuestionBank.get().count());
+                respondJson(socket, 200, o.toString());
+            } catch (Throwable e) {
+                respondError(socket, e);
+            }
+            return;
+        }
+
+        if (path.equals("/api/bank/delete-backup") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                JSONObject in = new JSONObject(body == null || body.trim().length() == 0 ? "{}" : body);
+                boolean ok = QuestionBank.get().deleteBackupFile(in.optString("name", ""));
+                JSONObject o = new JSONObject();
+                o.put("ok", ok);
+                o.put("items", QuestionBank.get().backups());
+                respondJson(socket, ok ? 200 : 400, o.toString());
+            } catch (Throwable e) {
+                respondError(socket, e);
+            }
+            return;
+        }
+
+        if (path.equals("/api/bank/restore-builtin") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                int n = QuestionBank.get().restoreBuiltin();
+                JSONObject o = new JSONObject();
+                o.put("ok", true);
+                o.put("count", n);
+                o.put("items", QuestionBank.get().backups());
+                respondJson(socket, 200, o.toString());
+            } catch (Throwable e) {
+                respondError(socket, e);
+            }
+            return;
+        }
+
+        if (path.equals("/api/bank/export") && method.equals("GET")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                String json = QuestionBank.get().exportJson();
+                byte[] bytes = (json == null ? "{\"questions\":[]}" : json).getBytes("UTF-8");
+                respondDownload(socket, "questions-" + new java.text.SimpleDateFormat(
+                        "yyyyMMdd-HHmm", java.util.Locale.US).format(new java.util.Date()) + ".json",
+                        bytes);
+            } catch (Throwable e) {
+                respondError(socket, e);
+            }
+            return;
         }
 
         if (path.equals("/api/settings") && method.equals("POST")) {
@@ -781,6 +983,13 @@ public class HttpServer {
                 sub.put(e.getKey(), e.getValue());
             }
             o.put("countBySubject", sub);
+            // 科目 · 年级 的题量（后台题库页、运行状态都按这个显示，例：语文 · 3年级）
+            JSONObject subGrade = new JSONObject();
+            for (Map.Entry<String, Integer> e : QuestionBank.get().countBySubjectGrade().entrySet()) {
+                subGrade.put(e.getKey(), e.getValue());
+            }
+            o.put("countBySubjectGrade", subGrade);
+            o.put("bankSize", QuestionBank.get().size());
             o.put("questionCount", QuestionBank.get().count());
 
             // ---- 年级：当前选择 + 各年级题量（0 = 未标年级的通用题）
@@ -813,27 +1022,77 @@ public class HttpServer {
         return o;
     }
 
+    /**
+     * 整份题库 JSON（后台「高级编辑」与备份下载用）。
+     *
+     * <p>直接回文件原文，不再从 Question 对象重建：v1.7.19 之前重建时漏了 grade，
+     * 家长在后台「载入当前题库 → 保存题库」一次就把全库年级抹平了。
+     */
     private JSONObject bankJson() throws Exception {
-        List<QuestionBank.Question> list = QuestionBank.get().all();
-        JSONArray arr = new JSONArray();
-        for (QuestionBank.Question q : list) {
-            JSONObject o = new JSONObject();
-            o.put("id", q.id);
-            o.put("subject", q.subject);
-            o.put("q", q.q);
-            JSONArray opts = new JSONArray();
-            for (String s : q.options) {
-                opts.put(s);
-            }
-            o.put("options", opts);
-            o.put("answer", q.answer);
-            arr.put(o);
+        String raw = QuestionBank.get().exportJson();
+        String t = raw == null ? "" : raw.trim();
+        if (t.length() == 0) {
+            JSONObject empty = new JSONObject();
+            empty.put("version", 1);
+            empty.put("questions", new JSONArray());
+            return empty;
         }
-        JSONObject root = new JSONObject();
-        root.put("version", 1);
-        root.put("count", arr.length());
-        root.put("questions", arr);
-        return root;
+        if (t.charAt(0) == '[') {
+            JSONObject o = new JSONObject();
+            o.put("version", 1);
+            o.put("questions", new JSONArray(t));
+            return o;
+        }
+        return new JSONObject(t);
+    }
+
+    private static JSONObject questionJson(QuestionBank.Question q) throws Exception {
+        JSONObject o = new JSONObject();
+        o.put("id", q.id);
+        o.put("subject", q.subject);
+        o.put("grade", q.grade);
+        o.put("label", q.label());
+        o.put("q", q.q);
+        JSONArray opts = new JSONArray();
+        for (String s : q.options) {
+            opts.put(s);
+        }
+        o.put("options", opts);
+        o.put("answer", q.answer);
+        return o;
+    }
+
+    private void respondError(Socket socket, Throwable e) throws Exception {
+        JSONObject err = new JSONObject();
+        err.put("ok", false);
+        err.put("error", e.getMessage() == null ? String.valueOf(e) : e.getMessage());
+        respondJson(socket, 400, err.toString());
+    }
+
+    private static int intOf(String s, int def) {
+        try {
+            return Integer.parseInt(String.valueOf(s).trim());
+        } catch (Throwable e) {
+            return def;
+        }
+    }
+
+    /** 让浏览器直接下载（备份题库用） */
+    private void respondDownload(Socket socket, String filename, byte[] body) throws Exception {
+        OutputStream os = socket.getOutputStream();
+        StringBuilder sb = new StringBuilder();
+        sb.append("HTTP/1.1 200 OK\r\n");
+        sb.append("Content-Type: application/json; charset=utf-8\r\n");
+        sb.append("Content-Length: ").append(body.length).append("\r\n");
+        sb.append("Content-Disposition: attachment; filename=\"").append(filename).append("\"\r\n");
+        sb.append("Access-Control-Allow-Origin: *\r\n");
+        sb.append("Cache-Control: no-store\r\n");
+        sb.append("Connection: close\r\n\r\n");
+        os.write(sb.toString().getBytes("UTF-8"));
+        if (body.length > 0) {
+            os.write(body);
+        }
+        os.flush();
     }
 
     // ------------------------------------------------------------------ 工具
