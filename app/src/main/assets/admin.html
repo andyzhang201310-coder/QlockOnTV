@@ -84,32 +84,125 @@
   .grades button .gn{display:block;font-size:11px;color:var(--sub);font-weight:400}
   .grades button.on{background:#e9f7ee;border-color:#bbf0cf;color:var(--green)}
   .grades button.on .gn{color:#4b8a68}
+
+  /* ---------- v1.7.14 两栏管理台 ----------
+     >=1024: 固定侧栏 238px + 内容区宽屏双列；768-1023: 窄侧栏 + 单列；
+     <768: 侧栏变顶部横滑导航，页签保留在内容区。 */
+  body{padding:0}
+  .shell{display:flex;min-height:100vh;align-items:flex-start}
+  .sidebar{width:238px;flex:0 0 238px;position:sticky;top:0;height:100vh;
+    background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;
+    padding:20px 14px 14px;z-index:20}
+  .sb-brand{display:flex;align-items:center;gap:10px;padding:0 6px 18px;
+    border-bottom:1px solid var(--line-soft);margin-bottom:10px}
+  .sb-brand img{width:40px;height:40px;border-radius:12px;background:#fff;
+    border:1px solid var(--line);padding:2px;flex:0 0 auto}
+  .sb-brand b{display:block;font-size:15px;line-height:1.25}
+  .sb-brand small{display:block;color:var(--sub);font-size:11.5px}
+  .sb-nav{flex:1;overflow-y:auto;overflow-x:hidden}
+  .sb-group{color:var(--sub);font-size:11px;letter-spacing:.08em;padding:12px 10px 5px;font-weight:600}
+  .sb-item{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--txt);
+    font-size:13.5px;padding:9px 10px;border-radius:9px;margin:1px 0;white-space:nowrap}
+  .sb-item:hover{background:var(--soft)}
+  .sb-item.on{background:#fff4e5;color:var(--accent);font-weight:650}
+  .sb-item .ic{width:16px;text-align:center;font-size:14px;opacity:.75;flex:0 0 auto}
+  .sb-item.sub{padding-left:30px;font-size:13px;color:var(--sub)}
+  .sb-item.sub.on{color:var(--accent)}
+  .sb-foot{border-top:1px solid var(--line-soft);padding-top:12px;margin-top:8px}
+  .sb-foot .dev{color:var(--sub);font-size:11.5px;padding:0 6px 8px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sb-foot button{width:100%;min-width:0;padding:9px;font-size:13px;font-weight:500;
+    background:var(--soft);border-color:transparent;color:var(--sub)}
+  .content{flex:1;min-width:0;padding:22px 28px 64px}
+  .page{max-width:1160px;margin:0 auto}
+  .page.narrow{max-width:900px}
+  .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+  .topbar h1{font-size:20px;margin:0 0 3px}
+  .topbar .sub{margin:0}
+  .conn{display:inline-flex;align-items:center;gap:6px;background:#e9f7ee;color:var(--green);
+    border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;white-space:nowrap}
+  .conn.bad{background:#fdeeee;color:var(--red)}
+  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+  .cards>.card{margin-bottom:0}
+  .cards>.wide{grid-column:1/-1}
+  .foot-tip{margin-top:18px}
+  .summary .row b{text-align:right;max-width:60%;font-weight:600}
+  @media(min-width:768px){
+    .tabs{display:none}
+  }
+  @media(max-width:1023px){
+    .sidebar{width:196px;flex-basis:196px;padding:16px 10px 12px}
+    .content{padding:18px 18px 54px}
+    .cards{grid-template-columns:1fr}
+  }
+  @media(max-width:767px){
+    .shell{display:block}
+    .sidebar{position:sticky;top:0;width:auto;height:auto;flex-direction:row;align-items:center;
+      gap:8px;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line);
+      box-shadow:0 3px 12px rgba(24,32,40,.05)}
+    .sb-brand{border:0;margin:0;padding:0;flex:0 0 auto}
+    .sb-brand img{width:32px;height:32px}
+    .sb-brand b,.sb-brand small{display:none}
+    .sb-nav{display:flex;flex-direction:row;gap:4px;overflow-x:auto;overflow-y:hidden;
+      flex:1;scrollbar-width:none}
+    .sb-nav::-webkit-scrollbar{display:none}
+    .sb-group,.sb-item.sub{display:none}
+    .sb-item{flex:0 0 auto;margin:0;padding:7px 11px;font-size:13px}
+    .sb-item .ic{display:none}
+    .sb-foot{border:0;margin:0;padding:0;flex:0 0 auto}
+    .sb-foot .dev{display:none}
+    .sb-foot button{width:auto;padding:7px 10px;font-size:12.5px}
+    .content{padding:14px 12px 50px}
+    .topbar h1{font-size:18px}
+    .tabs{display:flex;overflow-x:auto;gap:4px;padding:4px;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tabs button{flex:0 0 auto;min-width:0;padding:8px 14px}
+  }
+
 </style>
 </head>
 <body>
-
-<div class="brand">
-  <img src="/logo.png" alt="题锁">
-  <div class="who">
-    <h1>题锁 · 管理后台</h1>
-    <div class="sub" id="subline">正在连接电视…</div>
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-brand">
+    <img src="/logo.png" alt="题锁">
+    <div><b>题锁</b><small>家长控制台</small></div>
   </div>
-  <button class="logout" id="btnLogout">退出登录</button>
-</div>
+  <nav class="sb-nav">
+    <div class="sb-group">概览</div>
+    <a class="sb-item on" href="/#sec-status"><span class="ic">▦</span>运行状态</a>
+    <a class="sb-item" href="/#sec-quick"><span class="ic">⚡</span>快捷操作</a>
+    <a class="sb-item" href="/#sec-device"><span class="ic">⚙</span>设备与账号</a>
+    <a class="sb-item" href="/#sec-security"><span class="ic">⛨</span>防卸载保护</a>
+    <a class="sb-item" href="/#sec-bank"><span class="ic">▤</span>题库编辑</a>
+    <div class="sb-group">学习计划</div>
+    <a class="sb-item" href="/rules.html"><span class="ic">◈</span>管理规则</a>
+    <a class="sb-item sub" href="/rules.html#task">任务与解锁</a>
+    <a class="sb-item sub" href="/rules.html#time">时间计划</a>
+    <a class="sb-item sub" href="/rules.html#scope">答题范围</a>
+    <a class="sb-item sub" href="/rules.html#more">奖励与复习</a>
+  </nav>
+  <div class="sb-foot">
+    <div class="dev" id="sbDevice">正在连接电视…</div>
+    <button id="btnLogout">退出登录</button>
+  </div>
+</aside>
+<div class="content">
+<div class="page">
+  <div class="topbar">
+    <div><h1>管理后台</h1><p class="sub" id="subline">正在连接电视…</p></div>
+    <span class="conn" id="connBadge">● 已连接</span>
+  </div>
+<div class="cards">
 
-<div class="card navrule">
-  <button class="primary" id="navRules">管理规则 →</button>
-  <div class="tip">玩法、时间计划、答题范围、加练与复习，改动自动保存到电视</div>
-</div>
-
-<div class="card" id="pinWarn" style="display:none;border-color:#fed7aa;background:#fff7ed">
+<div class="card wide" id="pinWarn" style="display:none;border-color:#fed7aa;background:#fff7ed">
   <div style="color:var(--accent);font-size:14px;font-weight:600">管理密码仍是默认的 1234</div>
   <div class="tip" style="margin-top:6px;color:#8a6a3a">
-    知道这个密码的人都能改题库、关掉拦截。请立刻到下方「参数设置 → 管理密码」改成只有你知道的密码。
+    知道这个密码的人都能改题库、关掉拦截。请立刻到「设备与账号 → 管理密码」改成只有你知道的密码。
   </div>
 </div>
 
-<div class="card">
+<div class="card" id="sec-status">
   <h2>运行状态</h2>
   <div class="row"><span>拦截状态</span><b id="stEnabled">—</b></div>
   <div class="row"><span>当前弹窗</span><b id="stQuiz">—</b></div>
@@ -123,14 +216,42 @@
   <div id="stErr" class="tip" style="color:var(--red)"></div>
 </div>
 
-<div class="card">
-  <h2>参数设置</h2>
+<div class="card summary" id="sec-rules">
+  <h2>学习规则</h2>
+  <div class="row"><span>答题玩法</span><b id="sumMode">—</b></div>
+  <div class="row"><span>题量 / 通过正确率</span><b id="sumCount">—</b></div>
+  <div class="row"><span>通关后放行</span><b id="sumReward">—</b></div>
+  <div class="row"><span>出题范围</span><b id="sumScope">—</b></div>
+  <div class="row"><span>时间计划</span><b id="sumTime">—</b></div>
+  <div class="tip" id="sumStat" style="margin-top:8px">—</div>
+  <div class="btns" style="margin-top:6px">
+    <button class="primary" id="btnOpenRules">前往管理规则修改 →</button>
+  </div>
+  <div class="tip" style="margin-top:4px">
+    题量、放行时长、科目、年级、时间计划统一在「管理规则」里设置；本页不再重复提供，改动会自动同步。
+  </div>
+</div>
+
+<div class="card" id="sec-quick">
+  <h2>快捷操作</h2>
+  <div class="btns" style="margin-top:0">
+    <button id="btnTest">立即弹一次题</button>
+    <button id="btnReschedule">从现在重新计时</button>
+  </div>
+  <div class="btns" style="margin-top:10px">
+    <button class="unlock" id="btnUnlock">立即解锁</button>
+  </div>
+  <div class="tip" style="margin-top:6px">
+    「立即解锁」= 家长远程放行：关掉电视上正在显示的答题弹窗，孩子可以正常看电视；下一轮从现在重新计时。
+  </div>
+</div>
+
+<div class="card" id="sec-device">
+  <h2>设备与账号</h2>
   <div class="row">
     <span>启用拦截</span>
     <div class="switch" id="swEnabled"><i></i></div>
   </div>
-  <label class="fl">弹题间隔（分钟，1–720）</label>
-  <input type="number" id="inInterval" min="1" max="720" value="30">
   <div class="row" style="margin-top:12px">
     <span>自动弹题总开关（关掉后永久不再自动弹）</span>
     <div class="switch on" id="swAutoQuiz"><i></i></div>
@@ -161,38 +282,20 @@
     电视夜里待机不会再自己亮起来；白天开机后会自动补上欠的那一次。<br>
     用「时 + 分」两个下拉代替原生时间控件：部分手机 / 电视浏览器点不开原生控件，且每 15 秒的状态刷新会把还没保存的时间冲掉。
   </div>
-  <label class="fl">每次需要连续答对的题数</label>
-  <input type="number" id="inQuizCount" min="1" max="20" value="5">
   <div class="row" style="margin-top:12px">
     <span>开机立即弹一次题（防关机逃避）</span>
     <div class="switch on" id="swBoot"><i></i></div>
   </div>
-  <label class="fl">启用的学科（用逗号分隔，需与题库 subject 一致）</label>
-  <input type="text" id="inSubjects" value="语文,数学,英语">
-  <label class="fl">出题年级（可多选；只出所选年级的语文 / 数学 / 英语题）</label>
-  <div class="grades" id="gradeBox"></div>
-  <div class="btns" style="margin-top:8px">
-    <button id="btnGradeAll">全选 1-6 年级</button>
-  </div>
-  <div class="tip" id="gradeStat">—</div>
   <label class="fl">管理密码（至少 4 位，留空表示不修改）</label>
   <input type="password" id="inPinNew" placeholder="留空则不修改">
   <label class="fl">后台端口（改完需重新扫码，1–65500）</label>
   <input type="number" id="inPort" min="1024" max="65500" value="8899">
   <div class="btns">
     <button class="primary" id="btnSaveSettings">保存设置</button>
-    <button id="btnTest">立即弹一次题</button>
-  </div>
-  <div class="btns" style="margin-top:10px">
-    <button id="btnReschedule">从现在重新计时</button>
-    <button class="unlock" id="btnUnlock">立即解锁</button>
-  </div>
-  <div class="tip" style="margin-top:6px">
-    「立即解锁」= 家长远程放行：关掉电视上正在显示的答题弹窗，孩子可以正常看电视；下一轮从现在重新计时。
   </div>
 </div>
 
-<div class="card">
+<div class="card wide" id="sec-security">
   <h2>防卸载保护</h2>
   <div class="row"><span>保护状态</span><b id="stGuard">—</b></div>
   <div class="row"><span>设备管理员</span><b id="stAdmin">—</b></div>
@@ -231,7 +334,7 @@
   </div>
 </div>
 
-<div class="card">
+<div class="card wide" id="sec-bank">
   <h2>题库编辑</h2>
   <div class="tip" style="margin-top:0">
     格式：<code>{"questions":[{"subject":"语文","grade":3,"q":"题干","options":["正确","干扰1","干扰2","干扰3"],"answer":0}]}</code><br>
@@ -254,11 +357,15 @@
   </div>
 </div>
 
-<div class="tip">
+</div><!-- /.cards -->
+<div class="tip foot-tip">
   · 电视和手机必须连接同一个 WiFi / 路由器。<br>
   · 题库支持 2–6 个选项，推荐 4 个。<br>
   · 登录状态保留 12 小时，超过需重新输入管理密码。
 </div>
+</div><!-- /.page -->
+</div><!-- /.content -->
+</div><!-- /.shell -->
 
 <div id="toast"></div>
 
@@ -271,11 +378,22 @@
   try {
     var m = location.search.match(/[?&]pin=([^&]*)/);
     if (m) { pin = decodeURIComponent(m[1]).trim(); }
-    if (location.search) { history.replaceState(null, '', location.pathname); }
+    if (location.search) { history.replaceState(null, '', location.pathname + location.hash); }
   } catch (e) {}
   var state = null;
   // 家长正在改免打扰时间时，15 秒一次的状态刷新不能把下拉框冲掉
   var quietEditing = false;
+  // 内嵌浏览器禁用 Cookie 时，侧栏跳转也要带上 ?pin= 后备凭证；hash 必须留在最后
+  function withPin(href) {
+    if (!pin) { return href; }
+    var i = href.indexOf('#');
+    var base = i >= 0 ? href.slice(0, i) : href;
+    var hash = i >= 0 ? href.slice(i) : '';
+    return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'pin=' + encodeURIComponent(pin) + hash;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.sb-item'), function (a) {
+    a.setAttribute('href', withPin(a.getAttribute('href') || ''));
+  });
 
   function initTimeSelects() {
     ['StartH', 'EndH', 'StartM', 'EndM'].forEach(function (k) {
@@ -392,15 +510,10 @@
     var modeName = ({ round: '按组闯关', streak: '连续答对', count: '累计答对', practice: '自由练习' })[state.playMode] || '按组闯关';
     $('stRules').textContent = modeName + ' · 今日 ' + (state.roundsToday || 0) + ' 轮 · '
       + (state.ruleAllowedNow ? '时段允许' : '时段停用');
-    $('inInterval').value = state.intervalMinutes;
-    $('inQuizCount').value = state.quizCount;
-    $('inSubjects').value = state.subjects || '';
     $('inPort').value = state.port;
-    selectedGrades = String(state.grades || '1,2,3,4,5,6')
-      .split(',').map(function (x) { return parseInt(x, 10); })
-      .filter(function (g) { return g >= 1 && g <= 6; });
-    selectedGrades.sort(function (a, b) { return a - b; });
-    renderGrades();
+    $('sbDevice').textContent = (state.ip || '?') + ':' + (state.port || '') + ' · ' + (state.appVersion || '');
+    $('connBadge').className = 'conn' + (state.serverError ? ' bad' : '');
+    $('connBadge').textContent = state.serverError ? '● 服务异常' : '● 已连接';
 
     // ---- 防卸载
     var g = !!state.uninstallGuard;
@@ -435,53 +548,31 @@
     $('activeAdminCmd').textContent = state.activeAdminCmd || '';
   }
 
-  // ---- 出题年级（多选）
-  var selectedGrades = [];
-
-  function renderGrades() {
-    var box = $('gradeBox');
-    if (!box) { return; }
-    var cnt = (state && state.countByGrade) || {};
-    box.innerHTML = '';
-    for (var g = 1; g <= 6; g++) {
-      (function (gg) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        var picked = selectedGrades.indexOf(gg) >= 0;
-        b.className = picked ? 'on' : '';
-        b.innerHTML = gg + ' 年级<span class="gn">' + (cnt[String(gg)] || 0) + ' 题</span>';
-        b.onclick = function () {
-          var i = selectedGrades.indexOf(gg);
-          if (i >= 0) {
-            selectedGrades.splice(i, 1);
-          } else {
-            selectedGrades.push(gg);
-            selectedGrades.sort(function (a, c) { return a - c; });
-          }
-          renderGrades();
-        };
-        box.appendChild(b);
-      })(g);
-    }
-    var total = 0;
-    selectedGrades.forEach(function (g) { total += (cnt[String(g)] || 0); });
-    var generic = cnt['0'] || 0;
-    var txt;
-    if (selectedGrades.length === 0) {
-      txt = '没有选年级 = 1-6 年级全部出题';
-    } else {
-      txt = '已选 ' + selectedGrades.join('、') + ' 年级，可用 ' + total + ' 题';
-    }
-    if (generic > 0) {
-      txt += '（另有 ' + generic + ' 道未标年级的题，任何年级都会出）';
-    }
-    $('gradeStat').textContent = txt;
-  }
-
   function loadState() {
     return api('/api/state').then(function (s) { state = s; render(); }).catch(function (e) {
       $('subline').textContent = '连接失败：' + e.message;
+      $('connBadge').className = 'conn bad';
+      $('connBadge').textContent = '● 连接失败';
     });
+  }
+
+  // 「学习规则」摘要：规则页改完这里 15 秒内自动跟上，不在本页重复提供编辑控件
+  function loadRulesSummary() {
+    return api('/api/rules').then(function (r) {
+      var c = r.config || {};
+      var names = { round: '按组闯关', streak: '连续答对', count: '累计答对', practice: '自由练习' };
+      var subs = (c.quizSubjects && c.quizSubjects.length) ? c.quizSubjects.join('、') : '全部科目';
+      var gs = (c.quizLevels && c.quizLevels.length) ? c.quizLevels.join('、') + ' 年级' : '1–6 年级';
+      $('sumMode').textContent = names[c.playMode] || '按组闯关';
+      $('sumCount').textContent = (c.questionsPerRound || 5) + ' 题 · 正确率 ' +
+        Math.round((c.passRatio || 1) * 100) + '%';
+      $('sumReward').textContent = (c.sessionMinutes || 30) + ' 分钟';
+      $('sumScope').textContent = subs + ' / ' + gs;
+      $('sumTime').textContent = (c.scheduleMode === 'allow' ? '时段内自由观看' : '只在可用时段答题') +
+        ' · ' + (c.allDay ? '全天' : ((c.windowStart || '') + '–' + (c.windowEnd || '')));
+      $('sumStat').textContent = '今日已弹 ' + (r.roundsToday || 0) + ' 轮 · 错题库 ' +
+        (r.reviewDue || 0) + ' 题 · 规则 v' + (r.version || 1);
+    }).catch(function () {});
   }
 
   // ---- 交互
@@ -527,24 +618,14 @@
     toast('记得点「保存设置」生效', 2200);
   };
 
-  $('btnGradeAll').onclick = function () {
-    selectedGrades = [1, 2, 3, 4, 5, 6];
-    renderGrades();
-    toast('已选中全部年级，记得点「保存设置」', 2400);
-  };
-
   $('btnSaveSettings').onclick = function () {
     var body = {
       enabled: state ? !!state.enabled : true,
-      intervalMinutes: parseInt($('inInterval').value, 10) || 30,
-      quizCount: parseInt($('inQuizCount').value, 10) || 5,
       bootQuiz: state ? !!state.bootQuiz : true,
       autoQuiz: state ? !!state.autoQuiz : true,
       quietEnabled: state ? !!state.quietEnabled : false,
       quietStart: quietValue('Start'),
       quietEnd: quietValue('End'),
-      subjects: $('inSubjects').value || '语文,数学,英语',
-      grades: selectedGrades.length ? selectedGrades.join(',') : '1,2,3,4,5,6',
       port: parseInt($('inPort').value, 10) || 8899
     };
     if (state) {
@@ -691,11 +772,12 @@
 
   // ---- 初始化
   initTimeSelects();
-  $('navRules').onclick = function () {
+  $('btnOpenRules').onclick = function () {
     location.href = '/rules.html' + (pin ? '?pin=' + encodeURIComponent(pin) : '');
   };
   loadState();
-  setInterval(loadState, 15000);
+  loadRulesSummary();
+  setInterval(function () { loadState(); loadRulesSummary(); }, 15000);
 })();
 </script>
 </body>

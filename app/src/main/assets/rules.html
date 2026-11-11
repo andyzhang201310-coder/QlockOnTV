@@ -113,22 +113,115 @@
     opacity:0;transition:.25s;pointer-events:none;max-width:88%;text-align:center;z-index:99}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .hidden{display:none!important}
+
+  /* ---------- v1.7.14 两栏管理台 ----------
+     >=1024: 固定侧栏 238px + 内容区宽屏双列；768-1023: 窄侧栏 + 单列；
+     <768: 侧栏变顶部横滑导航，页签保留在内容区。 */
+  body{padding:0}
+  .shell{display:flex;min-height:100vh;align-items:flex-start}
+  .sidebar{width:238px;flex:0 0 238px;position:sticky;top:0;height:100vh;
+    background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;
+    padding:20px 14px 14px;z-index:20}
+  .sb-brand{display:flex;align-items:center;gap:10px;padding:0 6px 18px;
+    border-bottom:1px solid var(--line-soft);margin-bottom:10px}
+  .sb-brand img{width:40px;height:40px;border-radius:12px;background:#fff;
+    border:1px solid var(--line);padding:2px;flex:0 0 auto}
+  .sb-brand b{display:block;font-size:15px;line-height:1.25}
+  .sb-brand small{display:block;color:var(--sub);font-size:11.5px}
+  .sb-nav{flex:1;overflow-y:auto;overflow-x:hidden}
+  .sb-group{color:var(--sub);font-size:11px;letter-spacing:.08em;padding:12px 10px 5px;font-weight:600}
+  .sb-item{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--txt);
+    font-size:13.5px;padding:9px 10px;border-radius:9px;margin:1px 0;white-space:nowrap}
+  .sb-item:hover{background:var(--soft)}
+  .sb-item.on{background:#fff4e5;color:var(--accent);font-weight:650}
+  .sb-item .ic{width:16px;text-align:center;font-size:14px;opacity:.75;flex:0 0 auto}
+  .sb-item.sub{padding-left:30px;font-size:13px;color:var(--sub)}
+  .sb-item.sub.on{color:var(--accent)}
+  .sb-foot{border-top:1px solid var(--line-soft);padding-top:12px;margin-top:8px}
+  .sb-foot .dev{color:var(--sub);font-size:11.5px;padding:0 6px 8px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sb-foot button{width:100%;min-width:0;padding:9px;font-size:13px;font-weight:500;
+    background:var(--soft);border-color:transparent;color:var(--sub)}
+  .content{flex:1;min-width:0;padding:22px 28px 64px}
+  .page{max-width:1160px;margin:0 auto}
+  .page.narrow{max-width:900px}
+  .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+  .topbar h1{font-size:20px;margin:0 0 3px}
+  .topbar .sub{margin:0}
+  .conn{display:inline-flex;align-items:center;gap:6px;background:#e9f7ee;color:var(--green);
+    border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;white-space:nowrap}
+  .conn.bad{background:#fdeeee;color:var(--red)}
+  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+  .cards>.card{margin-bottom:0}
+  .cards>.wide{grid-column:1/-1}
+  .foot-tip{margin-top:18px}
+  .summary .row b{text-align:right;max-width:60%;font-weight:600}
+  @media(min-width:768px){
+    .tabs{display:none}
+  }
+  @media(max-width:1023px){
+    .sidebar{width:196px;flex-basis:196px;padding:16px 10px 12px}
+    .content{padding:18px 18px 54px}
+    .cards{grid-template-columns:1fr}
+  }
+  @media(max-width:767px){
+    .shell{display:block}
+    .sidebar{position:sticky;top:0;width:auto;height:auto;flex-direction:row;align-items:center;
+      gap:8px;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line);
+      box-shadow:0 3px 12px rgba(24,32,40,.05)}
+    .sb-brand{border:0;margin:0;padding:0;flex:0 0 auto}
+    .sb-brand img{width:32px;height:32px}
+    .sb-brand b,.sb-brand small{display:none}
+    .sb-nav{display:flex;flex-direction:row;gap:4px;overflow-x:auto;overflow-y:hidden;
+      flex:1;scrollbar-width:none}
+    .sb-nav::-webkit-scrollbar{display:none}
+    .sb-group,.sb-item.sub{display:none}
+    .sb-item{flex:0 0 auto;margin:0;padding:7px 11px;font-size:13px}
+    .sb-item .ic{display:none}
+    .sb-foot{border:0;margin:0;padding:0;flex:0 0 auto}
+    .sb-foot .dev{display:none}
+    .sb-foot button{width:auto;padding:7px 10px;font-size:12.5px}
+    .content{padding:14px 12px 50px}
+    .topbar h1{font-size:18px}
+    .tabs{display:flex;overflow-x:auto;gap:4px;padding:4px;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tabs button{flex:0 0 auto;min-width:0;padding:8px 14px}
+  }
+
 </style>
 </head>
 <body>
-
-<div class="brand">
-  <img src="/logo.png" alt="题锁">
-  <div class="who">
-    <h1>题锁 · 管理规则</h1>
-    <div class="sub" id="subline">正在读取电视上的规则…</div>
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-brand">
+    <img src="/logo.png" alt="题锁">
+    <div><b>题锁</b><small>家长控制台</small></div>
   </div>
-</div>
-
-<div class="nav">
-  <a href="/" id="navHome">← 管理首页</a>
-  <button class="logout" id="btnLogout">退出登录</button>
-</div>
+  <nav class="sb-nav">
+    <div class="sb-group">概览</div>
+    <a class="sb-item" href="/#sec-status"><span class="ic">▦</span>运行状态</a>
+    <a class="sb-item" href="/#sec-quick"><span class="ic">⚡</span>快捷操作</a>
+    <a class="sb-item" href="/#sec-device"><span class="ic">⚙</span>设备与账号</a>
+    <a class="sb-item" href="/#sec-security"><span class="ic">⛨</span>防卸载保护</a>
+    <a class="sb-item" href="/#sec-bank"><span class="ic">▤</span>题库编辑</a>
+    <div class="sb-group">学习计划</div>
+    <a class="sb-item on" href="/rules.html"><span class="ic">◈</span>管理规则</a>
+    <a class="sb-item sub on" href="/rules.html#task">任务与解锁</a>
+    <a class="sb-item sub" href="/rules.html#time">时间计划</a>
+    <a class="sb-item sub" href="/rules.html#scope">答题范围</a>
+    <a class="sb-item sub" href="/rules.html#more">奖励与复习</a>
+  </nav>
+  <div class="sb-foot">
+    <div class="dev" id="sbDevice">正在连接电视…</div>
+    <button id="btnLogout">退出登录</button>
+  </div>
+</aside>
+<div class="content">
+<div class="page narrow">
+  <div class="topbar">
+    <div><h1>管理规则</h1><p class="sub" id="subline">正在读取电视上的规则…</p></div>
+    <span class="conn" id="connBadge">● 已连接</span>
+  </div>
 
 <div class="foot">
   <div class="txt" id="statline">规则改动会自动保存到电视</div>
@@ -257,6 +350,10 @@
   <div class="note">「按题目星级奖励」需要题库里的星级字段和按题发放时长，题锁题库是统一奖励，因此统一用上面的「通过一组后放行」。</div>
 </div>
 
+</div><!-- /.page -->
+</div><!-- /.content -->
+</div><!-- /.shell -->
+
 <div id="toast"></div>
 
 <script>
@@ -266,9 +363,20 @@
   try {
     var m = location.search.match(/[?&]pin=([^&]*)/);
     if (m) { pin = decodeURIComponent(m[1]).trim(); }
-    if (location.search) { history.replaceState(null, '', location.pathname); }
+    if (location.search) { history.replaceState(null, '', location.pathname + location.hash); }
   } catch (e) {}
   var cfg = null, state = null, saveTimer = null, saving = false, failedSig = '';
+  // 内嵌浏览器禁用 Cookie 时，侧栏跳转也要带上 ?pin= 后备凭证；hash 必须留在最后
+  function withPin(href) {
+    if (!pin) { return href; }
+    var i = href.indexOf('#');
+    var base = i >= 0 ? href.slice(0, i) : href;
+    var hash = i >= 0 ? href.slice(i) : '';
+    return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'pin=' + encodeURIComponent(pin) + hash;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.sb-item'), function (a) {
+    a.setAttribute('href', withPin(a.getAttribute('href') || ''));
+  });
   var DAYS = ['一','二','三','四','五','六','日'];
   var TPL = [
     ['上学日', function () { return build(range('18:30','20:30'), range('09:00','20:00')); }],
@@ -357,21 +465,15 @@
     });
     Array.prototype.forEach.call($('tabs').children, function (b) {
       b.onclick = function () {
-        Array.prototype.forEach.call($('tabs').children, function (x) { x.className = ''; });
-        b.className = 'on';
-        ['task','time','scope','more'].forEach(function (t) {
-          $('tab-' + t).className = t === b.dataset.tab ? '' : 'hidden';
-        });
-        if (b.dataset.tab === 'time') { renderWeek(); }
+        activateTab(b.dataset.tab);
+        if (location.hash !== '#' + b.dataset.tab) {
+          history.replaceState(null, '', location.pathname + '#' + b.dataset.tab);
+        }
       };
     });
     $('btnLogout').onclick = function () {
       api('/api/logout', {method:'POST', body:'{}'}).then(function(){ location.replace('/'); })
         .catch(function(){ location.replace('/'); });
-    };
-    $('navHome').onclick = function (e) {
-      e.preventDefault();
-      location.href = '/' + (pin ? '?pin=' + encodeURIComponent(pin) : '');
     };
     $('btnClearWrong').onclick = function () {
       if (!confirm('清空错题库后，间隔重复复习会重新开始。确定吗？')) { return; }
@@ -406,6 +508,24 @@
       el.classList.toggle('hidden', !show[el.dataset.when]);
     });
   }
+
+  // 侧栏里的四个子项用 /rules.html#xxx 深链接；页面内切换不刷新
+  function activateTab(name) {
+    if (['task','time','scope','more'].indexOf(name) < 0) { name = 'task'; }
+    Array.prototype.forEach.call($('tabs').children, function (x) {
+      x.className = x.dataset.tab === name ? 'on' : '';
+    });
+    ['task','time','scope','more'].forEach(function (t) {
+      $('tab-' + t).className = t === name ? '' : 'hidden';
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.sb-item.sub'), function (a) {
+      a.classList.toggle('on', (a.getAttribute('href') || '').indexOf('#' + name) > 0);
+    });
+    if (name === 'time' && cfg) { renderWeek(); }
+  }
+  window.addEventListener('hashchange', function () {
+    activateTab(location.hash.replace('#', ''));
+  });
 
   // ---------- 起止时间（时 + 分两个下拉，替代点不开的原生 time 控件） ----------
   function timePicker(id, value, onPick) {
@@ -625,9 +745,11 @@
     cfg = rs[0].config; state = rs[1];
     syncHomeValues();
     $('subline').textContent = '已连接 '+state.ip+':'+state.port+' · 题锁 '+state.appVersion+' · 规则 v'+rs[0].version;
+    $('sbDevice').textContent = state.ip+':'+state.port+' · '+(state.appVersion||'');
     $('statline').textContent = '今日已弹 '+(rs[0].roundsToday||0)+' 轮 · 错题库 '+(rs[0].reviewDue||0)+' 题';
     $('reviewStat').textContent = '已记录 '+(rs[0].reviewDue||0)+' 道错题，今日答错 '+(rs[0].wrongToday||0)+' 次';
     renderAll();
+    activateTab(location.hash.replace('#','') || 'task');
   }).catch(function (e) {
     $('subline').textContent = '读取规则失败：'+e.message;
     toast('读取规则失败：'+e.message, 4000);
