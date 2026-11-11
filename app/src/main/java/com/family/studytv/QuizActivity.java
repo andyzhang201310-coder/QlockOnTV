@@ -86,8 +86,6 @@ public class QuizActivity extends Activity {
     private int groupAnswered = 0;
     private int streak = 0;
     private int totalCorrect = 0;
-    /** count 模式里答错后要重练的题 */
-    private final Set<String> retryIds = new LinkedHashSet<String>();
     /** 孩子自己选的年级（childSelectLevel），null = 沿用后台范围 */
     private Set<Integer> sessionGrades = null;
     private boolean choosingGrade = false;
@@ -314,15 +312,18 @@ public class QuizActivity extends Activity {
     private void buildSession() {
         List<QuestionBank.Question> picked = new ArrayList<QuestionBank.Question>();
         Set<String> seen = new LinkedHashSet<String>();
+        // 本轮序号 +1。错题按「轮」冷却：这一轮错的题，至少满 N 轮（默认 3 轮）才允许再出现，
+        // 所以同一轮里不会刚错完就原题重现，孩子也没法靠记答案过关。
+        Rules.nextRoundSeq(this);
+        int gap = Rules.reviewGap(cfg);
+        Set<String> cooling = Rules.coolingIds(this, gap);
         try {
-            // 间隔重复 / 错题重练：一半名额优先给做错过的题，其余照常抽新题
-            if (reviewEnabled || !retryIds.isEmpty()) {
-                Set<String> ids = new LinkedHashSet<String>(retryIds);
-                if (reviewEnabled) {
-                    ids.addAll(Rules.wrongIds(this));
-                }
+            // 间隔重复 / 错题重练：一半名额优先给已经过了冷却期的错题，其余照常抽新题
+            if (reviewEnabled) {
+                Set<String> due = new LinkedHashSet<String>(Rules.dueWrongIds(this, gap));
+                due.removeAll(cooling);
                 int want = Math.min(targetCount, Math.max(1, targetCount / 2));
-                for (QuestionBank.Question q : QuestionBank.get().byIds(ids, want)) {
+                for (QuestionBank.Question q : QuestionBank.get().byIds(due, want)) {
                     if (seen.add(q.id)) {
                         picked.add(q);
                     }
@@ -330,6 +331,8 @@ public class QuizActivity extends Activity {
             }
             if (picked.size() < targetCount) {
                 Set<String> exclude = new LinkedHashSet<String>(usedIds);
+                // 冷却期内的错题本轮一律不出，交给「至少隔 N 轮」的规则
+                exclude.addAll(cooling);
                 for (QuestionBank.Question q : picked) {
                     exclude.add(q.id);
                 }
@@ -364,11 +367,28 @@ public class QuizActivity extends Activity {
         groupCorrect = 0;
         groupAnswered = 0;
         index = 0;
-        retryIds.clear();
     }
 
     private static String letter(int k) {
         return k < LETTERS.length ? LETTERS[k] : String.valueOf(k + 1);
+    }
+
+    /**
+     * 顶部标签：「科目 · 3年级　★★★☆☆」。
+     * 实心星用暖金色、空心星用灰色，孩子扫一眼就知道这题几星难度。
+     */
+    private void renderSubject(QuestionBank.Question q) {
+        String head = q.label();
+        String stars = q.stars();
+        SpannableString s = new SpannableString(head + "    " + stars);
+        int start = head.length() + 4;
+        for (int k = 0; k < stars.length(); k++) {
+            char ch = stars.charAt(k);
+            int color = ch == '★' ? 0xFFFFC24A : 0xFF6B6B74;
+            s.setSpan(new android.text.style.ForegroundColorSpan(color),
+                    start + k, start + k + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        tvSubject.setText(s);
     }
 
     private String progressText(int i) {
@@ -392,8 +412,8 @@ public class QuizActivity extends Activity {
         index = i;
         final Item it = items.get(i);
         tvProgress.setText(progressText(i));
-        // 标签显示「科目 · 年级」，让孩子和家长一眼看出是哪个年级的题（未标年级时只显示科目）
-        tvSubject.setText(it.q.label());
+        // 标签显示「科目 · 年级」+ 难度星级，让孩子和家长一眼看出是哪个年级、多难的题
+        renderSubject(it.q);
         tvQuestion.setText(it.q.q);
         applyQuestionFont();
 
@@ -532,13 +552,10 @@ public class QuizActivity extends Activity {
             return;
         }
 
-        // 答错：揭示答案 + 记录错题；是否换组由玩法决定
+        // 答错：揭示答案 + 记录错题（记下当前轮次，之后至少隔 N 轮才会再出现）
         busy = true;
         streak = 0;
         Rules.noteWrong(this, it.q.id);
-        if ("count".equals(playMode) || reviewEnabled) {
-            retryIds.add(it.q.id);
-        }
         revealAnswer(it, choice);
         feedback(0xFFF2545B, "答错了！正确答案是 " + letter(it.answer)
                 + "、" + it.options.get(it.answer) + "，看清答案再继续");

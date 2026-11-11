@@ -294,7 +294,12 @@ public class HttpServer {
                 o.put("config", Rules.get(ctx));
                 o.put("roundsToday", Rules.roundsToday(ctx));
                 o.put("wrongToday", Rules.wrongToday(ctx));
+                JSONObject ruleCfg = Rules.get(ctx);
+                int gap = Rules.reviewGap(ruleCfg);
                 o.put("reviewDue", Rules.wrongIds(ctx).size());
+                o.put("reviewReady", Rules.dueWrongIds(ctx, gap).size());
+                o.put("reviewGapRounds", gap);
+                o.put("roundSeq", Rules.roundSeq(ctx));
                 respondJson(socket, 200, o.toString());
                 return;
             }
@@ -389,6 +394,7 @@ public class HttpServer {
             try {
                 String sub = params.get("subject") == null ? "" : params.get("subject").trim();
                 int grade = intOf(params.get("grade"), -1);
+                int star = intOf(params.get("star"), -1);
                 String kw = params.get("q") == null ? "" : params.get("q").trim();
                 int offset = Math.max(0, intOf(params.get("offset"), 0));
                 int limit = intOf(params.get("limit"), 20);
@@ -396,8 +402,8 @@ public class HttpServer {
                     limit = 20;
                 }
                 List<QuestionBank.Question> items =
-                        QuestionBank.get().query(sub, grade, kw, offset, limit);
-                int total = QuestionBank.get().queryCount(sub, grade, kw);
+                        QuestionBank.get().query(sub, grade, star, kw, offset, limit);
+                int total = QuestionBank.get().queryCount(sub, grade, star, kw);
 
                 JSONArray arr = new JSONArray();
                 for (QuestionBank.Question q : items) {
@@ -438,6 +444,7 @@ public class HttpServer {
                         in.optString("q", ""),
                         opts,
                         in.optInt("answer", -1),
+                        in.optInt("difficulty", 0),
                         intOf(in.optString("index", "-1"), -1));
                 JSONObject o = new JSONObject();
                 o.put("ok", true);
@@ -975,7 +982,10 @@ public class HttpServer {
             o.put("ruleAllowedNow", Rules.quizAllowedAt(rules, System.currentTimeMillis(),
                     Prefs.quietEnabled(), Prefs.quietStartMin(), Prefs.quietEndMin()));
             o.put("roundsToday", Rules.roundsToday(ctx));
+            int reviewGap = Rules.reviewGap(rules);
             o.put("reviewDue", Rules.wrongIds(ctx).size());
+            o.put("reviewReady", Rules.dueWrongIds(ctx, reviewGap).size());
+            o.put("reviewGapRounds", reviewGap);
 
             Map<String, Integer> bySubject = QuestionBank.get().countBySubject();
             JSONObject sub = new JSONObject();
@@ -991,6 +1001,12 @@ public class HttpServer {
             o.put("countBySubjectGrade", subGrade);
             o.put("bankSize", QuestionBank.get().size());
             o.put("questionCount", QuestionBank.get().count());
+            // 难度星级分布（1–5 星），后台题库页按星筛题/看分布用
+            JSONObject byStar = new JSONObject();
+            for (Map.Entry<Integer, Integer> e : QuestionBank.get().countByDifficulty().entrySet()) {
+                byStar.put(String.valueOf(e.getKey()), e.getValue());
+            }
+            o.put("countByDifficulty", byStar);
 
             // ---- 年级：当前选择 + 各年级题量（0 = 未标年级的通用题）
             o.put("grades", Prefs.grades());
@@ -1059,6 +1075,8 @@ public class HttpServer {
         }
         o.put("options", opts);
         o.put("answer", q.answer);
+        o.put("difficulty", q.difficulty);
+        o.put("stars", q.stars());
         return o;
     }
 

@@ -236,9 +236,63 @@ public class RulesTest {
         assertEquals(0, Rules.wrongToday(ctx));
     }
 
+    // ---------------------------------------------------------------- v6 按轮冷却
+
     @Test
-    public void syncFromPrefsKeepsHomeSettingsAndRulesAligned() throws Exception {
-        JSONObject cfg = Rules.get(ctx);
+    public void wrongQuestionWaitsAtLeastThreeRounds() throws Exception {
+        assertEquals(0, Rules.roundSeq(ctx));
+        assertEquals("默认冷却 3 轮", 3, Rules.reviewGap(Rules.defaults()));
+
+        int r1 = Rules.nextRoundSeq(ctx);            // 第 1 轮
+        assertEquals(1, r1);
+        Rules.noteWrong(ctx, "w1");
+
+        // 同一轮刚错完：必须回避，不能立刻重出
+        assertTrue(Rules.coolingIds(ctx, 3).contains("w1"));
+        assertFalse(Rules.dueWrongIds(ctx, 3).contains("w1"));
+
+        Rules.nextRoundSeq(ctx);                     // 第 2 轮
+        assertFalse("第 2 轮仍未到期", Rules.dueWrongIds(ctx, 3).contains("w1"));
+
+        Rules.nextRoundSeq(ctx);                     // 第 3 轮
+        assertFalse("第 3 轮仍未到期", Rules.dueWrongIds(ctx, 3).contains("w1"));
+
+        Rules.nextRoundSeq(ctx);                     // 第 4 轮：满 3 轮，可以再出现
+        assertTrue("隔 3 轮后应可复习", Rules.dueWrongIds(ctx, 3).contains("w1"));
+        assertTrue(Rules.coolingIds(ctx, 3).isEmpty());
+        assertTrue(Rules.wrongDue(ctx, "w1", 3));
+
+        // 再答错一次就从当前轮重新计时
+        Rules.noteWrong(ctx, "w1");
+        assertFalse(Rules.dueWrongIds(ctx, 3).contains("w1"));
+
+        // 答对后立刻离开错题库，不再受冷却限制
+        Rules.clearWrong(ctx, "w1");
+        assertTrue(Rules.wrongIds(ctx).isEmpty());
+        assertTrue(Rules.wrongDue(ctx, "w1", 3));
+
+        Rules.clearWrongPool(ctx);
+    }
+
+    @Test
+    public void reviewGapIsClampedAndLegacyIdsStillWork() throws Exception {
+        JSONObject cfg = Rules.defaults();
+        cfg.put("reviewGapRounds", 99);
+        assertEquals("上限 20 轮", 20, Rules.reviewGap(Rules.sanitize(cfg)));
+        cfg.put("reviewGapRounds", 0);
+        assertEquals("至少 1 轮", 1, Rules.reviewGap(Rules.sanitize(cfg)));
+
+        // 老版本只存了 id 列表（rules_wrong_ids）：升级后应立刻可复习，不能丢错题
+        Rules.clearWrongPool(ctx);
+        ctx.getSharedPreferences("studytv", Context.MODE_PRIVATE).edit()
+                .putString("rules_wrong_ids", "old1,old2").apply();
+        assertEquals(2, Rules.wrongIds(ctx).size());
+        assertTrue("老数据不带轮次，按第 0 轮处理", Rules.dueWrongIds(ctx, 3).contains("old1"));
+        Rules.clearWrongPool(ctx);
+    }
+
+    @Test
+    public void syncFromPrefsKeepsHomeSettingsAndRulesAligned() throws Exception {        JSONObject cfg = Rules.get(ctx);
         cfg.put("questionsPerRound", 5);
         cfg.put("sessionMinutes", 30);
         cfg.put("quizSubjects", new JSONArray());

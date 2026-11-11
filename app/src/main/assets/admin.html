@@ -246,6 +246,7 @@
   .qrow{display:flex;align-items:flex-start;gap:10px;padding:11px 0;
     border-bottom:1px solid var(--line-soft)}
   .qrow .meta{flex:0 0 auto;display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+  .qrow .meta .line{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
   .qtag{display:inline-block;background:var(--soft);border:1px solid var(--line);
     border-radius:6px;padding:1px 7px;font-size:11.5px;color:var(--txt2);
     white-space:nowrap;line-height:1.7}
@@ -261,6 +262,15 @@
   .pager button{flex:0 0 auto;min-width:0;padding:7px 14px;font-size:12.5px}
   .pager button[disabled]{opacity:.45;cursor:default}
   .pager .info{color:var(--sub);font-size:12.5px;font-variant-numeric:tabular-nums}
+  /* 难度星级：列表里一行金色星，编辑器里点星改难度 */
+  .qstar{display:inline-block;color:#d9a11a;letter-spacing:1px;font-size:11.5px;line-height:1.4;
+    white-space:nowrap}
+  .starpick{display:flex;align-items:center;gap:4px;margin:2px 0 12px}
+  .starpick span{font-size:24px;line-height:1;color:#d7dbcd;cursor:pointer;
+    transition:color .12s;user-select:none}
+  .starpick span.on{color:#e8a91b}
+  .starpick span:hover{color:#e8a91b}
+  .starpick em{font-style:normal;color:var(--sub);font-size:12.5px;margin-left:6px}
   textarea.qtext{font-family:inherit;font-size:13.5px;height:78px;background:var(--card);
     line-height:1.65;padding:10px 12px}
   .opts .opt{display:flex;align-items:center;gap:9px;margin-bottom:8px}
@@ -476,6 +486,7 @@
         <h2>题目列表</h2>
         <div class="tip" style="margin-top:0">
           只有当前这一页的题会被取到手机上，翻页 / 搜索 / 改筛选都在服务端完成，不再一次载入几兆 JSON。
+          每道题左下角带难度星级（★1–★5），可以按星筛选，也可以直接在下面新增/编辑里改星。
         </div>
         <div class="qfilter">
           <select id="fSubject"><option value="">全部科目</option></select>
@@ -489,10 +500,19 @@
             <option value="5">5 年级</option>
             <option value="6">6 年级</option>
           </select>
+          <select id="fStar">
+            <option value="-1">全部难度</option>
+            <option value="1">★ 1 星（最简单）</option>
+            <option value="2">★★ 2 星</option>
+            <option value="3">★★★ 3 星</option>
+            <option value="4">★★★★ 4 星</option>
+            <option value="5">★★★★★ 5 星（最难）</option>
+          </select>
           <input type="text" id="fKw" placeholder="搜题干 / 题号">
           <button id="btnSearch">搜索</button>
         </div>
         <div class="stat" id="bankSubjects"></div>
+        <div class="unit" id="starStat" style="padding:8px 0 2px;display:flex;flex-wrap:wrap;gap:2px 14px;align-items:center"></div>
         <div class="qlist" id="qList"></div>
         <div class="pager">
           <button id="btnPrev">上一页</button>
@@ -526,6 +546,11 @@
         <label class="fl">题干</label>
         <textarea id="qText" class="qtext" spellcheck="false"
           placeholder="例：「鹅，鹅，鹅」的下一句是？"></textarea>
+        <label class="fl">难度星级（电视上跟着「科目 · 年级」一起显示）</label>
+        <div class="starpick" id="qStar" data-value="3" title="点星星选 1–5 星">
+          <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+          <em id="qStarText">3 星</em>
+        </div>
         <label class="fl">选项（点左边的圆点选中正确答案，至少 2 个；右侧 × 可删掉多余的选项）</label>
         <div class="opts" id="optBox"></div>
         <div class="btns">
@@ -723,11 +748,13 @@
             <div class="ctl"><div class="stepper" data-key="extraQuestions" data-min="1" data-max="100"></div><span class="unit">题</span></div></div>
           <div class="f"><div class="lbl"><b>间隔重复复习</b><small>优先抽做错过的题，答对后移出错题库；进度跨重启保留</small></div>
             <div class="ctl"><div class="switch" data-bool="reviewEnabled"><i></i></div></div></div>
+          <div class="f"><div class="lbl"><b>错题冷却</b><small>这道题答错后，至少再过几「轮」才会重新出现；轮 = 屏幕上抽好的一组题，跨重启累计。设 3 表示这轮错的题第 4 轮才可能再考。关掉上面的间隔重复时，冷却期内的错题同样不会被随机抽到</small></div>
+            <div class="ctl"><div class="stepper" data-key="reviewGapRounds" data-min="1" data-max="20"></div><span class="unit">轮</span></div></div>
           <div class="f"><div class="lbl"><b>错题库</b><small id="reviewStat">—</small></div>
             <div class="ctl"><button id="btnClearWrong" style="min-width:0;padding:7px 12px;font-size:13px">清空</button></div></div>
         </div>
       </div>
-      <div class="note">「按题目星级奖励」需要题库里的星级字段和按题发放时长，题锁题库是统一奖励，因此统一用上面的「通过一组后放行」。</div>
+      <div class="note">题库里的每道题都带 1–5 星难度（1 星最易），电视上会和「科目 · 年级」一起显示，后台「题库管理」能按星筛题、单题改星。奖励仍然统一按上面的「通过一组后放行」发放，没有按星加时。</div>
     </div>
   </section>
 
@@ -1246,6 +1273,28 @@
     if (q.grade > 0) { return q.subject + ' · ' + q.grade + '年级'; }
     return q.subject || '综合';
   }
+  // 「★★★☆☆」：实心星是难度，空心补齐 5 颗
+  function starsOf(q) {
+    var d = Math.max(1, Math.min(5, +((q && q.difficulty) || 3)));
+    var s = '';
+    for (var i = 1; i <= 5; i++) { s += i <= d ? '★' : '☆'; }
+    return s;
+  }
+  // 编辑器里的星级选择
+  function setStar(v) {
+    v = Math.max(1, Math.min(5, +v || 3));
+    var box = $('qStar');
+    box.setAttribute('data-value', String(v));
+    Array.prototype.forEach.call(box.querySelectorAll('span'), function (sp) {
+      sp.className = +sp.getAttribute('data-v') <= v ? 'on' : '';
+    });
+    $('qStarText').textContent = v + ' 星' + (v <= 2 ? '（容易）' : (v >= 5 ? '（很难）' : ''));
+  }
+  $('qStar').onclick = function (e) {
+    var sp = e.target;
+    if (!sp || sp.tagName !== 'SPAN') { return; }
+    setStar(+sp.getAttribute('data-v'));
+  };
 
   function openBank() {
     loadBankMeta();
@@ -1253,6 +1302,7 @@
     renderBankSubjects();
     // 选项编辑器首屏就要有 4 个空位，否则「加一个选项」下面是一片空白
     if (!$('optBox').children.length) { renderOpts(null, 0); }
+    setStar(+$('qStar').getAttribute('data-value') || 3);
   }
 
   // 总览：题量 / 文件大小 / 备份列表
@@ -1268,6 +1318,7 @@
   function loadBankPage() {
     var qs = '?subject=' + encodeURIComponent($('fSubject').value) +
       '&grade=' + encodeURIComponent($('fGrade').value) +
+      '&star=' + encodeURIComponent($('fStar').value) +
       '&q=' + encodeURIComponent($('fKw').value.trim()) +
       '&offset=' + (bankPage * bankSize) + '&limit=' + bankSize;
     setBadge('bankBadge', 'wait', '读取中…');
@@ -1295,7 +1346,8 @@
       var row = document.createElement('div');
       row.className = 'qrow';
       row.innerHTML =
-        '<div class="meta"><span class="qtag">' + esc(qLabel(q)) + '</span>' +
+        '<div class="meta"><span class="line"><span class="qtag">' + esc(qLabel(q)) + '</span>' +
+        '<span class="qstar" title="难度 ' + (+q.difficulty || 3) + ' 星">' + starsOf(q) + '</span></span>' +
         '<span class="qtag qid">' + esc(q.id) + '</span></div>' +
         '<div class="body">' + esc(q.q) + '</div>' +
         '<div class="ops">' +
@@ -1363,10 +1415,16 @@
     $('editTitle').textContent = '编辑题目 · ' + qLabel(q);
     $('qSubject').value = q.subject || '';
     $('qGrade').value = String(q.grade || 0);
+    setStar(q.difficulty || 3);
     $('qText').value = q.q || '';
     renderOpts(q.options || null, q.answer || 0);
     try { $('editTitle').scrollIntoView({ block: 'center' }); } catch (e) {}
     toast('已载入，改完点「保存到题库」');
+  }
+  // 新增题目时的默认星级：跟着年级走（1–2 年级 1 星、3 年级 2 星、4 年级 3 星、5 年级 4 星、6 年级 5 星）
+  function defaultStar(g) {
+    if (!(g > 0)) { return 3; }
+    return Math.max(1, Math.min(5, g <= 2 ? 1 : g - 1));
   }
   function resetEditor() {
     bankEditId = '';
@@ -1376,6 +1434,7 @@
     $('qSubject').value = sub || '语文';
     var g = +$('fGrade').value;
     $('qGrade').value = String(g > 0 ? g : 3);
+    setStar(defaultStar(g));
     renderOpts(null, 0);
   }
   $('btnAddOpt').onclick = function () {
@@ -1420,6 +1479,7 @@
     var wasEdit = !!bankEditId;
     var payload = {
       id: bankEditId, subject: subject, grade: grade, q: text,
+      difficulty: +($('qStar').getAttribute('data-value')) || 3,
       options: opts, answer: answer
     };
     setBadge('bankBadge', 'wait', '正在保存…');
@@ -1462,6 +1522,7 @@
   $('btnSearch').onclick = searchBank;
   $('fSubject').onchange = searchBank;
   $('fGrade').onchange = searchBank;
+  $('fStar').onchange = searchBank;
   $('fKw').onkeydown = function (e) { if (e.key === 'Enter' || e.keyCode === 13) { searchBank(); } };
   $('btnPrev').onclick = function () { if (bankPage > 0) { bankPage--; loadBankPage(); } };
   $('btnNext').onclick = function () {
@@ -1518,6 +1579,28 @@
       };
       box.appendChild(d);
     });
+    // 难度分布：点某一档直接筛过去
+    var sd = (state && state.countByDifficulty) || {};
+    var st = $('starStat');
+    if (st) {
+      var html = '<span style="color:var(--sub);flex:0 0 auto">难度分布（点一下筛过去）：</span>';
+      for (var s = 1; s <= 5; s++) {
+        html += '<a href="javascript:void 0" data-star="' + s + '" style="flex:0 0 auto;' +
+          'color:#c58f0c;text-decoration:none;white-space:nowrap">' + starsOf({ difficulty: s }) +
+          ' <b style="color:var(--txt2)">' + (sd[String(s)] || 0) + '</b></a>';
+      }
+      st.innerHTML = html;
+      Array.prototype.forEach.call(st.querySelectorAll('[data-star]'), function (a) {
+        a.onclick = function () {
+          $('fStar').value = a.getAttribute('data-star');
+          $('fSubject').value = '';
+          $('fGrade').value = '-1';
+          $('fKw').value = '';
+          try { $('qList').scrollIntoView({ block: 'start' }); } catch (e) {}
+          searchBank();
+        };
+      });
+    }
   }
 
   // ---------- 备份与恢复
@@ -1737,7 +1820,8 @@
       round: (cfg.playMode === 'round'),
       roundsLimit: !!cfg.roundsLimitEnabled,
       notAllDay: !cfg.allDay,
-      extra: !!cfg.extraEnabled
+      extra: !!cfg.extraEnabled,
+      review: !!cfg.reviewEnabled
     };
     Array.prototype.forEach.call(document.querySelectorAll('[data-when]'), function (el) {
       el.classList.toggle('hidden', !show[el.dataset.when]);
@@ -1940,8 +2024,7 @@
       })(g);
     }
     $('bankTotal').textContent = state ? state.questionCount : '—';
-  }
-  function toggleScope(k, v) {
+  }  function toggleScope(k, v) {
     var list = arr(k).map(String), i = list.indexOf(String(v));
     if (i >= 0) { list.splice(i, 1); } else { list.push(String(v)); }
     cfg[k] = list;
@@ -1983,7 +2066,9 @@
       renderScope();
       $('statline').textContent = '今日已弹 ' + (s.roundsToday || 0) + ' 轮 · 错题库 ' +
         (s.reviewDue || 0) + ' 题 · 此刻' + (s.ruleAllowedNow ? '允许' : '不') + '弹题';
-      $('reviewStat').textContent = '已记录 ' + (s.reviewDue || 0) + ' 道错题，今日答错 ' + (s.wrongToday || 0) + ' 次';
+      $('reviewStat').textContent = '已记录 ' + (s.reviewDue || 0) + ' 道错题（其中 ' +
+        (s.reviewReady || 0) + ' 道已过冷却可复习，其余要等满 ' + (s.reviewGapRounds || 3) +
+        ' 轮），今日答错 ' + (s.wrongToday || 0) + ' 次';
     }).catch(function () {});
   }
   function renderRules() {

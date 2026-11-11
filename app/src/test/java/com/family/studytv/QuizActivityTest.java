@@ -67,22 +67,44 @@ public class QuizActivityTest {
         return b.getText().toString().replaceFirst("^[A-F]\\s+", "").trim();
     }
 
-    private String correctTextOf(String questionText) {
-        for (QuestionBank.Question q : QuestionBank.get().all()) {
-            if (q.q.equals(questionText)) {
-                return q.options.get(q.answer);
+    /** 当前屏幕上四个选项的文字（去掉 A/B/C/D 前缀） */
+    private java.util.List<String> shownOptions() {
+        LinearLayout box = (LinearLayout) activity.findViewById(R.id.optionBox);
+        java.util.List<String> out = new java.util.ArrayList<String>();
+        for (int i = 0; i < box.getChildCount(); i++) {
+            out.add(optionText((Button) box.getChildAt(i)));
+        }
+        return out;
+    }
+
+    private String correctTextOf(String questionText, java.util.List<String> shown) {        for (QuestionBank.Question q : QuestionBank.get().all()) {
+            if (!q.q.equals(questionText)) {
+                continue;
             }
+            // 复合诗词题的题干是复用的（「下列「诗句 — 作者 — 朝代」搭配正确的是？」），
+            // 必须连选项一起比对，否则会撞到同题干的第一道题、拿错答案。
+            if (shown != null) {
+                if (q.options.size() != shown.size() || !q.options.containsAll(shown)) {
+                    continue;
+                }
+            }
+            return q.options.get(q.answer);
         }
         return null;
     }
 
     private void answer(boolean correct) {
         String qText = ((TextView) activity.findViewById(R.id.tvQuestion)).getText().toString();
-        String right = correctTextOf(qText);
-        assertNotNull("题目应来自题库：" + qText, right);
 
         LinearLayout box = (LinearLayout) activity.findViewById(R.id.optionBox);
         assertTrue("每题应有多个选项", box.getChildCount() >= 2);
+
+        java.util.List<String> shown = new java.util.ArrayList<String>();
+        for (int i = 0; i < box.getChildCount(); i++) {
+            shown.add(optionText((Button) box.getChildAt(i)));
+        }
+        String right = correctTextOf(qText, shown);
+        assertNotNull("题目应来自题库：" + qText, right);
 
         Button target = null;
         for (int i = 0; i < box.getChildCount(); i++) {
@@ -122,7 +144,7 @@ public class QuizActivityTest {
         assertEquals("第 3 / 5 题", progress());
 
         String failedQuestion = ((TextView) activity.findViewById(R.id.tvQuestion)).getText().toString();
-        String right = correctTextOf(failedQuestion);
+        String right = correctTextOf(failedQuestion, shownOptions());
         assertNotNull(right);
 
         answer(false);

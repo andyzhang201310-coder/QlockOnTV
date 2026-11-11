@@ -38,10 +38,16 @@ public final class Rules {
     private static final String KEY_WRONG_TOTAL = "rules_wrong_total";
     private static final String KEY_WRONG_DATE = "rules_wrong_date";
     private static final String KEY_WRONG_IDS = "rules_wrong_ids";
+    /** 错题 → 答错时的轮次序号：{"q123": 47}，用于「至少隔 N 轮再出现」 */
+    private static final String KEY_WRONG_MAP = "rules_wrong_map";
+    /** 全局轮次序号，每抽一组题 +1（跨重启保留） */
+    private static final String KEY_ROUND_SEQ = "rules_round_seq";
 
     private static final int SLOTS_PER_DAY = 48;
     private static final int SLOT_MINUTES = 30;
     private static final int MAX_WRONG_IDS = 300;
+    /** 老版本错题库迁移时用的「很久以前」轮次，保证升级后立刻可复习 */
+    private static final int LEGACY_ROUND = -1000;
 
     private Rules() {
     }
@@ -81,6 +87,7 @@ public final class Rules {
             o.put("wrongThreshold", 3);
             o.put("extraQuestions", 2);
             o.put("reviewEnabled", false);
+            o.put("reviewGapRounds", 3);             // 错题至少隔 3 轮才再出现
             o.put("timePoints", new JSONArray());    // 网课时段：期间不弹题
             o.put("exemptWindows", new JSONArray());// 大人豁免：期间不弹题
         } catch (Throwable ignored) {
@@ -202,6 +209,7 @@ public final class Rules {
             num(o, in, "wrongThreshold", 1, 100);
             num(o, in, "extraQuestions", 1, 100);
             bool(o, in, "reviewEnabled");
+            num(o, in, "reviewGapRounds", 1, 20);
             windows(o, in, "timePoints");
             windows(o, in, "exemptWindows");
         } catch (Throwable ignored) {
@@ -544,11 +552,66 @@ public final class Rules {
         return roundsToday(c) < Math.max(1, cfg.optInt("roundsPerDay", 8));
     }
 
-    /** 今天累计答错的题数（用于「答错累计加练」） */
-    public static int wrongToday(Context c) {
+    // ------------------------------------------------------------------ 轮次 / 间隔重复
+    //
+    // 一轮 = 屏幕上抽好的一组题。全局轮次序号每抽一组 +1，跨重启保留。
+    // 答错的题记下「答错时是第几轮」，之后必须等满 N 轮（默认 3 轮）才允许再出现，
+    // 避免刚错完就原题重现、孩子靠记答案通过。
+
+    /** 当前轮次序号（最近一次抽组的序号；还没抽过题时为 0） */
+    public static int roundSeq(Context c) {
+        return sp(c).getInt(KEY_ROUND_SEQ, 0);
+    }
+
+    /** 开始新的一轮：序号 +1 并返回，供抽题与错题记账共用同一个轮次 */
+    public static synchronized int nextRoundSeq(Context c) {
+        int n = roundSeq(c) + 1;
+        sp(c).edit().putInt(KEY_ROUND_SEQ, n).apply();
+        return n;
+    }
+
+    /** 规则里的「错题冷却轮数」：至少隔几轮才再出现，默认 3，范围 1–20 */
+    public static int reviewGap(JSONObject cfg) {
+        int g = cfg == null ? 3 : cfg.optInt("reviewGapRounds", 3);
+        return Math.max(1, Math.min(20, g));
+    }
+
+    /** 错题 → 答错轮次。老版本只存了 id 列表，迁移成轮次 0（立刻可复习，不改变老用户体感） */
+    private static org.json.JSONObject wrongMap(Context c) {
         SharedPreferences p = sp(c);
-        return today(System.currentTimeMillis()).equals(p.getString(KEY_WRONG_DATE, ""))
-                ? p.getInt(KEY_WRONG_TOTAL, 0) : 0;
+        String raw = p.getString(KEY_WRONG_MAP, "");
+        org.json.JSONObject map = new org.json.JSONObject();
+        try {
+            if (raw != null && raw.trim().length() > 0) {
+                map = new org.json.JSONObject(raw);
+            }
+        } catch (Throwable ignored) {
+        }
+        if (map.length() == 0) {
+            // 迁移老格式：rules_wrong_ids 是纯 id 的逗号串
+            String legacy = p.getString(KEY_WRONG_IDS, "");
+            if (legacy != null && legacy.length() > 0) {
+                for (String id : legacy.split(",")) {
+                    if (id != null && id.trim().length() > 0) {
+                        try {
+                            // 老数据没有轮次，写成很早以前（立刻可复习），不改变升级前的体感
+                            map.put(id.trim(), LEGACY_ROUND);
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+                if (map.length() > 0) {
+                    p.edit().putString(KEY_WRONG_MAP, map.toString())
+                            .putString(KEY_WRONG_IDS, "").apply();
+                }
+            }
+        }
+        return map;
+    }
+
+    private static void writeWrongMap(Context c, org.json.JSONObject map) {
+        sp(c).edit().putString(KEY_WRONG_MAP, map.toString())
+                .putString(KEY_WRONG_IDS, "").apply();
     }
 
     public static void noteWrong(Context c, String id) {
@@ -558,43 +621,106 @@ public final class Rules {
         SharedPreferences p = sp(c);
         String d = today(System.currentTimeMillis());
         int n = d.equals(p.getString(KEY_WRONG_DATE, "")) ? p.getInt(KEY_WRONG_TOTAL, 0) : 0;
-        LinkedHashSet<String> ids = new LinkedHashSet<String>(wrongIds(c));
-        ids.add(id);
-        while (ids.size() > MAX_WRONG_IDS) {
-            java.util.Iterator<String> it = ids.iterator();
-            it.next();
-            it.remove();
+        org.json.JSONObject map = wrongMap(c);
+        try {
+            map.put(id, roundSeq(c));
+        } catch (Throwable ignored) {
         }
+        if (map.length() > MAX_WRONG_IDS) {
+            // 超量时丢最早答错的那几道（轮次最小）
+            java.util.List<String> keys = new ArrayList<String>();
+            for (java.util.Iterator<String> it = map.keys(); it.hasNext(); ) {
+                keys.add(it.next());
+            }
+            while (keys.size() > MAX_WRONG_IDS) {
+                String oldest = keys.get(0);
+                int oldestRound = Integer.MAX_VALUE;
+                for (String k : keys) {
+                    int r = map.optInt(k, 0);
+                    if (r < oldestRound) {
+                        oldestRound = r;
+                        oldest = k;
+                    }
+                }
+                map.remove(oldest);
+                keys.remove(oldest);
+            }
+        }
+        writeWrongMap(c, map);
         p.edit().putString(KEY_WRONG_DATE, d)
                 .putInt(KEY_WRONG_TOTAL, n + 1)
-                .putString(KEY_WRONG_IDS, join(new ArrayList<String>(ids), ","))
                 .apply();
     }
 
     public static void clearWrong(Context c, String id) {
-        Set<String> ids = new LinkedHashSet<String>(wrongIds(c));
-        if (ids.remove(id)) {
-            sp(c).edit().putString(KEY_WRONG_IDS, join(new ArrayList<String>(ids), ",")).apply();
+        if (id == null || id.length() == 0) {
+            return;
+        }
+        org.json.JSONObject map = wrongMap(c);
+        if (map.has(id)) {
+            map.remove(id);
+            writeWrongMap(c, map);
         }
     }
 
     /** 家长手动清空错题库（间隔重复重新开始） */
     public static void clearWrongPool(Context c) {
         sp(c).edit().putString(KEY_WRONG_IDS, "")
+                .putString(KEY_WRONG_MAP, "")
                 .putInt(KEY_WRONG_TOTAL, 0)
                 .putString(KEY_WRONG_DATE, "")
                 .apply();
     }
 
+    /** 全部错题 id（含还在冷却期的），用于后台显示错题总量 */
     public static Set<String> wrongIds(Context c) {
-        String raw = sp(c).getString(KEY_WRONG_IDS, "");
         LinkedHashSet<String> out = new LinkedHashSet<String>();
-        if (raw == null || raw.length() == 0) {
-            return out;
+        for (java.util.Iterator<String> it = wrongMap(c).keys(); it.hasNext(); ) {
+            out.add(it.next());
         }
-        Collections.addAll(out, raw.split(","));
-        out.remove("");
         return out;
+    }
+
+    /** 到期的错题：距上次答错已满 gap 轮，可以重新出现 */
+    public static Set<String> dueWrongIds(Context c, int gap) {
+        int now = roundSeq(c);
+        int g = Math.max(1, Math.min(20, gap));
+        LinkedHashSet<String> out = new LinkedHashSet<String>();
+        org.json.JSONObject map = wrongMap(c);
+        for (java.util.Iterator<String> it = map.keys(); it.hasNext(); ) {
+            String id = it.next();
+            int r = map.optInt(id, 0);
+            if (now - r >= g) {
+                out.add(id);
+            }
+        }
+        return out;
+    }
+
+    /** 还在冷却期（未满 gap 轮）的错题：本轮抽题必须避开 */
+    public static Set<String> coolingIds(Context c, int gap) {
+        Set<String> all = wrongIds(c);
+        all.removeAll(dueWrongIds(c, gap));
+        return all;
+    }
+
+    /** 单题是否已过冷却期 */
+    public static boolean wrongDue(Context c, String id, int gap) {
+        if (id == null) {
+            return false;
+        }
+        org.json.JSONObject map = wrongMap(c);
+        if (!map.has(id)) {
+            return true;   // 不在错题库里 = 不在冷却
+        }
+        return roundSeq(c) - map.optInt(id, 0) >= Math.max(1, Math.min(20, gap));
+    }
+
+    /** 今天累计答错的题数（用于「答错累计加练」） */
+    public static int wrongToday(Context c) {
+        SharedPreferences p = sp(c);
+        return today(System.currentTimeMillis()).equals(p.getString(KEY_WRONG_DATE, ""))
+                ? p.getInt(KEY_WRONG_TOTAL, 0) : 0;
     }
 
     /** 累计答错到阈值后，每组额外加练几题 */

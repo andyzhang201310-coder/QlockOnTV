@@ -182,6 +182,19 @@ public final class QuestionBank {
         return map;
     }
 
+    /** 按难度星级统计（1–5 星） */
+    public Map<Integer, Integer> countByDifficulty() {
+        Map<Integer, Integer> map = new LinkedHashMap<Integer, Integer>();
+        for (int i = 1; i <= 5; i++) {
+            map.put(i, 0);
+        }
+        for (Question q : all()) {
+            Integer v = map.get(q.difficulty);
+            map.put(q.difficulty, v == null ? 1 : v + 1);
+        }
+        return map;
+    }
+
     public String rawJson() {
         synchronized (lock) {
             if (rawCache == null) {
@@ -296,7 +309,21 @@ public final class QuestionBank {
      * @param keyword 题干 / id 模糊匹配，空表示不筛
      */
     public List<Question> query(String subject, int grade, String keyword, int offset, int limit) {
-        List<Question> hits = filter(subject, grade, keyword);
+        return query(subject, grade, -1, keyword, offset, limit);
+    }
+
+    public int queryCount(String subject, int grade, String keyword) {
+        return queryCount(subject, grade, -1, keyword);
+    }
+
+    /**
+     * 分页查询（带难度星级）。
+     *
+     * @param star -1 不限星级；1–5 只看该星级的题
+     */
+    public List<Question> query(String subject, int grade, int star, String keyword,
+                                int offset, int limit) {
+        List<Question> hits = filter(subject, grade, star, keyword);
         int from = Math.max(0, offset);
         if (from >= hits.size()) {
             return new ArrayList<Question>();
@@ -305,11 +332,11 @@ public final class QuestionBank {
         return new ArrayList<Question>(hits.subList(from, to));
     }
 
-    public int queryCount(String subject, int grade, String keyword) {
-        return filter(subject, grade, keyword).size();
+    public int queryCount(String subject, int grade, int star, String keyword) {
+        return filter(subject, grade, star, keyword).size();
     }
 
-    private List<Question> filter(String subject, int grade, String keyword) {
+    private List<Question> filter(String subject, int grade, int star, String keyword) {
         String sub = subject == null ? "" : subject.trim();
         String kw = keyword == null ? "" : keyword.trim().toLowerCase(Locale.US);
         List<Question> out = new ArrayList<Question>();
@@ -318,6 +345,9 @@ public final class QuestionBank {
                 continue;
             }
             if (grade >= 0 && q.grade != grade) {
+                continue;
+            }
+            if (star >= 1 && q.difficulty != star) {
                 continue;
             }
             if (kw.length() > 0) {
@@ -352,6 +382,15 @@ public final class QuestionBank {
      */
     public Question saveOne(String id, String subject, int grade, String q,
                             List<String> options, int answer, int index) throws Exception {
+        return saveOne(id, subject, grade, q, options, answer, -1, index);
+    }
+
+    /**
+     * 同上，带难度星级（1–5）。difficulty 传 0 / 负数表示按年级推默认值。
+     */
+    public Question saveOne(String id, String subject, int grade, String q,
+                            List<String> options, int answer, int difficulty, int index)
+            throws Exception {
         final String sub = subject == null ? "" : subject.trim();
         final String text = q == null ? "" : q.trim();
         if (sub.length() == 0) {
@@ -377,6 +416,7 @@ public final class QuestionBank {
         if (grade < 0 || grade > 6) {
             throw new Exception("年级只能是 1–6");
         }
+        final int star = difficulty >= 1 ? clampDifficulty(difficulty) : defaultDifficulty(grade);
 
         synchronized (lock) {
             JSONObject root = rootLocked();
@@ -397,6 +437,7 @@ public final class QuestionBank {
             if (grade > 0) {
                 item.put("grade", grade);
             }
+            item.put("difficulty", star);
             item.put("q", text);
             JSONArray oa = new JSONArray();
             for (String s : opts) {
@@ -411,7 +452,7 @@ public final class QuestionBank {
                 arr.put(item);
             }
             writeRootLocked(root);
-            return new Question(useId, sub, grade, text, opts, answer);
+            return new Question(useId, sub, grade, text, opts, answer, star);
         }
     }
 
@@ -790,6 +831,78 @@ public final class QuestionBank {
         return map;
     }
 
+    // ---------------------------------------------------------------- 难度星级
+    //
+    // 每道题带 1–5 星难度：老师/家长可以在后台按星筛题、单题改星，电视上答题时
+    // 星级跟着「科目 · 年级」一起显示，孩子自己也知道这题难不难。
+
+    public static int clampDifficulty(int d) {
+        return d < 1 ? 1 : (d > 5 ? 5 : d);
+    }
+
+    /** 老题库没写难度时按年级给个默认值：1–2 年级 1 星，3 年级 2 星，4 年级 3 星，5 年级 4 星，6 年级 5 星 */
+    static int defaultDifficulty(int grade) {
+        if (grade <= 0) {
+            return 3;
+        }
+        return clampDifficulty(grade <= 2 ? 1 : grade - 1);
+    }
+
+    /** "★★★☆☆"：实心星表示难度，空心补齐 5 颗 */
+    public static String stars(int difficulty) {
+        int d = clampDifficulty(difficulty);
+        StringBuilder sb = new StringBuilder(5);
+        for (int i = 1; i <= 5; i++) {
+            sb.append(i <= d ? '★' : '☆');
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 难度字段解析：支持数字 1–5、"3"、"★★★"、"3星"；
+     * 没写就按年级推默认值（老题库升级后也能在后台看到星级）。
+     */
+    static int parseDifficulty(JSONObject o, int grade) {
+        if (o == null) {
+            return defaultDifficulty(grade);
+        }
+        Object v = o.opt("difficulty");
+        if (v == null || v == JSONObject.NULL) {
+            v = o.opt("star");
+        }
+        if (v == null || v == JSONObject.NULL) {
+            v = o.opt("stars");
+        }
+        if (v == null || v == JSONObject.NULL) {
+            return defaultDifficulty(grade);
+        }
+        if (v instanceof Number) {
+            int d = ((Number) v).intValue();
+            return d >= 1 && d <= 5 ? d : defaultDifficulty(grade);
+        }
+        String s = String.valueOf(v).trim();
+        if (s.length() == 0) {
+            return defaultDifficulty(grade);
+        }
+        int filled = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == '★' || s.charAt(i) == '*') {
+                filled++;
+            }
+        }
+        if (filled >= 1 && filled <= 5) {
+            return filled;
+        }
+        try {
+            int d = Integer.parseInt(s.replaceAll("[^0-9]", ""));
+            if (d >= 1 && d <= 5) {
+                return d;
+            }
+        } catch (Throwable ignored) {
+        }
+        return defaultDifficulty(grade);
+    }
+
     /** 年级字段解析：支持 3、"3"、"三年级"、"三年级上"、0/空（未标注） */
     static int parseGrade(Object v) {
         if (v == null || v == JSONObject.NULL) {
@@ -931,8 +1044,9 @@ public final class QuestionBank {
                 subject = "综合";
             }
             int grade = parseGrade(o.opt("grade"));
+            int difficulty = parseDifficulty(o, grade);
             String id = o.optString("id", "q" + (i + 1)).trim();
-            out.add(new Question(id, subject, grade, q, list, answer));
+            out.add(new Question(id, subject, grade, q, list, answer, difficulty));
         }
         if (out.isEmpty()) {
             throw new Exception("没有解析到任何题目");
@@ -999,14 +1113,22 @@ public final class QuestionBank {
         public final String q;
         public final List<String> options;
         public final int answer;
+        /** 难度星级 1–5（1 星最易，5 星最难） */
+        public final int difficulty;
 
-        public Question(String id, String subject, int grade, String q, List<String> options, int answer) {
+        public Question(String id, String subject, int grade, String q,
+                        List<String> options, int answer, int difficulty) {
             this.id = id;
             this.subject = subject;
             this.grade = grade;
             this.q = q;
             this.options = Collections.unmodifiableList(new ArrayList<String>(options));
             this.answer = answer;
+            this.difficulty = clampDifficulty(difficulty);
+        }
+
+        public Question(String id, String subject, int grade, String q, List<String> options, int answer) {
+            this(id, subject, grade, q, options, answer, defaultDifficulty(grade));
         }
 
         public Question(String id, String subject, String q, List<String> options, int answer) {
@@ -1016,6 +1138,11 @@ public final class QuestionBank {
         /** 展示用的「科目 · 年级」，未标年级时只显示科目 */
         public String label() {
             return grade > 0 ? subject + " · " + grade + "年级" : subject;
+        }
+
+        /** 「★★★☆☆」，电视端与后台共用这一套星号 */
+        public String stars() {
+            return QuestionBank.stars(difficulty);
         }
     }
 }

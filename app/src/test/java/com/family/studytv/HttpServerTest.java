@@ -182,8 +182,26 @@ public class HttpServerTest {
     }
 
     @Test
-    public void logoutInvalidatesSession() throws Exception {
+    public void bankApiFiltersByStarAndKeepsDifficulty() throws Exception {
         String cookie = login();
+        String[] list = request("GET", "/api/bank/list?star=5&limit=5", null, null, cookie);
+        assertEquals("200", list[0]);
+        assertTrue("按 5 星筛选后应只回 5 星题", list[1].contains("\"difficulty\":5"));
+        assertTrue("接口同时给出星号串", list[1].contains("\"stars\":\"★★★★★\""));
+
+        String[] saved = request("POST", "/api/bank/save",
+                "{\"id\":\"\",\"subject\":\"语文\",\"grade\":6,\"q\":\"五星难度测试题\","
+                        + "\"options\":[\"a\",\"b\",\"answerA\"],\"answer\":0,\"difficulty\":5}",
+                null, cookie);
+        assertEquals("200", saved[0]);
+        assertTrue("保存后星级要落盘", saved[1].contains("\"difficulty\":5"));
+        String id = new org.json.JSONObject(saved[1]).getJSONObject("question").optString("id");
+        // 收尾：把测试题删掉，别污染后面的用例
+        request("POST", "/api/bank/delete", "{\"id\":\"" + id + "\"}", null, cookie);
+    }
+
+    @Test
+    public void logoutInvalidatesSession() throws Exception {        String cookie = login();
         assertEquals("200", request("GET", "/api/state", null, null, cookie)[0]);
 
         String[] out = request("POST", "/api/logout", "{}", null, cookie);

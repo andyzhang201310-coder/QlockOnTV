@@ -35,8 +35,8 @@ public class QuestionBankTest {
     public void seedBankLoadsAllThreeSubjects() {
         QuestionBank bank = QuestionBank.get();
         bank.ensureSeeded();
-        assertEquals("内置题库 = 原有 18000 题 + v5 追加 1738 题", 19738, bank.count());
-        assertEquals(Integer.valueOf(6866), bank.countBySubject().get("语文"));
+        assertEquals("内置题库 = 原有 18000 题 + v5 追加 + v6 复合诗词题", 19739, bank.count());
+        assertEquals(Integer.valueOf(6867), bank.countBySubject().get("语文"));
         assertEquals(Integer.valueOf(6576), bank.countBySubject().get("数学"));
         assertEquals(Integer.valueOf(6296), bank.countBySubject().get("英语"));
         assertTrue("每个年级至少还有原有的 3000 题", bank.countByGrade().get(3) >= 3000);
@@ -49,10 +49,13 @@ public class QuestionBankTest {
                 extra++;
                 continue;
             }
+            if (q.id != null && q.id.startsWith("poem-")) {
+                continue;   // v6 复合诗词题单独统计
+            }
             int idx = "语文".equals(q.subject) ? 0 : ("数学".equals(q.subject) ? 1 : 2);
             perGradeSubject[q.grade][idx]++;
         }
-        assertEquals("v5 追加题数", 1738, extra);
+        assertEquals("v5 追加题里未被复合题替换的部分", 990, extra);
         for (int g = 1; g <= 6; g++) {
             for (int s = 0; s < 3; s++) {
                 assertEquals("原有题库 年级 " + g + " 学科序号 " + s + " 应仍有 1000 题",
@@ -64,7 +67,7 @@ public class QuestionBankTest {
     @Test
     public void extendedQuestionsKeepFormatAndCoverNewTopics() {
         QuestionBank bank = QuestionBank.get();
-        boolean author = false, sequence = false, plural = false, formula = false;
+        boolean sequence = false, plural = false, formula = false;
         int extra = 0;
         for (QuestionBank.Question q : bank.all()) {
             if (q.id == null || !q.id.startsWith("ext-")) {
@@ -77,9 +80,6 @@ public class QuestionBankTest {
             assertTrue("新题年级需在 1-6 之间", q.grade >= 1 && q.grade <= 6);
             assertTrue("新题学科需为语数英", "语文".equals(q.subject)
                     || "数学".equals(q.subject) || "英语".equals(q.subject));
-            if (q.q.contains("的作者是谁")) {
-                author = true;
-            }
             if (q.q.contains("等差数列")) {
                 sequence = true;
             }
@@ -90,11 +90,58 @@ public class QuestionBankTest {
                 formula = true;
             }
         }
-        assertEquals(1738, extra);
-        assertTrue("应包含古诗文作者题", author);
+        assertEquals(990, extra);
         assertTrue("应包含等差数列题", sequence);
         assertTrue("应包含英语名词复数题", plural);
         assertTrue("应包含数学公式题", formula);
+    }
+
+    /**
+     * v6：语文诗词题不再只问「作者是谁」「哪个朝代」「出自哪首诗」，
+     * 改成「诗名 · 作者 · 朝代」这类复合答案，并且问到朝代时必然同时带作者。
+     */
+    @Test
+    public void chinesePoemQuestionsCombineDynastyAndAuthor() {
+        QuestionBank bank = QuestionBank.get();
+        int composite = 0;
+        int withDynasty = 0;
+        for (QuestionBank.Question q : bank.all()) {
+            if (!"语文".equals(q.subject)) {
+                continue;
+            }
+            boolean allCombo = true;
+            for (String o : q.options) {
+                if (o.indexOf('·') < 0) {
+                    allCombo = false;
+                    break;
+                }
+            }
+            if (q.id != null && q.id.startsWith("poem-")) {
+                composite++;
+                // 反查题（作者 + 朝代 → 名句）的选项是诗句本身，不要求带 ·
+                if (!q.q.endsWith("名句是哪一句？")) {
+                    assertTrue("复合题每个选项都要同时带作者与朝代：[" + q.q + "]", allCombo);
+                }
+                assertEquals("复合题固定 4 个选项", 4, q.options.size());
+                assertEquals("复合题选项不能重复", 4, new HashSet<String>(q.options).size());
+            }
+            // 还在问朝代的语文题，选项里必须带作者（不能只给一个朝代名）
+            if (q.q.contains("朝代") && q.options.size() == 4 && allCombo) {
+                withDynasty++;
+            }
+        }
+        assertTrue("复合诗词题应覆盖整套统编古诗文", composite >= 600);
+        assertTrue("问到朝代的题应同时带作者", withDynasty >= composite * 3 / 4);
+        // 老的「只问一个要素」的题干不应再大量存在
+        int solo = 0;
+        for (QuestionBank.Question q : bank.all()) {
+            if ("语文".equals(q.subject) && (q.q.startsWith("《") || q.q.startsWith("「"))) {
+                if (q.q.endsWith("的作者是谁？") || q.q.endsWith("出自哪首诗？")) {
+                    solo++;
+                }
+            }
+        }
+        assertTrue("单要素诗词题应基本清理干净，实际还剩 " + solo, solo < 10);
     }
 
     @Test
@@ -346,9 +393,81 @@ public class QuestionBankTest {
         assertTrue("关键词过滤后题量应少于全库", bank.queryCount("", -1, "拼音") < bank.count());
     }
 
+    // ---------------------------------------------------------------- v6 难度星级
+
     @Test
-    public void deleteOneRefusesToEmptyTheBank() throws Exception {
+    public void difficultyIsParsedFilteredAndDefaulted() throws Exception {
         QuestionBank bank = QuestionBank.get();
+        String original = bank.exportJson();
+        try {
+            bank.save("{\"questions\":["
+                    + "{\"id\":\"s1\",\"subject\":\"语文\",\"grade\":1,\"q\":\"易\","
+                    + "\"options\":[\"a\",\"b\"],\"answer\":0,\"difficulty\":1},"
+                    + "{\"id\":\"s5\",\"subject\":\"语文\",\"grade\":6,\"q\":\"难\","
+                    + "\"options\":[\"a\",\"b\"],\"answer\":0,\"difficulty\":5},"
+                    + "{\"id\":\"sd\",\"subject\":\"数学\",\"grade\":3,\"q\":\"默认\","
+                    + "\"options\":[\"a\",\"b\"],\"answer\":0},"
+                    + "{\"id\":\"ss\",\"subject\":\"英语\",\"grade\":4,\"q\":\"星号\","
+                    + "\"options\":[\"a\",\"b\"],\"answer\":0,\"stars\":\"★★★★\"}]}");
+
+            assertEquals(1, bank.byId("s1").difficulty);
+            assertEquals(5, bank.byId("s5").difficulty);
+            assertEquals("没写难度按年级推：3 年级 2 星", 2, bank.byId("sd").difficulty);
+            assertEquals("★★☆☆☆", bank.byId("sd").stars());
+            assertEquals("支持 stars:\"★★★★\" 写法", 4, bank.byId("ss").difficulty);
+
+            assertEquals("1 星只有语文那一道", 1, bank.queryCount("", -1, 1, ""));
+            assertEquals(1, bank.query("语文", -1, 5, "", 0, 10).size());
+            assertEquals("按星筛选要和关键词叠加", 1, bank.queryCount("", -1, 2, "默认"));
+            assertEquals("不限星级时全部命中", 4, bank.queryCount("", -1, -1, ""));
+        } finally {
+            bank.save(original);
+        }
+    }
+
+    @Test
+    public void saveOneKeepsDifficultyStars() throws Exception {
+        QuestionBank bank = QuestionBank.get();
+        String original = bank.exportJson();
+        try {
+            QuestionBank.Question hard = bank.saveOne("", "语文", 4, "五星题",
+                    Arrays.asList("对", "错"), 0, 5, -1);
+            assertEquals(5, hard.difficulty);
+            assertEquals("★★★★★", hard.stars());
+            assertEquals("落盘后星级仍在", 5, bank.byId(hard.id).difficulty);
+
+            QuestionBank.Question auto = bank.saveOne("", "数学", 5, "按年级默认",
+                    Arrays.asList("对", "错"), 0, 0, -1);
+            assertEquals("传 0 表示按年级推：5 年级 4 星", 4, auto.difficulty);
+
+            // 改题时可以顺手改星
+            QuestionBank.Question edited = bank.saveOne(hard.id, "语文", 4, "改成两星",
+                    Arrays.asList("对", "错"), 1, 2, -1);
+            assertEquals("★★☆☆☆", edited.stars());
+            assertEquals(2, bank.byId(hard.id).difficulty);
+        } finally {
+            bank.save(original);
+        }
+    }
+
+    @Test
+    public void builtinBankCarriesDifficultyForEveryQuestion() throws Exception {
+        QuestionBank bank = QuestionBank.get();
+        for (QuestionBank.Question q : bank.query("", -1, "", 0, 50)) {
+            assertTrue("内置题应有 1–5 星难度", q.difficulty >= 1 && q.difficulty <= 5);
+            assertEquals("星号由难度生成", 5, q.stars().length());
+        }
+        java.util.Map<Integer, Integer> dist = bank.countByDifficulty();
+        assertEquals("五档都要有统计键", 5, dist.size());
+        int sum = 0;
+        for (int v : dist.values()) {
+            sum += v;
+        }
+        assertEquals("各档题量之和等于全库", bank.count(), sum);
+    }
+
+    @Test
+    public void deleteOneRefusesToEmptyTheBank() throws Exception {        QuestionBank bank = QuestionBank.get();
         String original = bank.exportJson();
         try {
             bank.save("{\"questions\":[{\"id\":\"only\",\"subject\":\"数学\",\"q\":\"1+1=?\","
