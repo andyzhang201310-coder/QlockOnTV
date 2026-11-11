@@ -188,6 +188,40 @@
     .tabs button{flex:0 0 auto;min-width:0;padding:8px 14px}
   }
 
+
+  /* ---------- v1.7.15 左侧导航与右侧内容一一对应 ---------- */
+  .sb-group.first{padding-top:2px}
+  .sb-item .tx{overflow:hidden;text-overflow:ellipsis}
+  .sb-item.page{font-weight:600}
+  .sb-item.page.on{background:var(--ink);color:#fff}
+  .sb-item.page.on .ic{opacity:1}
+  .sb-item.sec{position:relative;padding-left:29px;font-size:13px;color:var(--sub)}
+  .sb-item.sec::before{content:"";position:absolute;left:15px;top:50%;width:5px;height:5px;
+    margin-top:-2.5px;border-radius:50%;background:#d3d7d0;transition:.15s}
+  .sb-item.sec:hover{color:var(--txt)}
+  .sb-item.sec.on{background:#fff4e5;color:var(--accent);font-weight:650}
+  .sb-item.sec.on::before{background:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.13)}
+  .tb-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}
+  .crumb{font-size:12px;color:var(--sub);background:#fff;border:1px solid var(--line);
+    border-radius:20px;padding:4px 11px;white-space:nowrap}
+  .cards>.card,.panel{scroll-margin-top:88px}
+  @media(min-width:768px){
+    .topbar{position:sticky;top:0;z-index:10;background:var(--bg);
+      padding:10px 0;margin:-10px 0 6px;border-bottom:1px solid var(--line-soft)}
+  }
+  .card.flash{animation:secflash 1.2s ease-out}
+  @keyframes secflash{
+    0%{box-shadow:0 0 0 3px rgba(180,83,9,.38),0 4px 18px rgba(24,32,40,.05)}
+    100%{box-shadow:0 4px 18px rgba(24,32,40,.05)}}
+  @media(max-width:767px){
+    .sb-item.sec{padding-left:11px}
+    .sb-item.sec::before{display:none}
+    .sb-item.sec.first{border-left:1px solid var(--line);margin-left:4px;border-radius:0 9px 9px 0}
+    .tabs{display:none!important}
+    .tb-right{gap:4px}
+    .crumb{font-size:11px;padding:3px 9px}
+    .cards>.card,.panel{scroll-margin-top:66px}
+  }
 </style>
 </head>
 <body>
@@ -198,18 +232,14 @@
     <div><b>题锁</b><small>家长控制台</small></div>
   </div>
   <nav class="sb-nav">
-    <div class="sb-group">概览</div>
-    <a class="sb-item" href="/#sec-status"><span class="ic">▦</span>运行状态</a>
-    <a class="sb-item" href="/#sec-quick"><span class="ic">⚡</span>快捷操作</a>
-    <a class="sb-item" href="/#sec-device"><span class="ic">⚙</span>设备与账号</a>
-    <a class="sb-item" href="/#sec-security"><span class="ic">⛨</span>防卸载保护</a>
-    <a class="sb-item" href="/#sec-bank"><span class="ic">▤</span>题库编辑</a>
-    <div class="sb-group">学习计划</div>
-    <a class="sb-item on" href="/rules.html"><span class="ic">◈</span>管理规则</a>
-    <a class="sb-item sub on" href="/rules.html#task">任务与解锁</a>
-    <a class="sb-item sub" href="/rules.html#time">时间计划</a>
-    <a class="sb-item sub" href="/rules.html#scope">答题范围</a>
-    <a class="sb-item sub" href="/rules.html#more">奖励与复习</a>
+    <div class="sb-group first">页面</div>
+    <a class="sb-item page" href="/"><span class="ic">▦</span><span class="tx">管理首页</span></a>
+    <a class="sb-item page on" href="#task"><span class="ic">◈</span><span class="tx">管理规则</span></a>
+    <div class="sb-group">本页内容</div>
+    <a class="sb-item sec first on" href="#task" data-sec="task"><span class="tx">任务与解锁</span></a>
+    <a class="sb-item sec" href="#time" data-sec="time"><span class="tx">时间计划</span></a>
+    <a class="sb-item sec" href="#scope" data-sec="scope"><span class="tx">答题范围</span></a>
+    <a class="sb-item sec" href="#more" data-sec="more"><span class="tx">奖励与复习</span></a>
   </nav>
   <div class="sb-foot">
     <div class="dev" id="sbDevice">正在连接电视…</div>
@@ -220,7 +250,7 @@
 <div class="page narrow">
   <div class="topbar">
     <div><h1>管理规则</h1><p class="sub" id="subline">正在读取电视上的规则…</p></div>
-    <span class="conn" id="connBadge">● 已连接</span>
+    <div class="tb-right"><span class="crumb" id="crumb">管理规则 / 任务与解锁</span><span class="conn" id="connBadge">● 已连接</span></div>
   </div>
 
 <div class="foot">
@@ -368,7 +398,7 @@
   var cfg = null, state = null, saveTimer = null, saving = false, failedSig = '';
   // 内嵌浏览器禁用 Cookie 时，侧栏跳转也要带上 ?pin= 后备凭证；hash 必须留在最后
   function withPin(href) {
-    if (!pin) { return href; }
+    if (!pin || href.charAt(0) === '#') { return href; }
     var i = href.indexOf('#');
     var base = i >= 0 ? href.slice(0, i) : href;
     var hash = i >= 0 ? href.slice(i) : '';
@@ -377,6 +407,18 @@
   Array.prototype.forEach.call(document.querySelectorAll('.sb-item'), function (a) {
     a.setAttribute('href', withPin(a.getAttribute('href') || ''));
   });
+  // ---- 左侧导航 ↔ 右侧内容一一对应（v1.7.15）----
+  function secName(a) { var t = a && a.querySelector('.tx'); return t ? t.textContent.trim() : ''; }
+  function setCrumb(name) {
+    var page = document.querySelector('.sb-item.page.on');
+    if ($('crumb')) { $('crumb').textContent = (page ? secName(page) : '') + ' / ' + name; }
+  }
+  var navReady = false;
+  function revealNav(a) {
+    // 首次加载不自动横滑，避免把导航条第一项裁掉；之后用户切换时才把当前项滚进视野
+    if (!navReady || window.innerWidth >= 768) { return; }
+    try { a.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (e) {}
+  }
   var DAYS = ['一','二','三','四','五','六','日'];
   var TPL = [
     ['上学日', function () { return build(range('18:30','20:30'), range('09:00','20:00')); }],
@@ -518,8 +560,10 @@
     ['task','time','scope','more'].forEach(function (t) {
       $('tab-' + t).className = t === name ? '' : 'hidden';
     });
-    Array.prototype.forEach.call(document.querySelectorAll('.sb-item.sub'), function (a) {
-      a.classList.toggle('on', (a.getAttribute('href') || '').indexOf('#' + name) > 0);
+    Array.prototype.forEach.call(document.querySelectorAll('.sb-item.sec'), function (a) {
+      var on = a.getAttribute('data-sec') === name;
+      a.classList.toggle('on', on);
+      if (on) { setCrumb(secName(a)); revealNav(a); }
     });
     if (name === 'time' && cfg) { renderWeek(); }
   }
@@ -750,6 +794,7 @@
     $('reviewStat').textContent = '已记录 '+(rs[0].reviewDue||0)+' 道错题，今日答错 '+(rs[0].wrongToday||0)+' 次';
     renderAll();
     activateTab(location.hash.replace('#','') || 'task');
+    navReady = true;
   }).catch(function (e) {
     $('subline').textContent = '读取规则失败：'+e.message;
     toast('读取规则失败：'+e.message, 4000);

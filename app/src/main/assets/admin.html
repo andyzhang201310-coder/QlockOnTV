@@ -159,6 +159,40 @@
     .tabs button{flex:0 0 auto;min-width:0;padding:8px 14px}
   }
 
+
+  /* ---------- v1.7.15 左侧导航与右侧内容一一对应 ---------- */
+  .sb-group.first{padding-top:2px}
+  .sb-item .tx{overflow:hidden;text-overflow:ellipsis}
+  .sb-item.page{font-weight:600}
+  .sb-item.page.on{background:var(--ink);color:#fff}
+  .sb-item.page.on .ic{opacity:1}
+  .sb-item.sec{position:relative;padding-left:29px;font-size:13px;color:var(--sub)}
+  .sb-item.sec::before{content:"";position:absolute;left:15px;top:50%;width:5px;height:5px;
+    margin-top:-2.5px;border-radius:50%;background:#d3d7d0;transition:.15s}
+  .sb-item.sec:hover{color:var(--txt)}
+  .sb-item.sec.on{background:#fff4e5;color:var(--accent);font-weight:650}
+  .sb-item.sec.on::before{background:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.13)}
+  .tb-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}
+  .crumb{font-size:12px;color:var(--sub);background:#fff;border:1px solid var(--line);
+    border-radius:20px;padding:4px 11px;white-space:nowrap}
+  .cards>.card,.panel{scroll-margin-top:88px}
+  @media(min-width:768px){
+    .topbar{position:sticky;top:0;z-index:10;background:var(--bg);
+      padding:10px 0;margin:-10px 0 6px;border-bottom:1px solid var(--line-soft)}
+  }
+  .card.flash{animation:secflash 1.2s ease-out}
+  @keyframes secflash{
+    0%{box-shadow:0 0 0 3px rgba(180,83,9,.38),0 4px 18px rgba(24,32,40,.05)}
+    100%{box-shadow:0 4px 18px rgba(24,32,40,.05)}}
+  @media(max-width:767px){
+    .sb-item.sec{padding-left:11px}
+    .sb-item.sec::before{display:none}
+    .sb-item.sec.first{border-left:1px solid var(--line);margin-left:4px;border-radius:0 9px 9px 0}
+    .tabs{display:none!important}
+    .tb-right{gap:4px}
+    .crumb{font-size:11px;padding:3px 9px}
+    .cards>.card,.panel{scroll-margin-top:66px}
+  }
 </style>
 </head>
 <body>
@@ -169,18 +203,16 @@
     <div><b>题锁</b><small>家长控制台</small></div>
   </div>
   <nav class="sb-nav">
-    <div class="sb-group">概览</div>
-    <a class="sb-item on" href="/#sec-status"><span class="ic">▦</span>运行状态</a>
-    <a class="sb-item" href="/#sec-quick"><span class="ic">⚡</span>快捷操作</a>
-    <a class="sb-item" href="/#sec-device"><span class="ic">⚙</span>设备与账号</a>
-    <a class="sb-item" href="/#sec-security"><span class="ic">⛨</span>防卸载保护</a>
-    <a class="sb-item" href="/#sec-bank"><span class="ic">▤</span>题库编辑</a>
-    <div class="sb-group">学习计划</div>
-    <a class="sb-item" href="/rules.html"><span class="ic">◈</span>管理规则</a>
-    <a class="sb-item sub" href="/rules.html#task">任务与解锁</a>
-    <a class="sb-item sub" href="/rules.html#time">时间计划</a>
-    <a class="sb-item sub" href="/rules.html#scope">答题范围</a>
-    <a class="sb-item sub" href="/rules.html#more">奖励与复习</a>
+    <div class="sb-group first">页面</div>
+    <a class="sb-item page on" href="/"><span class="ic">▦</span><span class="tx">管理首页</span></a>
+    <a class="sb-item page" href="/rules.html"><span class="ic">◈</span><span class="tx">管理规则</span></a>
+    <div class="sb-group">本页内容</div>
+    <a class="sb-item sec first on" href="#sec-status" data-sec="sec-status"><span class="tx">运行状态</span></a>
+    <a class="sb-item sec" href="#sec-rules" data-sec="sec-rules"><span class="tx">学习规则</span></a>
+    <a class="sb-item sec" href="#sec-quick" data-sec="sec-quick"><span class="tx">快捷操作</span></a>
+    <a class="sb-item sec" href="#sec-device" data-sec="sec-device"><span class="tx">设备与账号</span></a>
+    <a class="sb-item sec" href="#sec-security" data-sec="sec-security"><span class="tx">防卸载保护</span></a>
+    <a class="sb-item sec" href="#sec-bank" data-sec="sec-bank"><span class="tx">题库编辑</span></a>
   </nav>
   <div class="sb-foot">
     <div class="dev" id="sbDevice">正在连接电视…</div>
@@ -191,7 +223,7 @@
 <div class="page">
   <div class="topbar">
     <div><h1>管理后台</h1><p class="sub" id="subline">正在连接电视…</p></div>
-    <span class="conn" id="connBadge">● 已连接</span>
+    <div class="tb-right"><span class="crumb" id="crumb">管理首页 / 运行状态</span><span class="conn" id="connBadge">● 已连接</span></div>
   </div>
 <div class="cards">
 
@@ -385,7 +417,7 @@
   var quietEditing = false;
   // 内嵌浏览器禁用 Cookie 时，侧栏跳转也要带上 ?pin= 后备凭证；hash 必须留在最后
   function withPin(href) {
-    if (!pin) { return href; }
+    if (!pin || href.charAt(0) === '#') { return href; }
     var i = href.indexOf('#');
     var base = i >= 0 ? href.slice(0, i) : href;
     var hash = i >= 0 ? href.slice(i) : '';
@@ -395,6 +427,86 @@
     a.setAttribute('href', withPin(a.getAttribute('href') || ''));
   });
 
+  // ---- 左侧导航 ↔ 右侧内容一一对应（v1.7.15）----
+  function secName(a) { var t = a && a.querySelector('.tx'); return t ? t.textContent.trim() : ''; }
+  function setCrumb(name) {
+    var page = document.querySelector('.sb-item.page.on');
+    if ($('crumb')) { $('crumb').textContent = (page ? secName(page) : '') + ' / ' + name; }
+  }
+  function revealNav(a) {
+    if (window.innerWidth >= 768) { return; }
+    try { a.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' }); } catch (e) {}
+  }
+  var secLinks = Array.prototype.slice.call(document.querySelectorAll('.sb-item.sec'));
+  var lastPicked = null;
+  var navLockUntil = 0;
+  function setSec(id, flash) {
+    var hit = null;
+    secLinks.forEach(function (a) {
+      var on = a.getAttribute('data-sec') === id;
+      a.classList.toggle('on', on);
+      if (on) { hit = a; }
+    });
+    if (!hit) { return; }
+    setCrumb(secName(hit));
+    if (flash) {
+      navLockUntil = Date.now() + 1400;
+      lastPicked = id;
+      revealNav(hit);
+      var card = document.getElementById(id);
+      if (card) { card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash'); }
+    }
+  }
+  function currentSecByScroll() {
+    var cands = [];
+    secLinks.forEach(function (a) {
+      var el = document.getElementById(a.getAttribute('data-sec'));
+      if (el) { cands.push({ id: a.getAttribute('data-sec'), top: el.getBoundingClientRect().top }); }
+    });
+    if (!cands.length) { return null; }
+    var passed = cands.filter(function (c) { return c.top <= 110; });
+    if (!passed.length) { return cands[0].id; }
+    var last = passed[passed.length - 1];
+    var row = passed.filter(function (c) { return Math.abs(c.top - last.top) < 12; });
+    var pick = row.filter(function (c) { return c.id === lastPicked; })[0] || row[0];
+    return pick.id;
+  }
+  var navTicking = false;
+  var raf = window.requestAnimationFrame || function (f) { setTimeout(f, 16); };
+  window.addEventListener('scroll', function () {
+    if (navTicking) { return; }
+    navTicking = true;
+    raf(function () {
+      navTicking = false;
+      if (Date.now() < navLockUntil) { return; }
+      var id = currentSecByScroll();
+      if (id) { setSec(id, false); }
+    });
+  }, { passive: true });
+  window.addEventListener('hashchange', function () {
+    var id = (location.hash || '').replace('#', '');
+    if (id) { setSec(id, true); }
+  });
+  var initialSec = (location.hash || '').replace('#', '');
+  if (initialSec) { navLockUntil = Date.now() + 1400; }
+  setSec(initialSec || (secLinks[0] ? secLinks[0].getAttribute('data-sec') : ''), false);
+  secLinks.forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      var id = a.getAttribute('data-sec');
+      var el = document.getElementById(id);
+      if (!el) { return; }
+      e.preventDefault();
+      try { history.replaceState(null, '', location.pathname + '#' + id); } catch (err) {}
+      setSec(id, true);
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      catch (err2) { el.scrollIntoView(); }
+      // 部分 WebView / 内嵌浏览器不执行平滑滚动，用即时定位兜底
+      setTimeout(function () {
+        var top = el.getBoundingClientRect().top;
+        if (top > 180 || top < -40) { el.scrollIntoView(); }
+      }, 300);
+    });
+  });
   function initTimeSelects() {
     ['StartH', 'EndH', 'StartM', 'EndM'].forEach(function (k) {
       var sel = $('inQuiet' + k), isHour = k.indexOf('H') > 0, n = isHour ? 24 : 60;
