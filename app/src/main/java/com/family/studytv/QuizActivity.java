@@ -539,6 +539,7 @@ public class QuizActivity extends Activity {
             streak++;
             totalCorrect++;
             Rules.clearWrong(this, it.q.id);   // 答对就把这题从错题库移出
+            StudyStats.record(this, it.q.subject, QType.of(it.q), true);
             feedback(0xFF33D17A, "答对了！继续下一题");
             if ("streak".equals(playMode) && streak >= targetCount) {
                 pass("连对 " + targetCount + " 题，可以继续看电视啦");
@@ -556,6 +557,7 @@ public class QuizActivity extends Activity {
         busy = true;
         streak = 0;
         Rules.noteWrong(this, it.q.id);
+        StudyStats.record(this, it.q.subject, QType.of(it.q), false);
         revealAnswer(it, choice);
         feedback(0xFFF2545B, "答错了！正确答案是 " + letter(it.answer)
                 + "、" + it.options.get(it.answer) + "，看清答案再继续");

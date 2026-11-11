@@ -344,6 +344,28 @@ public class HttpServer {
             return;
         }
 
+        // ---- 学习统计：按题型累计答题 / 错题，后台出柱状图与雷达图
+        if (path.equals("/api/stats")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            respondJson(socket, 200, StudyStats.snapshot(ctx).toString());
+            return;
+        }
+
+        if (path.equals("/api/stats/reset") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            StudyStats.reset(ctx);
+            JSONObject ok = new JSONObject();
+            ok.put("ok", true);
+            respondJson(socket, 200, ok.toString());
+            return;
+        }
+
         if (path.equals("/api/questions")) {
             if (method.equals("GET")) {
                 // 题库里有正确答案，未登录不给看

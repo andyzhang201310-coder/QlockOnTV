@@ -258,6 +258,13 @@
   .qrow .ops button{flex:0 0 auto;min-width:0;padding:5px 10px;font-size:12px}
   .qrow .ops button.del{background:#fbf0ef;border-color:#ecd6d4;color:var(--red)}
   .qempty{color:var(--sub);font-size:12.5px;padding:18px 0;text-align:center}
+  /* 行内编辑：编辑卡片被搬到被点的那道题下面，套一层浅色底让边界清楚 */
+  .qedit{background:#fbfcf7;border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px 2px;margin:2px 0 10px}
+  .qedit .card.inline{background:transparent;border:0;box-shadow:none;padding:0}
+  .edithead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .edithead h2{margin:0}
+  #btnCloseEdit{flex:0 0 auto;min-width:0;padding:4px 11px;font-size:12px}
   .pager{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
   .pager button{flex:0 0 auto;min-width:0;padding:7px 14px;font-size:12.5px}
   .pager button[disabled]{opacity:.45;cursor:default}
@@ -300,6 +307,42 @@
   /* 通栏卡片里的输入框 / 按钮不必拉满整行，避免 1100px 宽的单行输入框 */
   .stack>.card .fl+input{max-width:520px}
   .stack>.card .win input[type=text]{max-width:520px}
+
+  /* ---------------- 学习统计（v1.7.22）：总览 + 横向柱状图 + 雷达图 + 明细 ---------------- */
+  .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:6px}
+  .kpi{background:#fbfcf7;border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px}
+  .kpi .k{color:var(--sub);font-size:11.5px;white-space:nowrap}
+  .kpi .v{font-size:21px;font-weight:650;letter-spacing:-.01em;margin-top:1px;color:var(--txt);
+    font-variant-numeric:tabular-nums;line-height:1.35}
+  .kpi .v small{font-size:11.5px;font-weight:500;color:var(--sub);margin-left:2px}
+  .kpi .v.sm{font-size:14px;font-weight:600;padding-top:5px}
+  .seg-mini{margin:10px 0 2px}
+  .seg-mini button{padding:5px 11px;font-size:12px;border-radius:7px}
+  .hbars{display:grid;gap:8px;margin-top:11px}
+  .hbar{display:grid;grid-template-columns:78px minmax(0,1fr) 98px;gap:9px;align-items:center}
+  .hbar .nm{font-size:12.5px;color:var(--txt2);text-align:right;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  .hbar .track{height:14px;border-radius:7px;background:#f0f2e9;overflow:hidden}
+  .hbar .fill{display:block;height:100%;border-radius:7px;background:#7f9c72;min-width:4px;
+    transition:width .35s}
+  .hbar.hot .fill{background:#bb766c}
+  .hbar .vl{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .hbar .vl b{color:var(--txt);font-weight:600}
+  .radar{margin-top:2px}
+  .radar svg{width:100%;height:auto;display:block;overflow:visible}
+  .statline{margin-top:10px;border-top:1px solid var(--line-soft)}
+  .strow{display:grid;grid-template-columns:minmax(0,1fr) 62px 60px 60px 96px;gap:8px;
+    align-items:center;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px}
+  .strow:last-child{border-bottom:0}
+  .strow.hd{color:var(--sub);font-size:11.5px;padding:7px 0}
+  .strow .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--txt)}
+  .strow .s{color:var(--sub);font-size:11.5px;white-space:nowrap}
+  .strow .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--txt2)}
+  .strow .rt{display:flex;align-items:center;gap:6px}
+  .strow .rt i{flex:1;height:6px;border-radius:3px;background:#f0f2e9;overflow:hidden;display:block}
+  .strow .rt i b{display:block;height:100%;background:#7f9c72}
+  .strow .rt em{font-style:normal;width:36px;text-align:right;color:var(--txt2);
+    font-variant-numeric:tabular-nums}
 
   /* ---------------- 收起侧栏（桌面端） ---------------- */
   @media(min-width:768px){
@@ -364,6 +407,12 @@
       scrollbar-width:none;padding-bottom:7px}
     #bankSubjects::-webkit-scrollbar{display:none}
     #bankSubjects .chip{flex:0 0 auto}
+    /* 统计页：四格总览两列、柱子收窄、明细表去掉科目列 */
+    .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .kpi .v{font-size:19px}
+    .hbar{grid-template-columns:66px minmax(0,1fr) 86px;gap:7px}
+    .strow{grid-template-columns:minmax(0,1fr) 52px 52px 84px}
+    .strow .s,.strow.hd .s{display:none}
   }
 </style>
 </head>
@@ -380,6 +429,7 @@
     <a class="sb-item" href="#quick" data-view="quick"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5 14h6l-1 7 8-11h-6l1-7z"/></svg></span><span class="tx">快捷操作</span></a>
     <a class="sb-item" href="#bank" data-view="bank"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></span><span class="tx">题库管理</span></a>
     <a class="sb-item" href="#rules" data-view="rules"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M18 7h2M4 17h4M14 17h6"/><circle cx="15" cy="7" r="2.2"/><circle cx="11" cy="17" r="2.2"/></svg></span><span class="tx">规则管理</span></a>
+    <a class="sb-item" href="#stats" data-view="stats"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="tx">学习统计</span></a>
     <div class="sb-grp">系统</div>
     <a class="sb-item" href="#system" data-view="system"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1"/></svg></span><span class="tx">系统设置</span></a>
   </nav>
@@ -521,9 +571,12 @@
         </div>
       </div>
 
-      <!-- ---------- 3.2 新增 / 编辑单题 ---------- -->
-      <div class="card">
-        <h2 id="editTitle">新增题目</h2>
+      <!-- ---------- 3.2 新增 / 编辑单题（编辑时整块搬到那道题下面） ---------- -->
+      <div class="card" id="bankEditor">
+        <div class="edithead">
+          <h2 id="editTitle">新增题目</h2>
+          <button type="button" id="btnCloseEdit" class="hidden" title="收起编辑窗口">收起</button>
+        </div>
         <div class="grid2">
           <div>
             <label class="fl">科目</label>
@@ -758,7 +811,59 @@
     </div>
   </section>
 
-  <!-- ============================ 5. 系统设置 ============================ -->
+  <!-- ============================ 5. 学习统计 ============================ -->
+  <section class="view" id="view-stats">
+    <div class="bar">
+      <div class="txt" id="statsLine">正在读取统计…</div>
+      <span class="badge wait" id="statsBadge">读取中…</span>
+    </div>
+    <div class="stack">
+
+      <div class="card">
+        <h2>总览</h2>
+        <div class="kpis">
+          <div class="kpi"><div class="k">累计答题</div><div class="v" id="kTotal">—<small>次</small></div></div>
+          <div class="kpi"><div class="k">答错</div><div class="v" id="kWrong">—<small>次</small></div></div>
+          <div class="kpi"><div class="k">正确率</div><div class="v" id="kRate">—<small>%</small></div></div>
+          <div class="kpi"><div class="k">统计起始</div><div class="v sm" id="kSince">—</div></div>
+        </div>
+        <div class="tip">
+          每答一题就按「科目 + 题型」累加一次，用来找孩子的薄弱题型。只记答题结果，不记录看了什么内容；
+          改题库、清空错题库都不会动这里的数字。
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <h2>错题题型排行</h2>
+          <div class="seg seg-mini" id="statMetric">
+            <button data-metric="wrong" class="on">按错题数</button>
+            <button data-metric="rate">按错误率</button>
+          </div>
+          <div class="stat" id="statSub"></div>
+          <div class="hbars" id="barBox"></div>
+        </div>
+        <div class="card">
+          <h2>薄弱题型雷达</h2>
+          <div class="tip" style="margin-top:0" id="radarHint">
+            取错得最多的 8 个题型连成雷达图，面积越大说明这类题越薄弱。
+          </div>
+          <div id="radarBox" class="radar"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>题型明细</h2>
+        <div class="statline" id="statTable"></div>
+        <div class="btns">
+          <button class="warn" id="btnStatsReset">清空统计</button>
+        </div>
+        <div class="tip">清空只删统计数字，不影响题库、错题库和答题规则。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 6. 系统设置 ============================ -->
   <section class="view" id="view-system">
     <div class="bar">
       <div class="txt">密码与端口改完即自动保存</div>
@@ -891,7 +996,7 @@
   }
 
   // ============================================================ 视图切换
-  var VIEWS = { status: '运行状态', quick: '快捷操作', bank: '题库管理', rules: '规则管理', system: '系统设置' };
+  var VIEWS = { status: '运行状态', quick: '快捷操作', bank: '题库管理', rules: '规则管理', stats: '学习统计', system: '系统设置' };
   var navItems = Array.prototype.slice.call(document.querySelectorAll('.sb-item'));
   var curView = 'status';
 
@@ -930,6 +1035,7 @@
     $('crumb').textContent = '家长控制台 / ' + VIEWS[view];
     if (view === 'rules') { activateTab(sub); }
     if (view === 'bank') { openBank(); }
+    if (view === 'stats') { openStats(); }
     try {
       history.replaceState(null, '', location.pathname + '#' + (view === 'rules' ? 'rules-' + sub : view));
     } catch (e) {}
@@ -1316,6 +1422,8 @@
   }
 
   function loadBankPage() {
+    // 翻页 / 改筛选 / 重新拉列表：先把可能还挂在某一行下面的编辑卡片收回去
+    if (inlineHost) { closeInlineEditor(); resetEditor(); }
     var qs = '?subject=' + encodeURIComponent($('fSubject').value) +
       '&grade=' + encodeURIComponent($('fGrade').value) +
       '&star=' + encodeURIComponent($('fStar').value) +
@@ -1374,12 +1482,13 @@
     return null;
   }
   $('qList').onclick = function (e) {
-    var b = rowOf(e.target, 'qrow') ? e.target : null;
+    var row = rowOf(e.target, 'qrow');
+    var b = row ? e.target : null;
     while (b && b.tagName !== 'BUTTON') { b = b.parentNode; }
     if (!b) { return; }
     var q = bankRows[+b.getAttribute('data-i')];
     if (!q) { return; }
-    if (b.getAttribute('data-act') === 'edit') { fillEditor(q); } else { removeQuestion(q); }
+    if (b.getAttribute('data-act') === 'edit') { fillEditor(q, row); } else { removeQuestion(q); }
   };
 
   // ---------- 单题编辑器
@@ -1410,16 +1519,50 @@
     var r = document.querySelector('#optBox input[name=qopt]:checked');
     return r ? +r.value : -1;
   }
-  function fillEditor(q) {
+  // 编辑卡片整块搬到被点的那道题下面：记住它原来的位置，收起 / 保存后放回去
+  var editorCard = $('bankEditor');
+  var editorHome = editorCard.parentNode;
+  var editorNext = editorCard.nextSibling;
+  var inlineHost = null;
+
+  function mountInlineEditor(row) {
+    if (!inlineHost) {
+      inlineHost = document.createElement('div');
+      inlineHost.className = 'qedit';
+    }
+    if (row && row.parentNode) {
+      row.parentNode.insertBefore(inlineHost, row.nextSibling);
+    }
+    if (editorCard.parentNode !== inlineHost) { inlineHost.appendChild(editorCard); }
+    editorCard.classList.add('inline');
+    $('btnCloseEdit').classList.remove('hidden');
+  }
+
+  function closeInlineEditor() {
+    if (!inlineHost) { return; }
+    if (inlineHost.parentNode) { inlineHost.parentNode.removeChild(inlineHost); }
+    if (editorNext && editorNext.parentNode === editorHome) {
+      editorHome.insertBefore(editorCard, editorNext);
+    } else {
+      editorHome.insertBefore(editorCard, $('editTitle') ? editorHome.firstChild : null);
+    }
+    editorCard.classList.remove('inline');
+    $('btnCloseEdit').classList.add('hidden');
+    inlineHost = null;
+  }
+
+  function fillEditor(q, row) {
     bankEditId = q.id || '';
-    $('editTitle').textContent = '编辑题目 · ' + qLabel(q);
+    $('editTitle').textContent = '编辑这道题 · ' + qLabel(q);
     $('qSubject').value = q.subject || '';
     $('qGrade').value = String(q.grade || 0);
     setStar(q.difficulty || 3);
     $('qText').value = q.q || '';
     renderOpts(q.options || null, q.answer || 0);
-    try { $('editTitle').scrollIntoView({ block: 'center' }); } catch (e) {}
-    toast('已载入，改完点「保存到题库」');
+    if (row) { mountInlineEditor(row); }
+    var anchor = inlineHost || editorCard;
+    try { anchor.scrollIntoView({ block: 'center' }); } catch (e) {}
+    toast('已展开在题目下方，改完点「保存到题库」');
   }
   // 新增题目时的默认星级：跟着年级走（1–2 年级 1 星、3 年级 2 星、4 年级 3 星、5 年级 4 星、6 年级 5 星）
   function defaultStar(g) {
@@ -1457,7 +1600,13 @@
     if (ans === idx) { ans = 0; } else if (ans > idx) { ans -= 1; }
     renderOpts(vals, ans < 0 ? 0 : ans);
   };
+  $('btnCloseEdit').onclick = function () {
+    closeInlineEditor();
+    resetEditor();
+    toast('已收起，未保存的改动已丢弃');
+  };
   $('btnResetQ').onclick = function () {
+    closeInlineEditor();
     resetEditor();
     toast('已清空');
   };
@@ -1486,6 +1635,7 @@
     api('/api/bank/save', { method: 'POST', body: JSON.stringify(payload) }).then(function (r) {
       setBadge('bankBadge', 'ok', '已保存');
       toast(wasEdit ? '已保存修改' : '已新增 1 题，共 ' + r.count + ' 题');
+      closeInlineEditor();
       resetEditor();
       if (!wasEdit && !$('fKw').value.trim()) {
         // 新题排在最后，直接翻到最后一页让家长看到
@@ -1505,7 +1655,7 @@
     api('/api/bank/delete', { method: 'POST', body: JSON.stringify({ id: q.id }) })
       .then(function (r) {
         toast('已删除，剩余 ' + r.count + ' 题');
-        if (bankEditId === q.id) { resetEditor(); }
+        if (bankEditId === q.id) { closeInlineEditor(); resetEditor(); }
         if (bankRows.length === 1 && bankPage > 0) { bankPage--; }
         return loadBankPage().then(loadBankMeta).then(loadState);
       }).catch(function (e) {
@@ -2077,6 +2227,199 @@
     renderWindows('timePoints'); renderWindows('exemptWindows'); renderScope();
   }
 
+  // ============================================================ 学习统计（v1.7.22）
+  var statData = null;
+  var statMetric = 'wrong';   // wrong = 按错题数，rate = 按错误率
+  var statSubject = '';       // 空 = 全部科目
+
+  function openStats() {
+    setBadge('statsBadge', 'wait', '读取中…');
+    return api('/api/stats').then(function (d) {
+      statData = d || { types: [] };
+      renderStats();
+      setBadge('statsBadge', 'ok', '实时');
+    }).catch(function (e) {
+      setBadge('statsBadge', 'err', '读取失败');
+      toast('读取统计失败：' + e.message, 3200);
+    });
+  }
+
+  function statRows() {
+    var rows = (statData && statData.types) || [];
+    if (!statSubject) { return rows.slice(); }
+    return rows.filter(function (r) { return r.subject === statSubject; });
+  }
+
+  function statValue(r) {
+    return statMetric === 'rate' ? (+r.wrongRate || 0) : (+r.wrong || 0);
+  }
+
+  function renderStats() {
+    var d = statData || {};
+    var total = +d.total || 0;
+    var wrong = +d.wrong || 0;
+    $('kTotal').innerHTML = total + '<small>次</small>';
+    $('kWrong').innerHTML = wrong + '<small>次</small>';
+    $('kRate').innerHTML = (total ? (+d.rate || 0).toFixed(1) : '—') + '<small>%</small>';
+    $('kSince').textContent = d.since || '还没开始';
+    $('statsLine').textContent = total
+      ? '累计答题 ' + total + ' 次 · 答错 ' + wrong + ' 次 · 覆盖 ' +
+        ((d.types || []).length) + ' 个题型'
+      : '还没有答题记录，孩子答过一组题后这里就会有数据';
+
+    renderStatSubjects();
+    var rows = statRows();
+    renderStatBars(rows);
+    renderRadar(rows);
+    renderStatTable(rows);
+  }
+
+  function renderStatSubjects() {
+    var box = $('statSub');
+    var subs = (statData && statData.subjects) || [];
+    if (!subs.length) { box.innerHTML = ''; return; }
+    var html = '<span class="cchip' + (statSubject ? '' : ' on') + '" data-sub="">全部</span>';
+    subs.forEach(function (s) {
+      html += '<span class="cchip' + (statSubject === s.subject ? ' on' : '') +
+        '" data-sub="' + esc(s.subject) + '">' + esc(s.subject) +
+        '<b>' + (s.wrong || 0) + ' 错 / ' + (s.total || 0) + '</b></span>';
+    });
+    box.innerHTML = html;
+  }
+
+  // 横向柱状图：题型名 -- 长度条 -- 数值（错题数 + 错误率）
+  function renderStatBars(rows) {
+    var box = $('barBox');
+    if (!rows.length) {
+      box.innerHTML = '<div class="qempty">还没有统计到的题型</div>';
+      return;
+    }
+    var list = rows.slice().sort(function (a, b) { return statValue(b) - statValue(a); }).slice(0, 10);
+    var max = 1;
+    list.forEach(function (r) { max = Math.max(max, statValue(r)); });
+    var html = '';
+    list.forEach(function (r) {
+      var v = statValue(r);
+      var w = Math.max(2, Math.round(v / max * 100));
+      var hot = (+r.wrongRate) >= 60 ? ' hot' : '';
+      html += '<div class="hbar' + hot + '" title="' + esc(r.subject + ' · ' + r.type) +
+        '：答 ' + r.total + ' 次，错 ' + r.wrong + ' 次，错误率 ' + r.wrongRate + '%">' +
+        '<span class="nm">' + esc(r.type) + '</span>' +
+        '<span class="track"><b class="fill" style="width:' + w + '%"></b></span>' +
+        '<span class="vl"><b>' + (statMetric === 'rate' ? r.wrongRate + '%' : r.wrong + ' 次') + '</b>' +
+        ' · ' + r.total + ' 题</span></div>';
+    });
+    box.innerHTML = html;
+  }
+
+  // 雷达图：取最薄弱的 8 个题型，值越大面积越大
+  function renderRadar(rows) {
+    var box = $('radarBox');
+    var top = rows.slice().sort(function (a, b) { return statValue(b) - statValue(a); }).slice(0, 8);
+    if (top.length < 3) {
+      box.innerHTML = '<div class="qempty">至少要有 3 个题型的记录才能画雷达图' +
+        (rows.length ? '（当前 ' + rows.length + ' 个）' : '') + '，再让孩子答几轮吧</div>';
+      return;
+    }
+    var W = 400, H = 332, cx = W / 2, cy = H / 2 + 6, R = 94;
+    var n = top.length;
+    var max = 1;
+    top.forEach(function (r) { max = Math.max(max, statValue(r)); });
+    function pt(i, ratio) {
+      var a = -Math.PI / 2 + i * 2 * Math.PI / n;
+      return [cx + Math.cos(a) * R * ratio, cy + Math.sin(a) * R * ratio];
+    }
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="薄弱题型雷达图">';
+    // 四圈网格 + 轴
+    for (var ring = 4; ring >= 1; ring--) {
+      var ringPts = [];
+      for (var i = 0; i < n; i++) {
+        var p = pt(i, ring / 4);
+        ringPts.push(p[0].toFixed(1) + ',' + p[1].toFixed(1));
+      }
+      svg += '<polygon points="' + ringPts.join(' ') + '" fill="' +
+        (ring === 4 ? '#fbfcf7' : 'none') + '" stroke="#e4e7d9" stroke-width="1"/>';
+    }
+    for (var i = 0; i < n; i++) {
+      var e = pt(i, 1);
+      svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + e[0].toFixed(1) + '" y2="' +
+        e[1].toFixed(1) + '" stroke="#eceee3" stroke-width="1"/>';
+    }
+    var dPts = [], dots = '';
+    for (var i = 0; i < n; i++) {
+      var ratio = Math.max(0.04, statValue(top[i]) / max);
+      var p = pt(i, ratio);
+      dPts.push(p[0].toFixed(1) + ',' + p[1].toFixed(1));
+      dots += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) +
+        '" r="3" fill="#3f6b46"/>';
+    }
+    svg += '<polygon points="' + dPts.join(' ') + '" fill="rgba(63,107,70,.18)" ' +
+      'stroke="#3f6b46" stroke-width="2" stroke-linejoin="round"/>' + dots;
+    // 标签
+    for (var i = 0; i < n; i++) {
+      var a = -Math.PI / 2 + i * 2 * Math.PI / n;
+      var lx = cx + Math.cos(a) * (R + 16);
+      var ly = cy + Math.sin(a) * (R + 20);
+      var anchor = Math.abs(Math.cos(a)) < 0.3 ? 'middle' : (Math.cos(a) > 0 ? 'start' : 'end');
+      var val = statMetric === 'rate' ? (top[i].wrongRate + '%') : (top[i].wrong + ' 次');
+      svg += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="' + anchor +
+        '" font-size="11.5" fill="#3b4239">' + esc(top[i].type) + '</text>' +
+        '<text x="' + lx.toFixed(1) + '" y="' + (ly + 12).toFixed(1) + '" text-anchor="' + anchor +
+        '" font-size="10.5" fill="#8b9187">' + val + '</text>';
+    }
+    svg += '</svg>';
+    box.innerHTML = svg;
+  }
+
+  function renderStatTable(rows) {
+    var box = $('statTable');
+    if (!rows.length) {
+      box.innerHTML = '<div class="qempty">还没有记录</div>';
+      return;
+    }
+    var html = '<div class="strow hd"><span class="t">题型</span><span class="s">科目</span>' +
+      '<span class="n">答题</span><span class="n">错题</span><span>错误率</span></div>';
+    rows.forEach(function (r) {
+      html += '<div class="strow"><span class="t">' + esc(r.type) + '</span>' +
+        '<span class="s">' + esc(r.subject) + '</span>' +
+        '<span class="n">' + r.total + '</span>' +
+        '<span class="n">' + r.wrong + '</span>' +
+        '<span class="rt"><i><b style="width:' + Math.min(100, +r.wrongRate) + '%"></b></i>' +
+        '<em>' + r.wrongRate + '%</em></span></div>';
+    });
+    box.innerHTML = html;
+  }
+
+  $('statMetric').onclick = function (e) {
+    var b = e.target;
+    while (b && b.tagName !== 'BUTTON') { b = b.parentNode; }
+    if (!b) { return; }
+    statMetric = b.getAttribute('data-metric') || 'wrong';
+    Array.prototype.forEach.call(this.querySelectorAll('button'), function (x) {
+      x.classList.toggle('on', x === b);
+    });
+    var rows = statRows();
+    renderStatBars(rows);
+    renderRadar(rows);
+  };
+  $('statSub').onclick = function (e) {
+    var box = this;
+    var el = e.target;
+    while (el && el !== box && !(el.className && String(el.className).indexOf('cchip') >= 0)) {
+      el = el.parentNode;
+    }
+    if (!el || el === box) { return; }
+    statSubject = el.getAttribute('data-sub') || '';
+    renderStats();
+  };
+  $('btnStatsReset').onclick = function () {
+    if (!window.confirm('确定清空学习统计？题库和错题库不受影响，但历史数字会归零。')) { return; }
+    api('/api/stats/reset', { method: 'POST', body: '{}' }).then(function () {
+      toast('统计已清空');
+      openStats();
+    }).catch(function (e) { toast('清空失败：' + e.message, 3000); });
+  };
+
   // 桌面端收起 / 展开侧栏（按钮同样只在桌面端显示，状态记在本地）
   (function () {
     var btn = $('btnMini');
@@ -2106,6 +2449,7 @@
   setInterval(function () {
     loadState();
     if (curView === 'rules') { loadRulesStats(); }
+    if (curView === 'stats') { openStats(); }
   }, 15000);
 })();
 </script>
