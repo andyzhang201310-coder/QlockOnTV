@@ -71,7 +71,7 @@
 
   .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
   .cards>.wide{grid-column:1/-1}
-  .stack{display:grid;grid-template-columns:1fr;gap:14px;max-width:900px}
+  .stack{display:grid;grid-template-columns:1fr;gap:14px}
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;
     box-shadow:var(--shadow)}
@@ -129,13 +129,13 @@
 
   /* ---------------- 规则管理里的四段（内容区分段，不是左侧导航） ---------------- */
   .seg{display:flex;gap:5px;background:#ecefe9;border:1px solid var(--line);border-radius:13px;
-    padding:5px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;max-width:900px}
+    padding:5px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
   .seg::-webkit-scrollbar{display:none}
   .seg button{flex:0 0 auto;min-width:0;border:0;background:transparent;border-radius:9px;
     padding:9px 14px;font-size:13.5px;color:var(--sub);font-weight:500;white-space:nowrap}
   .seg button.on{background:#fff;color:var(--txt);font-weight:650;box-shadow:0 1px 5px rgba(24,32,40,.08)}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:14px;
-    box-shadow:var(--shadow);overflow:hidden;max-width:900px}
+    box-shadow:var(--shadow);overflow:hidden}
   .panel>h2{font-size:15px;margin:0;padding:13px 16px;border-bottom:1px solid var(--line-soft);
     font-weight:650;padding-left:13px;border-left:3px solid var(--accent)}
   .panel .desc{color:var(--sub);font-size:12.5px;padding:10px 16px 0;margin:0}
@@ -159,7 +159,7 @@
   .cchip.on{background:#fff5e8;border-color:#f4c68c;color:var(--accent)}
   .cchip.on b{color:#c07a28}
   .note{background:#fffaf1;border:1px solid #f6e2c3;border-radius:11px;padding:11px 13px;
-    color:#7c5a22;font-size:12.5px;line-height:1.75;margin:12px 0 2px;max-width:900px}
+    color:#7c5a22;font-size:12.5px;line-height:1.75;margin:12px 0 2px}
   .note.gray{background:var(--soft);border-color:var(--line);color:var(--sub)}
   .tpl{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 4px}
   .tpl button{flex:0 0 auto;min-width:0;padding:6px 11px;border-radius:8px;border:1px solid var(--line);
@@ -797,7 +797,11 @@
   }
 
   function loadState() {
-    return api('/api/state').then(function (s) { state = s; render(); }).catch(function (e) {
+    return api('/api/state').then(function (s) {
+      state = s; render();
+      // 首次 state 到达后重画科目/年级多选（init 时 state 还是 null，会显示「题库里还没有科目」）
+      if (cfg && curView && curView.indexOf('rules') === 0) { renderScope(); }
+    }).catch(function (e) {
       $('subline').textContent = '连接失败：' + e.message;
       $('connBadge').className = 'conn bad';
       $('connBadge').textContent = '● 连接失败';
@@ -1411,6 +1415,7 @@
     return api('/api/state').then(function (s) {
       state = s;
       render();
+      renderScope();
       $('statline').textContent = '今日已弹 ' + (s.roundsToday || 0) + ' 轮 · 错题库 ' +
         (s.reviewDue || 0) + ' 题 · 此刻' + (s.ruleAllowedNow ? '允许' : '不') + '弹题';
       $('reviewStat').textContent = '已记录 ' + (s.reviewDue || 0) + ' 道错题，今日答错 ' + (s.wrongToday || 0) + ' 次';
