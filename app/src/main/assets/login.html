@@ -7,37 +7,41 @@
 <title>题锁 · 请输入管理密码</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <style>
-  /* v1.7.12：登录页与家长管理台统一米白浅色卡片 */
+  /* v1.7.19：与管理台同一套「米绿底 + 细边框卡片 + 墨黑按钮」的极简风 */
   :root{
-    --bg:#f7f8f5; --card:#ffffff; --line:#e6e8e3; --txt:#1f242b;
-    --sub:#6b7280; --accent:#b45309; --red:#dc2626; --amber:#b45309;
-    --soft:#f3f5f1; --ink:#20262e; --shadow:0 8px 28px rgba(24,32,40,.07);
+    --bg:#eef1e6; --shell:#fbfcf6; --card:#ffffff; --line:#e4e7d9; --line-soft:#ecefe4;
+    --txt:#1f2620; --txt2:#4b5249; --sub:#8b9187; --ink:#1f2b24;
+    --accent:#3c5241; --red:#a13a37; --soft:#f1f3e9;
+    --shadow:0 10px 34px rgba(48,60,40,.07);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;min-height:100vh;background:var(--bg);color:var(--txt);
-    background-image:radial-gradient(circle at 20% 0%, rgba(255,176,32,.13), transparent 34%),
-                     radial-gradient(circle at 85% 100%, rgba(45,150,110,.07), transparent 30%);
-    background-attachment:fixed;
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
-    font-size:15px;line-height:1.6;display:flex;align-items:center;justify-content:center;padding:24px 18px}
-  .wrap{width:100%;max-width:380px}
-  .logo{display:block;width:76px;height:76px;border-radius:22px;margin:0 auto 16px;
-    background:#fff;border:1px solid var(--line);padding:4px;box-shadow:var(--shadow)}
-  h1{font-size:20px;margin:0 0 6px;text-align:center;font-weight:700;color:var(--txt)}
-  .sub{color:var(--sub);font-size:13px;text-align:center;margin-bottom:22px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;
+    font-size:14px;line-height:1.6;display:flex;align-items:center;justify-content:center;
+    padding:24px 18px}
+  .wrap{width:100%;max-width:366px}
+  .logo{display:block;width:62px;height:62px;border-radius:15px;margin:0 auto 16px;
+    background:#fff;border:1px solid var(--line);padding:3px;box-shadow:var(--shadow)}
+  h1{font-size:18px;margin:0 0 5px;text-align:center;font-weight:650;color:var(--txt);
+    letter-spacing:.01em}
+  .sub{color:var(--sub);font-size:12.5px;text-align:center;margin-bottom:20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;
     box-shadow:var(--shadow)}
-  label.fl{display:block;color:var(--sub);font-size:13px;margin:0 0 8px}
-  input{width:100%;background:#fff;border:1px solid var(--line);border-radius:11px;
-    color:var(--txt);padding:13px 14px;font-size:17px;letter-spacing:2px;font-family:inherit;outline:none;transition:.15s}
-  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.10)}
-  button{width:100%;margin-top:14px;padding:13px;border-radius:11px;border:1px solid transparent;
-    background:var(--ink);color:#fff;font-size:15px;font-family:inherit;font-weight:650}
-  button:active{opacity:.85}
+  label.fl{display:block;color:var(--sub);font-size:12.5px;margin:0 0 7px}
+  input{width:100%;background:#fcfdf8;border:1px solid var(--line);border-radius:9px;
+    color:var(--txt);padding:11px 13px;font-size:15px;letter-spacing:2px;font-family:inherit;
+    outline:none;transition:.15s}
+  input:focus{border-color:#aab7a2;box-shadow:0 0 0 3px rgba(70,95,70,.09);background:#fff}
+  button{width:100%;margin-top:13px;padding:11px;border-radius:9px;border:1px solid var(--ink);
+    background:var(--ink);color:#fff;font-size:14px;font-family:inherit;font-weight:600;
+    cursor:pointer}
+  button:active{opacity:.88}
   button[disabled]{opacity:.6}
-  .err{color:var(--red);font-size:13px;min-height:20px;margin-top:10px;text-align:center;word-break:break-all}
-  .tip{color:var(--sub);font-size:12.5px;line-height:1.7;margin-top:16px}
-  .tip code{background:var(--soft);padding:1px 5px;border-radius:4px;color:var(--accent)}
+  .err{color:var(--red);font-size:12.5px;min-height:20px;margin-top:9px;text-align:center;
+    word-break:break-all}
+  .tip{color:var(--sub);font-size:12px;line-height:1.8;margin-top:16px}
+  .tip code{background:var(--soft);padding:1px 5px;border-radius:4px;color:var(--accent);
+    font-size:11.5px}
   .shake{animation:sk .28s}
   @keyframes sk{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 </style>

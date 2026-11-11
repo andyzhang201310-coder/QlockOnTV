@@ -7,63 +7,94 @@
 <title>题锁 · 家长控制台</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <style>
-  /* v1.7.16：单页五分区的家长控制台。
-     左侧五项导航各对应右侧一整块内容，点一项只显示那一块（不再有「页 + 本页内容」两层），
-     所有设置改完自动保存，页面不再出现「保存设置」按钮。 */
+  /* v1.7.19：视觉换肤——参考「米绿底 + 圆角窗口 + 细边框卡片 + 墨黑实心控件」的极简风。
+     结构不变：单页五分区，左侧五项导航对应右侧一整块内容，设置改完自动保存。 */
   :root{
-    --bg:#f7f8f5; --card:#ffffff; --line:#e6e8e3; --txt:#1f242b;
-    --sub:#6b7280; --accent:#b45309; --green:#15803d; --red:#dc2626;
-    --soft:#f3f5f1; --ink:#20262e; --line-soft:#f0f1ee;
-    --shadow:0 4px 18px rgba(24,32,40,.05);
+    --bg:#eef1e6;          /* 页面底色：浅米绿 */
+    --shell:#fbfcf6;       /* 应用外壳 / 内容区 */
+    --side:#f7f8f1;        /* 侧栏 */
+    --card:#ffffff;
+    --line:#e4e7d9;        /* 边框 */
+    --line-soft:#ecEFe4;   /* 分隔线 */
+    --txt:#1f2620;
+    --txt2:#4b5249;
+    --sub:#8b9187;
+    --ink:#1f2b24;         /* 深墨：主按钮 / 开关 / 选中格 */
+    --soft:#f1f3e9;
+    --green:#3f6b46;
+    --red:#a13a37;
+    --accent:#3c5241;      /* 代码 / 命令文字 */
+    --shadow:0 1px 2px rgba(38,48,32,.03);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{margin:0;background:var(--bg);color:var(--txt);
-    background-image:radial-gradient(circle at 6% 0%, rgba(255,176,32,.11), transparent 30%),
-                     radial-gradient(circle at 94% 10%, rgba(45,150,110,.07), transparent 26%);
-    background-attachment:fixed;
+  body{margin:0;padding:16px;background:var(--bg);color:var(--txt);
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
-    font-size:15px;line-height:1.6;padding:0}
-  .shell{display:flex;min-height:100vh;align-items:flex-start}
+    font-size:14px;line-height:1.6}
+  .shell{display:flex;align-items:flex-start;min-height:calc(100vh - 32px);
+    background:var(--shell);border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 10px 34px rgba(48,60,40,.07)}
 
   /* ---------------- 侧栏 ---------------- */
-  .sidebar{width:238px;flex:0 0 238px;position:sticky;top:0;height:100vh;background:#fff;
-    border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 14px 14px;z-index:20}
-  .sb-brand{display:flex;align-items:center;gap:10px;padding:0 6px 18px;
-    border-bottom:1px solid var(--line-soft);margin-bottom:12px}
-  .sb-brand img{width:40px;height:40px;border-radius:12px;background:#fff;
+  .sidebar{width:230px;flex:0 0 230px;position:sticky;top:16px;height:calc(100vh - 32px);
+    background:var(--side);border-right:1px solid var(--line);border-radius:13px 0 0 13px;
+    display:flex;flex-direction:column;padding:16px 12px 12px;z-index:20}
+  .sb-brand{display:flex;align-items:center;gap:10px;padding:2px 6px 16px}
+  .sb-brand img{width:34px;height:34px;border-radius:9px;background:#fff;
     border:1px solid var(--line);padding:2px;flex:0 0 auto}
-  .sb-brand b{display:block;font-size:15px;line-height:1.25}
-  .sb-brand small{display:block;color:var(--sub);font-size:11.5px}
+  .sb-brand b{display:block;font-size:14px;line-height:1.3;font-weight:650;letter-spacing:.01em}
+  .sb-brand small{display:block;color:var(--sub);font-size:11.5px;line-height:1.3;margin-top:1px}
   .sb-nav{flex:1;overflow-y:auto;overflow-x:hidden}
-  .sb-item{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--txt);
-    font-size:14px;padding:10px 11px;border-radius:10px;margin:2px 0;white-space:nowrap;
-    font-weight:500;cursor:pointer}
-  .sb-item:hover{background:var(--soft)}
-  .sb-item .ic{width:17px;text-align:center;font-size:14px;opacity:.7;flex:0 0 auto}
+  .sb-grp{color:var(--sub);font-size:11.5px;padding:14px 8px 6px;letter-spacing:.02em}
+  .sb-grp:first-child{padding-top:2px}
+  .sb-item{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--txt2);
+    font-size:13.5px;padding:8px 9px;border-radius:8px;margin:1px 0;white-space:nowrap;
+    font-weight:500;cursor:pointer;transition:background .15s,color .15s}
+  .sb-item:hover{background:#eef0e4;color:var(--txt)}
+  .sb-item .ic{width:17px;height:17px;flex:0 0 auto;display:flex;align-items:center;
+    justify-content:center;opacity:.75}
+  .sb-item .ic svg{width:16px;height:16px;display:block}
   .sb-item .tx{overflow:hidden;text-overflow:ellipsis}
-  .sb-item.on{background:var(--ink);color:#fff;font-weight:650}
+  .sb-item.on{background:#e9ecdf;color:var(--txt);font-weight:600}
   .sb-item.on .ic{opacity:1}
-  .sb-foot{border-top:1px solid var(--line-soft);padding-top:12px;margin-top:8px}
-  .sb-foot .dev{color:var(--sub);font-size:11.5px;padding:0 6px 8px;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .sb-foot button{width:100%;min-width:0;padding:9px;font-size:13px;font-weight:500;
-    background:var(--soft);border-color:transparent;color:var(--sub)}
+  .sb-foot{border-top:1px solid var(--line-soft);margin-top:10px;padding:10px 4px 0}
+  .sb-foot .dev{display:flex;align-items:center;gap:7px;color:var(--sub);font-size:11.5px;
+    padding:0 4px 8px;white-space:nowrap;overflow:hidden}
+  .sb-foot .dev .dot{width:5px;height:5px;border-radius:50%;background:#4f9a5c;flex:0 0 auto}
+  .sb-foot .dev svg{width:14px;height:14px;flex:0 0 auto;opacity:.6}
+  .sb-foot .dev .ip{overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+  .sb-foot button{width:100%;min-width:0;padding:8px;font-size:12.5px;font-weight:500;
+    background:transparent;border-color:transparent;color:var(--sub);text-align:left;
+    justify-content:flex-start;display:flex;align-items:center;gap:7px}
+  .sb-foot button:hover{background:#eef0e4;color:var(--txt2)}
 
   /* ---------------- 内容区 ---------------- */
-  .content{flex:1;min-width:0;padding:22px 28px 64px}
+  .content{flex:1;min-width:0;padding:20px 30px 56px}
   .page{max-width:1100px;margin:0 auto}
-  .topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
-  .topbar h1{font-size:20px;margin:0 0 3px;font-weight:700}
-  .sub{color:var(--sub);font-size:12.5px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tb-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}
-  .conn{display:inline-flex;align-items:center;gap:6px;background:#e9f7ee;color:var(--green);
-    border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;white-space:nowrap}
-  .conn.bad{background:#fdeeee;color:var(--red)}
-  .crumb{font-size:12px;color:var(--sub);background:#fff;border:1px solid var(--line);
-    border-radius:20px;padding:4px 11px;white-space:nowrap}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:6px 0 13px;border-bottom:1px solid var(--line-soft);margin-bottom:18px}
+  .tb-left{display:flex;align-items:center;gap:11px;min-width:0}
+  .tb-left>div{min-width:0}
+  .icon-btn{flex:0 0 auto;width:32px;height:32px;min-width:0;padding:0;border-radius:8px;
+    border:1px solid var(--line);background:var(--card);color:#5c6359;
+    display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .icon-btn:hover{background:var(--soft)}
+  .icon-btn svg{width:17px;height:17px}
+  .topbar h1{font-size:17.5px;margin:0;font-weight:650;letter-spacing:.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sub{color:var(--sub);font-size:12px;margin:1px 0 0;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  .tb-right{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+  .conn{display:inline-flex;align-items:center;gap:6px;background:var(--card);color:#414b3f;
+    border:1px solid var(--line);border-radius:20px;padding:4px 11px;font-size:12px;
+    font-weight:500;white-space:nowrap}
+  .conn::before{content:"";width:6px;height:6px;border-radius:50%;background:#4f9a5c;
+    flex:0 0 auto}
+  .conn.bad{color:var(--red);border-color:#ecd6d4;background:#fdf5f4}
+  .conn.bad::before{background:var(--red)}
+  .crumb{font-size:12px;color:var(--sub);white-space:nowrap}
   @media(min-width:768px){
-    .topbar{position:sticky;top:0;z-index:10;background:var(--bg);
-      padding:10px 0;margin:-10px 0 10px;border-bottom:1px solid var(--line-soft)}
+    .topbar{position:sticky;top:16px;z-index:10;background:var(--shell);
+      border-radius:12px 12px 0 0;padding-top:12px;margin-top:-12px}
   }
 
   .view{display:none}
@@ -73,154 +104,194 @@
   .cards>.wide{grid-column:1/-1}
   .stack{display:grid;grid-template-columns:1fr;gap:14px}
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;
-    box-shadow:var(--shadow)}
-  .card h2{font-size:15px;margin:0 0 12px;color:var(--txt);font-weight:650;
-    padding-left:10px;border-left:3px solid var(--accent)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;box-shadow:var(--shadow)}
+  .card h2{font-size:14.5px;margin:0 0 6px;color:var(--txt);font-weight:650;letter-spacing:.01em}
   .row{display:flex;align-items:center;justify-content:space-between;gap:12px;
-    padding:10px 0;border-bottom:1px solid var(--line-soft)}
+    padding:11px 0;border-bottom:1px solid var(--line-soft)}
   .row:last-child{border-bottom:none}
-  .row>span{color:var(--sub);font-size:13.5px;min-width:0}
-  .row>b{font-weight:650;font-size:14px;text-align:right}
-  .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;white-space:nowrap}
-  .badge.on,.badge.ok{background:#e9f7ee;color:var(--green)}
-  .badge.off,.badge.err{background:#fdeeee;color:var(--red)}
-  .badge.wait{background:#fff5e8;color:var(--accent)}
-  label.fl{display:block;color:var(--sub);font-size:13px;margin:14px 0 6px}
+  .row>span{color:var(--txt2);font-size:13.5px;min-width:0}
+  .row>b{font-weight:600;font-size:13.5px;text-align:right;display:flex;align-items:center;
+    justify-content:flex-end;gap:6px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:20px;
+    font-size:11.5px;font-weight:500;white-space:nowrap;line-height:1.7}
+  .badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;
+    flex:0 0 auto;opacity:.9}
+  .badge.on,.badge.ok{background:#eef4ea;color:var(--green)}
+  .badge.off,.badge.err{background:#f9eeee;color:var(--red)}
+  .badge.wait{background:#f6f2e4;color:#8a6d2f}
+  label.fl{display:block;color:var(--sub);font-size:12.5px;margin:14px 0 6px}
   .grid2{display:flex;gap:10px}
   .grid2>div{flex:1;min-width:0}
   input[type=text],input[type=number],input[type=password],textarea,select{
-    width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;
-    color:var(--txt);padding:10px 12px;font-size:15px;font-family:inherit;outline:none;
+    width:100%;background:var(--card);border:1px solid var(--line);border-radius:9px;
+    color:var(--txt);padding:9px 11px;font-size:13.5px;font-family:inherit;outline:none;
     transition:.15s;min-width:0}
-  select{cursor:pointer}
-  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.10)}
-  textarea{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.5;height:240px;resize:vertical}
-  .btns{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
-  button{flex:1;min-width:110px;padding:11px 10px;border-radius:11px;border:1px solid var(--line);
-    background:#fff;color:var(--txt);font-size:14.5px;font-family:inherit;font-weight:500;
-    transition:.15s;cursor:pointer}
-  button:active{background:var(--soft)}
-  button.primary{background:var(--ink);border-color:transparent;color:#fff;font-weight:650}
-  button.warn{background:#fff7ed;border-color:#fed7aa;color:var(--accent)}
-  button.unlock{background:#effaf3;border-color:#bbf0cf;color:var(--green);font-weight:650}
-  button.unlock:active{background:#dff3e7}
-  .switch{position:relative;width:52px;height:29px;border-radius:20px;background:#d9dcd6;
+  select{cursor:pointer;padding-right:8px}
+  input:focus,textarea:focus,select:focus{border-color:#aab7a2;box-shadow:0 0 0 3px rgba(70,95,70,.09)}
+  textarea{font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.6;
+    height:240px;resize:vertical;background:#fcfdf8}
+  .btns{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap;justify-content:flex-start}
+  button{flex:1;min-width:110px;max-width:260px;padding:9px 12px;border-radius:9px;
+    border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:13px;
+    font-family:inherit;font-weight:500;transition:.15s;cursor:pointer;line-height:1.45}
+  button:hover{background:var(--soft)}
+  button.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+  button.primary:hover{background:#2a3a30}
+  button.warn{background:#f6f7ee;border-color:#e0e5d2;color:#4a5b45}
+  button.warn:hover{background:#eef1e2}
+  button.unlock{background:#eef4e9;border-color:#d7e3cd;color:var(--green);font-weight:600}
+  button.unlock:hover{background:#e5eedd}
+  .switch{position:relative;width:46px;height:26px;border-radius:20px;background:#e2e6db;
     transition:.2s;flex:0 0 auto;cursor:pointer}
-  .switch.on{background:#e08a1e}
-  .switch i{position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;
-    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:.2s}
-  .switch.on i{left:26px}
-  .tip{color:var(--sub);font-size:12.5px;line-height:1.75;margin-top:10px}
-  .tip code{background:var(--soft);padding:1px 5px;border-radius:4px;color:var(--accent)}
-  .stat{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-  .chip{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:5px 10px;
-    font-size:12.5px;color:var(--sub)}
-  .chip b{color:var(--txt)}
+  .switch.on{background:var(--ink)}
+  .switch i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.16);transition:.2s}
+  .switch.on i{left:23px}
+  .tip{color:var(--sub);font-size:12.5px;line-height:1.8;margin-top:10px}
+  .tip code{background:var(--soft);padding:1px 5px;border-radius:4px;color:var(--accent);
+    font-size:11.5px}
+  .stat{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+  .chip{background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:4px 9px;
+    font-size:12px;color:var(--sub)}
+  .chip b{color:var(--txt);font-weight:600}
   .bar{display:flex;align-items:center;justify-content:space-between;gap:10px;
-    padding:11px 14px;background:#fff;border:1px solid var(--line);border-radius:13px;
-    box-shadow:var(--shadow);margin-bottom:14px}
+    padding:0 2px 11px;margin-bottom:16px;border-bottom:1px solid var(--line-soft)}
   .bar .txt{color:var(--sub);font-size:12.5px;flex:1;min-width:0}
   #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
-    background:var(--ink);border:1px solid var(--ink);color:#fff;padding:11px 20px;border-radius:24px;
-    font-size:14px;opacity:0;transition:.25s;pointer-events:none;max-width:88%;text-align:center;
-    z-index:99;box-shadow:0 10px 30px rgba(24,32,40,.22)}
+    background:#20261f;border:1px solid #20261f;color:#fff;padding:10px 19px;border-radius:22px;
+    font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;max-width:88%;text-align:center;
+    z-index:99;box-shadow:0 10px 28px rgba(30,40,28,.2)}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
   /* ---------------- 规则管理里的四段（内容区分段，不是左侧导航） ---------------- */
-  .seg{display:flex;gap:5px;background:#ecefe9;border:1px solid var(--line);border-radius:13px;
-    padding:5px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+  .seg{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;
+    padding-bottom:1px}
   .seg::-webkit-scrollbar{display:none}
-  .seg button{flex:0 0 auto;min-width:0;border:0;background:transparent;border-radius:9px;
-    padding:9px 14px;font-size:13.5px;color:var(--sub);font-weight:500;white-space:nowrap}
-  .seg button.on{background:#fff;color:var(--txt);font-weight:650;box-shadow:0 1px 5px rgba(24,32,40,.08)}
-  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:14px;
-    box-shadow:var(--shadow);overflow:hidden}
-  .panel>h2{font-size:15px;margin:0;padding:13px 16px;border-bottom:1px solid var(--line-soft);
-    font-weight:650;padding-left:13px;border-left:3px solid var(--accent)}
-  .panel .desc{color:var(--sub);font-size:12.5px;padding:10px 16px 0;margin:0}
-  .panel .body{padding:4px 16px 12px}
+  .seg button{flex:0 0 auto;min-width:0;border:1px solid var(--line);background:var(--card);
+    border-radius:8px;padding:7px 14px;font-size:12.5px;color:var(--txt2);font-weight:500;
+    white-space:nowrap}
+  .seg button:hover{background:var(--soft)}
+  .seg button.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
+  .panel>h2{font-size:14.5px;margin:0;padding:14px 18px 12px;font-weight:650;
+    letter-spacing:.01em;background:transparent;border-bottom:1px solid var(--line-soft)}
+  .panel .desc{color:var(--sub);font-size:12.5px;padding:10px 18px 0;margin:0;line-height:1.75}
+  .panel .body{padding:2px 18px 12px}
   .f{display:flex;align-items:center;justify-content:space-between;gap:12px;
     padding:12px 0;border-bottom:1px solid var(--line-soft)}
   .f:last-child{border-bottom:0}
   .f .lbl{min-width:0;flex:1}
-  .f .lbl b{display:block;font-size:14px;font-weight:600}
-  .f .lbl small{display:block;color:var(--sub);font-size:12px;line-height:1.6;margin-top:2px}
+  .f .lbl b{display:block;font-size:13.5px;font-weight:600;color:var(--txt)}
+  .f .lbl small{display:block;color:var(--sub);font-size:12px;line-height:1.65;margin-top:3px}
   .f .ctl{flex:0 0 auto;display:flex;align-items:center;gap:6px}
-  .stepper{display:flex;align-items:center;gap:5px}
-  .stepper button{width:31px;height:31px;min-width:0;padding:0;border:1px solid var(--line);
-    border-radius:8px;background:#fff;color:var(--txt);font-size:17px;line-height:1}
-  .stepper input{width:60px;text-align:center;padding:6px 4px}
-  .unit{color:var(--sub);font-size:12.5px;white-space:nowrap}
+  .stepper{display:flex;align-items:center;gap:4px}
+  .stepper button{width:30px;height:30px;min-width:0;padding:0;border:1px solid var(--line);
+    border-radius:7px;background:var(--card);color:var(--txt);font-size:16px;line-height:1}
+  .stepper input{width:56px;text-align:center;padding:5px 4px;font-size:13.5px}
+  .unit{color:var(--sub);font-size:12px;white-space:nowrap}
   .chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end;max-width:66%}
-  .cchip{cursor:pointer;user-select:none;border:1px solid var(--line);background:#fff;color:var(--sub);
-    border-radius:9px;padding:6px 10px;font-size:13px;line-height:1.3}
-  .cchip b{color:var(--sub);font-weight:500;font-size:11px;display:block}
-  .cchip.on{background:#fff5e8;border-color:#f4c68c;color:var(--accent)}
-  .cchip.on b{color:#c07a28}
-  .note{background:#fffaf1;border:1px solid #f6e2c3;border-radius:11px;padding:11px 13px;
-    color:#7c5a22;font-size:12.5px;line-height:1.75;margin:12px 0 2px}
-  .note.gray{background:var(--soft);border-color:var(--line);color:var(--sub)}
-  .tpl{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 4px}
-  .tpl button{flex:0 0 auto;min-width:0;padding:6px 11px;border-radius:8px;border:1px solid var(--line);
-    background:#fff;color:var(--sub);font-size:12.5px}
-  .week-wrap{overflow-x:auto;padding:6px 0 4px;-webkit-overflow-scrolling:touch}
+  .cchip{cursor:pointer;user-select:none;border:1px solid var(--line);background:var(--card);
+    color:var(--txt2);border-radius:8px;padding:6px 11px;font-size:12.5px;line-height:1.35;
+    transition:.15s;text-align:center}
+  .cchip b{color:var(--sub);font-weight:500;font-size:10.5px;display:block;margin-top:1px}
+  .cchip:hover{background:var(--soft)}
+  .cchip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .cchip.on b{color:rgba(255,255,255,.72)}
+  .note{background:#f7f8ef;border:1px solid var(--line);border-radius:10px;padding:11px 13px;
+    color:#5f675c;font-size:12.5px;line-height:1.8;margin:12px 0 2px}
+  .note.gray{background:#f7f8f2;color:var(--sub)}
+  .tpl{display:flex;flex-wrap:wrap;gap:6px;margin:11px 0 6px}
+  .tpl button{flex:0 0 auto;min-width:0;padding:6px 12px;border-radius:8px;
+    border:1px solid var(--line);background:var(--card);color:var(--txt2);font-size:12px}
+  .tpl button:hover{background:var(--soft)}
+  .week-wrap{overflow-x:auto;padding:4px 0 2px;-webkit-overflow-scrolling:touch}
   .week{min-width:600px}
-  .week-scale{display:flex;justify-content:space-between;color:var(--sub);font-size:11px;
-    margin-left:42px;margin-bottom:4px}
-  .week-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-  .week-row .day{width:36px;flex:0 0 auto;font-size:12px;color:var(--sub);text-align:left;
+  .week-scale{display:flex;justify-content:space-between;color:var(--sub);font-size:10.5px;
+    margin-left:44px;margin-bottom:5px;font-variant-numeric:tabular-nums}
+  .week-row{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+  .week-row .day{width:36px;flex:0 0 auto;font-size:11.5px;color:var(--sub);text-align:left;
     background:transparent;border:0;padding:0;min-width:0}
-  .cells{display:flex;gap:1px;flex:1}
-  .cell{height:18px;flex:1;min-width:9px;border-radius:2px;background:#edf0eb;border:0;padding:0;min-width:9px}
-  .cell.on{background:#e89a35}
-  .cell.hour{border-left:1px solid #dcdfd8}
-  .win{border:1px solid var(--line);border-radius:11px;padding:10px;margin-top:10px;background:#fcfdfb}
+  .week-row .day:hover{color:var(--txt)}
+  .cells{display:flex;gap:2px;flex:1}
+  .cell{height:16px;flex:1;min-width:8px;border-radius:3px;background:#eef1f5;border:0;
+    padding:0;min-width:8px;transition:background .1s}
+  .cell:hover{background:#e2e7ec}
+  .cell.on{background:var(--ink)}
+  .cell.on:hover{background:#2a3a30}
+  .cell.hour{margin-left:2px}
+  .win{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:9px;
+    background:#fbfcf7}
   .win .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .win input[type=text]{flex:1;min-width:110px;padding:7px 9px}
-  .win .del{border:1px solid #f2cccc;background:#fff6f6;color:var(--red);border-radius:8px;
-    padding:6px 10px;font-size:12.5px;flex:0 0 auto;min-width:0}
+  .win .del{border:1px solid #ecd6d4;background:#fbf0ef;color:var(--red);border-radius:7px;
+    padding:5px 10px;font-size:12px;flex:0 0 auto;min-width:0}
   .win .days{display:flex;gap:4px;flex-wrap:wrap;margin:9px 0 7px}
-  .win .days button{width:32px;min-width:0;padding:5px 0;border:1px solid var(--line);border-radius:7px;
-    background:#fff;color:var(--sub);font-size:12.5px;flex:0 0 auto}
+  .win .days button{width:31px;min-width:0;padding:4px 0;border:1px solid var(--line);
+    border-radius:6px;background:var(--card);color:var(--sub);font-size:11.5px;flex:0 0 auto}
   .win .days button.on{background:var(--ink);border-color:var(--ink);color:#fff}
-  .win .rng{display:flex;align-items:center;gap:5px;color:var(--sub);font-size:12.5px;flex-wrap:wrap}
-  .win select{padding:5px 6px;font-size:13px;width:auto}
-  .add{margin-top:10px;width:100%;border:1px dashed #d7c6a6;background:#fffaf1;color:var(--accent);
-    border-radius:10px;padding:9px;font-size:13.5px}
+  .win .rng{display:flex;align-items:center;gap:5px;color:var(--sub);font-size:12px;flex-wrap:wrap}
+  .win select{padding:5px 6px;font-size:12.5px;width:auto}
+  .add{margin-top:10px;width:100%;max-width:none;border:1px dashed #ccd6c2;background:#fbfcf6;
+    color:#4a5b45;border-radius:9px;padding:9px;font-size:12.5px}
+  .add:hover{background:#f4f7ec}
   .hidden{display:none!important}
   /* 通栏卡片里的输入框 / 按钮不必拉满整行，避免 1100px 宽的单行输入框 */
   .stack>.card .fl+input{max-width:520px}
   .stack>.card .win input[type=text]{max-width:520px}
 
+  /* ---------------- 收起侧栏（桌面端） ---------------- */
+  @media(min-width:768px){
+    body.mini .sidebar{width:70px;flex-basis:70px;padding:16px 9px 12px}
+    body.mini .sb-brand{justify-content:center;padding:2px 0 14px}
+    body.mini .sb-brand div{display:none}
+    body.mini .sb-grp{display:none}
+    body.mini .sb-item{justify-content:center;padding:9px 0}
+    body.mini .sb-item .tx{display:none}
+    body.mini .sb-foot{padding:10px 0 0}
+    body.mini .sb-foot .dev{display:none}
+    body.mini .sb-foot button{justify-content:center;padding:8px 0}
+    body.mini .sb-foot button span{display:none}
+  }
+
   /* ---------------- 响应式 ---------------- */
   @media(max-width:1023px){
-    .sidebar{width:200px;flex-basis:200px;padding:16px 10px 12px}
+    .sidebar{width:198px;flex-basis:198px;padding:14px 9px 10px}
     .content{padding:18px 18px 54px}
     .cards{grid-template-columns:1fr}
     .chips{max-width:100%}
   }
   @media(max-width:767px){
-    .shell{display:block}
+    body{padding:0}
+    .shell{display:block;min-height:100vh;border:0;border-radius:0;box-shadow:none}
     .sidebar{position:sticky;top:0;width:auto;height:auto;flex-direction:row;align-items:center;
       gap:8px;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line);
-      box-shadow:0 3px 12px rgba(24,32,40,.05)}
+      border-radius:0;background:var(--side);box-shadow:0 2px 10px rgba(48,60,40,.05)}
     .sb-brand{border:0;margin:0;padding:0;flex:0 0 auto}
-    .sb-brand img{width:32px;height:32px}
+    .sb-brand img{width:30px;height:30px;border-radius:8px}
     .sb-brand b,.sb-brand small{display:none}
-    .sb-nav{display:flex;flex-direction:row;gap:3px;overflow-x:auto;overflow-y:hidden;flex:1;
+    .sb-nav{display:flex;flex-direction:row;gap:2px;overflow-x:auto;overflow-y:hidden;flex:1;
       scrollbar-width:none}
     .sb-nav::-webkit-scrollbar{display:none}
-    .sb-item{flex:0 0 auto;margin:0;padding:7px 9px;font-size:13px;gap:0}
+    .sb-grp{display:none}
+    .sb-item{flex:0 0 auto;margin:0;padding:6px 9px;font-size:12.5px;gap:0}
     .sb-item .ic{display:none}
     .sb-foot{border:0;margin:0;padding:0;flex:0 0 auto}
     .sb-foot .dev{display:none}
-    .sb-foot button{width:auto;padding:7px 9px;font-size:12.5px}
+    .sb-foot button{width:auto;padding:6px 9px;font-size:12px}
     .content{padding:14px 12px 50px}
-    .topbar h1{font-size:18px}
+    .topbar{padding:4px 0 10px;margin-bottom:14px;border-radius:0}
+    .topbar h1{font-size:16.5px}
+    .crumb{display:none}
+    .icon-btn{display:none}
     .f{flex-wrap:wrap}
     .f .ctl{width:100%;justify-content:flex-end}
     .chips{max-width:100%;justify-content:flex-start}
+    .card{padding:14px}
+    .panel .body{padding:2px 14px 10px}
+    .panel>h2{padding:13px 14px 11px}
+    .panel .desc{padding:10px 14px 0}
   }
 </style>
 </head>
@@ -229,34 +300,39 @@
 <aside class="sidebar">
   <div class="sb-brand">
     <img src="/logo.png" alt="题锁">
-    <div><b>题锁</b><small>家长控制台</small></div>
+    <div><b>题锁</b><small>家长管理</small></div>
   </div>
   <nav class="sb-nav">
-    <a class="sb-item on" href="#status" data-view="status"><span class="ic">◎</span><span class="tx">运行状态</span></a>
-    <a class="sb-item" href="#quick" data-view="quick"><span class="ic">⚡</span><span class="tx">快捷操作</span></a>
-    <a class="sb-item" href="#bank" data-view="bank"><span class="ic">▤</span><span class="tx">题库管理</span></a>
-    <a class="sb-item" href="#rules" data-view="rules"><span class="ic">◈</span><span class="tx">规则管理</span></a>
-    <a class="sb-item" href="#system" data-view="system"><span class="ic">⚙</span><span class="tx">系统设置</span></a>
+    <div class="sb-grp">学习</div>
+    <a class="sb-item on" href="#status" data-view="status"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M9 21h6M12 17v4"/></svg></span><span class="tx">运行状态</span></a>
+    <a class="sb-item" href="#quick" data-view="quick"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5 14h6l-1 7 8-11h-6l1-7z"/></svg></span><span class="tx">快捷操作</span></a>
+    <a class="sb-item" href="#bank" data-view="bank"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></span><span class="tx">题库管理</span></a>
+    <a class="sb-item" href="#rules" data-view="rules"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M18 7h2M4 17h4M14 17h6"/><circle cx="15" cy="7" r="2.2"/><circle cx="11" cy="17" r="2.2"/></svg></span><span class="tx">规则管理</span></a>
+    <div class="sb-grp">系统</div>
+    <a class="sb-item" href="#system" data-view="system"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1"/></svg></span><span class="tx">系统设置</span></a>
   </nav>
   <div class="sb-foot">
-    <div class="dev" id="sbDevice">正在连接电视…</div>
-    <button id="btnLogout">退出登录</button>
+    <div class="dev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M9 21h6M12 17v4"/></svg><span class="dot"></span><span class="ip" id="sbDevice">正在连接电视…</span></div>
+    <button id="btnLogout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4M6 12h10"/></svg><span>退出登录</span></button>
   </div>
 </aside>
 
 <div class="content">
 <div class="page">
   <div class="topbar">
-    <div><h1 id="pageTitle">运行状态</h1><p class="sub" id="subline">正在连接电视…</p></div>
+    <div class="tb-left">
+      <button class="icon-btn" id="btnMini" type="button" title="收起 / 展开侧栏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+      <div><h1 id="pageTitle">运行状态</h1><p class="sub" id="subline">正在连接电视…</p></div>
+    </div>
     <div class="tb-right">
       <span class="crumb" id="crumb">家长控制台 / 运行状态</span>
-      <span class="conn" id="connBadge">● 已连接</span>
+      <span class="conn" id="connBadge">已连接</span>
     </div>
   </div>
 
-  <div class="card" id="pinWarn" style="display:none;border-color:#fed7aa;background:#fff7ed;margin-bottom:14px">
-    <div style="color:var(--accent);font-size:14px;font-weight:600">管理密码仍是默认的 1234</div>
-    <div class="tip" style="margin-top:6px;color:#8a6a3a">
+  <div class="card" id="pinWarn" style="display:none;border-color:#e8dcbe;background:#fdfaf0;margin-bottom:14px">
+    <div style="color:#7a6428;font-size:13.5px;font-weight:600">管理密码仍是默认的 1234</div>
+    <div class="tip" style="margin-top:6px;color:#8a7a56">
       知道这个密码的人都能改题库、关掉拦截。请立刻到「系统设置 → 管理密码」改成只有你知道的密码。
     </div>
   </div>
@@ -310,7 +386,7 @@
           <button id="btnReschedule">从现在重新计时</button>
         </div>
         <div class="btns">
-          <button class="unlock" id="btnUnlock">立即解锁</button>
+          <button class="unlock" id="btnUnlock" style="max-width:none">立即解锁</button>
         </div>
         <div class="tip">
           「立即解锁」= 家长远程放行：关掉电视上正在显示的答题弹窗，孩子可以正常看电视；下一轮从现在重新计时。
@@ -706,9 +782,9 @@
     $('subline').textContent = '已连接 ' + (state.ip || '?') + ':' + (state.port || '') +
       ' · 题锁 ' + (state.appVersion || '');
     $('pinWarn').style.display = state.pinDefault ? '' : 'none';
-    $('sbDevice').textContent = (state.ip || '?') + ':' + (state.port || '') + ' · ' + (state.appVersion || '');
+    $('sbDevice').textContent = (state.ip || '?') + ':' + (state.port || '');
     $('connBadge').className = 'conn' + (state.serverError ? ' bad' : '');
-    $('connBadge').textContent = state.serverError ? '● 服务异常' : '● 已连接';
+    $('connBadge').textContent = state.serverError ? '服务异常' : '已连接';
 
     var on = !!state.enabled;
     // ---- 运行状态
@@ -811,7 +887,7 @@
     }).catch(function (e) {
       $('subline').textContent = '连接失败：' + e.message;
       $('connBadge').className = 'conn bad';
-      $('connBadge').textContent = '● 连接失败';
+      $('connBadge').textContent = '连接失败';
     });
   }
 
@@ -1438,6 +1514,17 @@
     renderWindowRange(); renderTpl(); renderWeek();
     renderWindows('timePoints'); renderWindows('exemptWindows'); renderScope();
   }
+
+  // 桌面端收起 / 展开侧栏（按钮同样只在桌面端显示，状态记在本地）
+  (function () {
+    var btn = $('btnMini');
+    if (!btn) { return; }
+    try { if (localStorage.getItem('qlock.mini') === '1') { document.body.classList.add('mini'); } } catch (e) {}
+    btn.addEventListener('click', function () {
+      var on = document.body.classList.toggle('mini');
+      try { localStorage.setItem('qlock.mini', on ? '1' : '0'); } catch (e) {}
+    });
+  })();
 
   // ============================================================ 初始化
   initTimeSelects();
