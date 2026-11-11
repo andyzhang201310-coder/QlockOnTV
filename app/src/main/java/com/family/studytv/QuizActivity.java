@@ -2,6 +2,10 @@ package com.family.studytv;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -9,6 +13,7 @@ import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.LeadingMarginSpan;
+import android.text.style.ReplacementSpan;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -252,16 +257,78 @@ public class QuizActivity extends Activity {
     }
 
     /**
-     * 换行后的行首与 A/B/C 标号后的正文对齐（悬挂缩进），长成语解释不会顶回行首。
-     * 按钮高度由 wrap_content 自行决定，文本不做任何截断。
+     * A/B/C 画成方块字母徽标；换行后的行首与徽标后的正文对齐（悬挂缩进），
+     * 长成语解释不会顶回行首。按钮高度由 wrap_content 自行决定，文本不做任何截断。
      */
     static CharSequence optionText(Button b, int k, String text, String suffix) {
         String label = letter(k) + "    ";
         SpannableString s = new SpannableString(label + text + (suffix == null ? "" : suffix));
-        int indent = (int) b.getPaint().measureText(label);
+        float textSize = b.getTextSize();
+        int indent = (int) (badgeWidth(textSize) + b.getPaint().measureText("    "));
         s.setSpan(new LeadingMarginSpan.Standard(0, indent), 0, s.length(),
                 Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+        s.setSpan(new LetterSpan(letter(k), textSize), 0, 1,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return s;
+    }
+
+    private static float badgeWidth(float textSize) {
+        return textSize * 1.47f;   // 徽标边长 1.05 + 后置间距 0.42
+    }
+
+    /** 选项前缀的方块字母徽标，正确 / 错误时随文字变成绿 / 红底 */
+    private static final class LetterSpan extends ReplacementSpan {
+        private final String ch;
+        private final float box;
+        private final float gap;
+
+        LetterSpan(String ch, float textSize) {
+            this.ch = ch;
+            this.box = textSize * 1.05f;
+            this.gap = textSize * 0.42f;
+        }
+
+        @Override
+        public int getSize(Paint paint, CharSequence text, int start, int end,
+                           Paint.FontMetricsInt fm) {
+            if (fm != null) {
+                Paint.FontMetricsInt p = paint.getFontMetricsInt();
+                fm.ascent = p.ascent;
+                fm.descent = p.descent;
+                fm.top = p.top;
+                fm.bottom = p.bottom;
+            }
+            return (int) (box + gap);
+        }
+
+        @Override
+        public void draw(Canvas canvas, CharSequence text, int start, int end,
+                         float x, int top, int y, int bottom, Paint paint) {
+            int body = paint.getColor();
+            boolean right = body == 0xFF33D17A;
+            boolean wrong = body == 0xFFF2545B;
+            float cy = (top + bottom) / 2f;
+            RectF r = new RectF(x, cy - box / 2f, x + box, cy + box / 2f);
+
+            Paint.Align align = paint.getTextAlign();
+            float textSize = paint.getTextSize();
+            Typeface tf = paint.getTypeface();
+
+            paint.setColor(right ? 0xFF33D17A : (wrong ? 0xFFF2545B : 0xFF2A2A30));
+            canvas.drawRoundRect(r, box * 0.28f, box * 0.28f, paint);
+
+            paint.setColor(right ? 0xFF06210F : (wrong ? 0xFF2A0507 : 0xFFC9C9CF));
+            paint.setTextAlign(Paint.Align.CENTER);
+            paint.setTextSize(box * 0.56f);
+            paint.setTypeface(Typeface.DEFAULT_BOLD);
+            Paint.FontMetrics fm = paint.getFontMetrics();
+            canvas.drawText(ch, r.centerX(), r.centerY() - (fm.ascent + fm.descent) / 2f, paint);
+
+            paint.setColor(body);
+            paint.setTextAlign(align);
+            paint.setTextSize(textSize);
+            paint.setTypeface(tf);
+        }
     }
 
     /** 换题后回到顶部，避免上一题滚动位置残留导致看不到题干 */
@@ -290,13 +357,13 @@ public class QuizActivity extends Activity {
             if (next >= items.size()) {
                 pass();
             } else {
-                feedback(0xFF4ADE80, "答对了！继续下一题");
+                feedback(0xFF33D17A, "答对了！继续下一题");
                 show(next);
             }
         } else {
             busy = true;
             revealAnswer(it, choice);
-            feedback(0xFFFF6B6B, "答错了！正确答案是 " + letter(it.answer)
+            feedback(0xFFF2545B, "答错了！正确答案是 " + letter(it.answer)
                     + "、" + it.options.get(it.answer) + "，看清后换一组新题");
             handler.postDelayed(new Runnable() {
                 @Override
@@ -304,7 +371,7 @@ public class QuizActivity extends Activity {
                     busy = false;
                     buildSession();   // 重新随机抽一组，不重复刚才这套题
                     show(0);
-                    feedback(0xFF8FA0B8, "新的一组题，答对 5 道才能继续看电视");
+                    feedback(0xFF9A9AA2, "新的一组题，答对 5 道才能继续看电视");
                 }
             }, REVEAL_MS);
         }
@@ -321,14 +388,14 @@ public class QuizActivity extends Activity {
             Button b = (Button) v;
             if (k == it.answer) {
                 b.setText(optionText(b, k, it.options.get(k), "    ← 正确答案"));
-                b.setTextColor(0xFF4ADE80);
+                b.setTextColor(0xFF33D17A);
                 correctView = b;
             } else if (k == choice) {
                 b.setText(optionText(b, k, it.options.get(k), "    ← 你选的"));
-                b.setTextColor(0xFFFF6B6B);
+                b.setTextColor(0xFFF2545B);
             } else {
                 b.setText(optionText(b, k, it.options.get(k), null));
-                b.setTextColor(0xFF6B7688);
+                b.setTextColor(0xFF6B6B74);
             }
             b.setOnClickListener(null);
             b.setClickable(false);
@@ -341,6 +408,8 @@ public class QuizActivity extends Activity {
     private void feedback(int color, String text) {
         tvFeedback.setTextColor(color);
         tvFeedback.setText(text);
+        // 未答题时反馈卡片不占位，四个短答案选项能同屏显示完整
+        tvFeedback.setVisibility(text == null || text.length() == 0 ? View.GONE : View.VISIBLE);
     }
 
     private void pass() {
@@ -354,7 +423,7 @@ public class QuizActivity extends Activity {
             startService(new Intent(this, GuardService.class).setAction(GuardService.ACTION_QUIZ_PASSED));
         } catch (Throwable ignored) {
         }
-        feedback(0xFF4ADE80, "全部答对，可以继续看电视啦");
+        feedback(0xFF33D17A, "全部答对，可以继续看电视啦");
         Toast.makeText(this, "全部答对！", Toast.LENGTH_SHORT).show();
         // 通关即收工：关掉界面退回电视/桌面，守护服务继续在后台计时
         handler.postDelayed(new Runnable() {
@@ -370,7 +439,7 @@ public class QuizActivity extends Activity {
     private void askManagePin() {
         long remain = Prefs.pinLockRemainMs();
         if (remain > 0) {
-            feedback(0xFFFFC857, "密码输错次数过多，请 "
+            feedback(0xFFFFC24A, "密码输错次数过多，请 "
                     + UninstallCode.describeLock(remain) + "后再试");
             return;
         }
@@ -412,7 +481,7 @@ public class QuizActivity extends Activity {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         } catch (Throwable e) {
             managing = false;
-            feedback(0xFFFFC857, "打不开管理页，请重试");
+            feedback(0xFFFFC24A, "打不开管理页，请重试");
         }
     }
 
@@ -458,7 +527,7 @@ public class QuizActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_ESCAPE) {
-            feedback(0xFFFFC857, "答完题才能继续看电视哦");
+            feedback(0xFFFFC24A, "答完题才能继续看电视哦");
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -504,6 +573,6 @@ public class QuizActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        feedback(0xFFFFC857, "答完题才能继续看电视哦");
+        feedback(0xFFFFC24A, "答完题才能继续看电视哦");
     }
 }

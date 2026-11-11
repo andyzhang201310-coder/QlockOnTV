@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TV 页面背景：近黑底 + 两团极淡的暖橙径向光晕 + 细点阵感，
+  对应参考项目 .bg / .glow-a / .glow-b 的氛围，但用纯 XML 实现、不引入位图。
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/bgDeep" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="760dp"
+                android:centerX="0.92"
+                android:centerY="0.0"
+                android:startColor="#14FF7A1A"
+                android:endColor="#00FF7A1A" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="640dp"
+                android:centerX="0.02"
+                android:centerY="1.0"
+                android:startColor="#0EFFB020"
+                android:endColor="#00FFB020" />
+        </shape>
+    </item>
+</layer-list>

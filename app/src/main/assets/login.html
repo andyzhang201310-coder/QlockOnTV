@@ -7,32 +7,37 @@
 <title>题锁 · 请输入管理密码</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <style>
+  /* v1.7.12：登录页与家长管理台统一米白浅色卡片 */
   :root{
-    --bg:#0b1220; --card:#151e2e; --line:#27374f; --txt:#eef4fb;
-    --sub:#9fb0c7; --accent:#4cc2ff; --red:#ff6b6b; --amber:#ffc857;
+    --bg:#f7f8f5; --card:#ffffff; --line:#e6e8e3; --txt:#1f242b;
+    --sub:#6b7280; --accent:#b45309; --red:#dc2626; --amber:#b45309;
+    --soft:#f3f5f1; --ink:#20262e; --shadow:0 8px 28px rgba(24,32,40,.07);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;min-height:100vh;background:var(--bg);color:var(--txt);
+    background-image:radial-gradient(circle at 20% 0%, rgba(255,176,32,.13), transparent 34%),
+                     radial-gradient(circle at 85% 100%, rgba(45,150,110,.07), transparent 30%);
+    background-attachment:fixed;
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
     font-size:15px;line-height:1.6;display:flex;align-items:center;justify-content:center;padding:24px 18px}
-  .wrap{width:100%;max-width:360px}
-  .logo{display:block;width:76px;height:76px;border-radius:20px;margin:0 auto 14px;
-    box-shadow:0 8px 26px rgba(0,0,0,.38)}
-  h1{font-size:19px;margin:0 0 6px;text-align:center;font-weight:600}
+  .wrap{width:100%;max-width:380px}
+  .logo{display:block;width:76px;height:76px;border-radius:22px;margin:0 auto 16px;
+    background:#fff;border:1px solid var(--line);padding:4px;box-shadow:var(--shadow)}
+  h1{font-size:20px;margin:0 0 6px;text-align:center;font-weight:700;color:var(--txt)}
   .sub{color:var(--sub);font-size:13px;text-align:center;margin-bottom:22px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;
+    box-shadow:var(--shadow)}
   label.fl{display:block;color:var(--sub);font-size:13px;margin:0 0 8px}
-  input{width:100%;background:#0e1726;border:1px solid var(--line);border-radius:10px;
-    color:var(--txt);padding:13px 14px;font-size:17px;letter-spacing:2px;font-family:inherit;outline:none}
-  input:focus{border-color:var(--accent)}
+  input{width:100%;background:#fff;border:1px solid var(--line);border-radius:11px;
+    color:var(--txt);padding:13px 14px;font-size:17px;letter-spacing:2px;font-family:inherit;outline:none;transition:.15s}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.10)}
   button{width:100%;margin-top:14px;padding:13px;border-radius:11px;border:1px solid transparent;
-    background:linear-gradient(135deg,#2f8fd8,#4cc2ff);color:#04121f;font-size:15px;
-    font-family:inherit;font-weight:700}
+    background:var(--ink);color:#fff;font-size:15px;font-family:inherit;font-weight:650}
   button:active{opacity:.85}
   button[disabled]{opacity:.6}
   .err{color:var(--red);font-size:13px;min-height:20px;margin-top:10px;text-align:center;word-break:break-all}
   .tip{color:var(--sub);font-size:12.5px;line-height:1.7;margin-top:16px}
-  .tip code{background:#0e1726;padding:1px 5px;border-radius:4px;color:var(--accent)}
+  .tip code{background:var(--soft);padding:1px 5px;border-radius:4px;color:var(--accent)}
   .shake{animation:sk .28s}
   @keyframes sk{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 </style>

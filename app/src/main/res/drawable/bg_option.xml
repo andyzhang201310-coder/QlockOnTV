@@ -1,18 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 选项 / 普通按钮：近黑卡片 + 细描边；聚焦时暖橙描边并带一圈柔和外光 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/surfaceFocus" />
-            <corners android:radius="14dp" />
-            <stroke
-                android:width="3dp"
-                android:color="@color/strokeFocus" />
-        </shape>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#33FFB020" />
+                    <corners android:radius="21dp" />
+                </shape>
+            </item>
+            <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/surfaceFocus" />
+                    <corners android:radius="18dp" />
+                    <stroke
+                        android:width="2dp"
+                        android:color="@color/strokeFocus" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/surfaceFocus" />
-            <corners android:radius="14dp" />
+            <corners android:radius="18dp" />
             <stroke
                 android:width="2dp"
                 android:color="@color/accent" />
@@ -21,7 +32,7 @@
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/surface" />
-            <corners android:radius="14dp" />
+            <corners android:radius="18dp" />
             <stroke
                 android:width="2dp"
                 android:color="@color/stroke" />

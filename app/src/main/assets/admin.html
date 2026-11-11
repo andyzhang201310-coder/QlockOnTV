@@ -7,68 +7,79 @@
 <title>题锁 · 管理后台</title>
 <link rel="icon" type="image/png" href="/logo.png">
 <style>
+  /* v1.7.12：家长端改为米白底 + 纯白卡片 + 细边框的浅色管理台，
+     与 TV 端暖橙近黑形成「孩子端沉浸 / 家长端清爽」的分工。 */
   :root{
-    --bg:#0b1220; --card:#151e2e; --line:#27374f; --txt:#eef4fb;
-    --sub:#9fb0c7; --accent:#4cc2ff; --green:#4ade80; --red:#ff6b6b; --amber:#ffc857;
+    --bg:#f7f8f5; --card:#ffffff; --line:#e6e8e3; --txt:#1f242b;
+    --sub:#6b7280; --accent:#b45309; --green:#15803d; --red:#dc2626; --amber:#b45309;
+    --soft:#f3f5f1; --ink:#20262e; --line-soft:#f0f1ee;
+    --shadow:0 4px 18px rgba(24,32,40,.05);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;background:var(--bg);color:var(--txt);
+    background-image:radial-gradient(circle at 6% 0%, rgba(255,176,32,.11), transparent 30%),
+                     radial-gradient(circle at 94% 10%, rgba(45,150,110,.07), transparent 26%);
+    background-attachment:fixed;
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
     font-size:15px;line-height:1.6;padding:16px 14px 60px}
-  .brand{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-  .brand img{width:54px;height:54px;border-radius:15px;flex:0 0 auto;
-    box-shadow:0 6px 20px rgba(0,0,0,.35)}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .brand img{width:54px;height:54px;border-radius:16px;flex:0 0 auto;background:#fff;
+    border:1px solid var(--line);box-shadow:var(--shadow);padding:3px}
   .brand .who{flex:1;min-width:0}
   .brand .sub{margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  h1{font-size:17.5px;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  h1{font-size:18px;margin:0 0 4px;color:var(--txt);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sub{color:var(--sub);font-size:12.5px;margin-bottom:14px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
-  .card h2{font-size:15px;margin:0 0 10px;color:var(--accent);font-weight:600}
-  .row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px dashed rgba(255,255,255,.07)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;
+    box-shadow:var(--shadow)}
+  .card h2{font-size:15px;margin:0 0 12px;color:var(--txt);font-weight:650;
+    padding-left:10px;border-left:3px solid var(--accent)}
+  .row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line-soft)}
   .row:last-child{border-bottom:none}
   .row span{color:var(--sub);font-size:13.5px}
-  .row b{font-weight:600;font-size:14px}
+  .row b{font-weight:650;font-size:14px}
   .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px}
-  .on{background:rgba(74,222,128,.16);color:var(--green)}
-  .off{background:rgba(255,107,107,.16);color:var(--red)}
+  .on{background:#e9f7ee;color:var(--green)}
+  .off{background:#fdeeee;color:var(--red)}
   label.fl{display:block;color:var(--sub);font-size:13px;margin:12px 0 6px}
   .grid2{display:flex;gap:10px}
   .grid2>div{flex:1;min-width:0}
   input[type=text],input[type=number],input[type=password],input[type=time],textarea{
-    width:100%;background:#0e1726;border:1px solid var(--line);border-radius:10px;
-    color:var(--txt);padding:11px 12px;font-size:15px;font-family:inherit;outline:none}
-  input[type=time]{color-scheme:dark}
-  input:focus,textarea:focus{border-color:var(--accent)}
+    width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;
+    color:var(--txt);padding:11px 12px;font-size:15px;font-family:inherit;outline:none;transition:.15s}
+  input[type=time]{color-scheme:light}
+  input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,83,9,.10)}
   textarea{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.5;height:260px;resize:vertical}
   .btns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
   button{flex:1;min-width:110px;padding:12px 10px;border-radius:11px;border:1px solid var(--line);
-    background:#1b2740;color:var(--txt);font-size:14.5px;font-family:inherit;font-weight:500}
-  button:active{background:#25344f}
-  button.primary{background:linear-gradient(135deg,#2f8fd8,#4cc2ff);border-color:transparent;color:#04121f;font-weight:700}
-  button.warn{background:#3a2a1a;border-color:#6b4c22;color:#ffc857}
-  button.unlock{background:rgba(74,222,128,.14);border-color:#2f7d5a;color:var(--green);font-weight:600}
-  button.unlock:active{background:rgba(74,222,128,.24)}
+    background:#fff;color:var(--txt);font-size:14.5px;font-family:inherit;font-weight:500;transition:.15s}
+  button:active{background:var(--soft)}
+  button.primary{background:var(--ink);border-color:transparent;color:#fff;font-weight:650}
+  button.warn{background:#fff7ed;border-color:#fed7aa;color:var(--accent)}
+  button.unlock{background:#effaf3;border-color:#bbf0cf;color:var(--green);font-weight:650}
+  button.unlock:active{background:#dff3e7}
   button.logout{flex:0 0 auto;min-width:0;padding:8px 13px;border-radius:10px;
-    font-size:13px;font-weight:500;background:#1b2740;color:var(--sub)}
-  button.logout:active{background:#25344f;color:var(--txt)}
-  .switch{position:relative;width:52px;height:29px;border-radius:20px;background:#2a3b55;transition:.2s}
-  .switch.on{background:var(--green)}
-  .switch i{position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;background:#fff;transition:.2s}
+    font-size:13px;font-weight:500;background:var(--soft);color:var(--sub)}
+  button.logout:active{background:#e9ece6;color:var(--txt)}
+  .switch{position:relative;width:52px;height:29px;border-radius:20px;background:#d9dcd6;transition:.2s}
+  .switch.on{background:#e08a1e}
+  .switch i{position:absolute;top:3px;left:3px;width:23px;height:23px;border-radius:50%;background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.18);transition:.2s}
   .switch.on i{left:26px}
   .tip{color:var(--sub);font-size:12.5px;line-height:1.7;margin-top:10px}
-  .tip code{background:#0e1726;padding:1px 5px;border-radius:4px;color:var(--accent)}
+  .tip code{background:var(--soft);padding:1px 5px;border-radius:4px;color:var(--accent)}
   #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
-    background:#1f2f47;border:1px solid var(--line);color:var(--txt);padding:11px 20px;border-radius:24px;
-    font-size:14px;opacity:0;transition:.25s;pointer-events:none;max-width:88%;text-align:center;z-index:99}
+    background:var(--ink);border:1px solid var(--ink);color:#fff;padding:11px 20px;border-radius:24px;
+    font-size:14px;opacity:0;transition:.25s;pointer-events:none;max-width:88%;text-align:center;z-index:99;
+    box-shadow:0 10px 30px rgba(24,32,40,.22)}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .stat{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .chip{background:#0e1726;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--sub)}
+  .chip{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--sub)}
   .chip b{color:var(--txt)}
   .grades{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
   .grades button{flex:0 0 auto;min-width:0;padding:9px 13px;border-radius:10px;font-size:13.5px;line-height:1.25}
   .grades button .gn{display:block;font-size:11px;color:var(--sub);font-weight:400}
-  .grades button.on{background:rgba(74,222,128,.16);border-color:#2f7d5a;color:var(--green)}
-  .grades button.on .gn{color:#7ef0b0}
+  .grades button.on{background:#e9f7ee;border-color:#bbf0cf;color:var(--green)}
+  .grades button.on .gn{color:#4b8a68}
 </style>
 </head>
 <body>
@@ -82,9 +93,9 @@
   <button class="logout" id="btnLogout">退出登录</button>
 </div>
 
-<div class="card" id="pinWarn" style="display:none;border-color:#6b4c22;background:#3a2a1a">
-  <div style="color:#ffc857;font-size:14px;font-weight:600">管理密码仍是默认的 1234</div>
-  <div class="tip" style="margin-top:6px;color:#e2cba6">
+<div class="card" id="pinWarn" style="display:none;border-color:#fed7aa;background:#fff7ed">
+  <div style="color:var(--accent);font-size:14px;font-weight:600">管理密码仍是默认的 1234</div>
+  <div class="tip" style="margin-top:6px;color:#8a6a3a">
     知道这个密码的人都能改题库、关掉拦截。请立刻到下方「参数设置 → 管理密码」改成只有你知道的密码。
   </div>
 </div>
@@ -99,7 +110,7 @@
   <div class="row"><span>下次弹题</span><b id="stDue">—</b></div>
   <div class="row"><span>题库总数</span><b id="stBank">—</b></div>
   <div class="stat" id="stSubjects"></div>
-  <div id="stErr" class="tip" style="color:#ff6b6b"></div>
+  <div id="stErr" class="tip" style="color:var(--red)"></div>
 </div>
 
 <div class="card">
@@ -194,12 +205,12 @@
     · <b>设备所有者</b>（电脑 adb 执行一次）：系统卸载按钮直接置灰，必须回到电视输入卸载码才能卸载。<br>
     电视拒绝自动激活时，用下面这条命令（不要求电视上没登录账号）：
   </div>
-  <div class="tip" id="activeAdminCmd" style="word-break:break-all;color:#4cc2ff"></div>
+  <div class="tip" id="activeAdminCmd" style="word-break:break-all;color:var(--accent)"></div>
   <div class="btns">
     <button id="btnCopyActiveCmd">复制基础保护命令</button>
   </div>
   <div class="tip">当前设备的所有者命令（彻底锁定，要求电视上没登录账号）：</div>
-  <div class="tip" id="ownerCmd" style="word-break:break-all;color:#4cc2ff"></div>
+  <div class="tip" id="ownerCmd" style="word-break:break-all;color:var(--accent)"></div>
   <div class="btns">
     <button id="btnCopyCmd">复制命令</button>
   </div>
@@ -294,25 +305,25 @@
     var on = !!state.enabled;
     $('stEnabled').innerHTML = on ? '<span class="badge on">拦截中</span>' : '<span class="badge off">已暂停</span>';
     $('stQuiz').innerHTML = state.quizRunning
-      ? '<span style="color:#ffc857">答题弹窗显示中</span>'
-      : '<span style="color:#9fb0c7">未弹出</span>';
+      ? '<span style="color:var(--accent)">答题弹窗显示中</span>'
+      : '<span style="color:var(--sub)">未弹出</span>';
     $('stInterval').textContent = '每 ' + state.intervalMinutes + ' 分钟';
     $('stCount').textContent = state.quizCount + ' 题';
     $('stBank').textContent = state.questionCount + ' 题';
     if (!state.autoQuiz) {
       $('stAuto').innerHTML = '<span class="badge off">已关闭</span>';
     } else if (state.quietEnabled && state.inQuiet) {
-      $('stAuto').innerHTML = '<span style="color:#ffc857">免打扰中</span>';
+      $('stAuto').innerHTML = '<span style="color:var(--accent)">免打扰中</span>';
     } else if (state.quietEnabled) {
-      $('stAuto').innerHTML = '<span class="badge on">自动</span> <span style="color:#9fb0c7">' +
+      $('stAuto').innerHTML = '<span class="badge on">自动</span> <span style="color:var(--sub)">' +
         state.quietStart + '–' + state.quietEnd + ' 免打扰</span>';
     } else {
       $('stAuto').innerHTML = '<span class="badge on">自动</span>';
     }
     if (!state.autoQuiz) {
-      $('stDue').innerHTML = '<span style="color:#9fb0c7">已关闭自动弹题</span>';
+      $('stDue').innerHTML = '<span style="color:var(--sub)">已关闭自动弹题</span>';
     } else if (state.pending) {
-      $('stDue').innerHTML = '<span style="color:#ffc857">上一轮未完成</span>';
+      $('stDue').innerHTML = '<span style="color:var(--accent)">上一轮未完成</span>';
     } else if (on && state.dueAt > 0) {
       var left = Math.max(0, state.dueAt - Date.now());
       $('stDue').textContent = hhmm(state.dueAt) + '（' + Math.ceil(left / 60000) + ' 分钟后）';
@@ -364,14 +375,14 @@
     $('stOwner').innerHTML = state.isDeviceOwner
       ? '<span class="badge on">已生效</span>' : '<span class="badge off">未设置</span>';
     if (!state.isDeviceOwner) {
-      $('stBlock').innerHTML = '<span style="color:#9fb0c7">需设备所有者</span>';
+      $('stBlock').innerHTML = '<span style="color:var(--sub)">需设备所有者</span>';
     } else {
       $('stBlock').innerHTML = state.uninstallBlocked
         ? '<span class="badge on">已锁定</span>' : '<span class="badge off">未锁定</span>';
     }
-    var codeTxt = state.uninstallPinCustom ? '已自定义' : '<span style="color:#ffc857">默认 246810</span>';
+    var codeTxt = state.uninstallPinCustom ? '已自定义' : '<span style="color:var(--accent)">默认 246810</span>';
     if (state.uninstallLockMs > 0) {
-      codeTxt += ' <span style="color:#ff6b6b">（输错锁定 ' +
+      codeTxt += ' <span style="color:var(--red)">（输错锁定 ' +
         Math.ceil(state.uninstallLockMs / 1000) + 's）</span>';
     }
     $('stCode').innerHTML = codeTxt;

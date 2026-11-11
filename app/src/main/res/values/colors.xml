@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  视觉基调（v1.7.12）：参考「题了个题」TV 端——近黑底 + 暖橙渐变 + 大圆角 + 极简层级。
+  颜色名全部保持兼容，Java / layout 引用不用改；家长端后台页面走米白浅色卡片，见 assets/*.html。
+-->
 <resources>
-    <color name="bg">#0B1220</color>
-    <color name="surface">#151E2E</color>
-    <color name="surfaceFocus">#1E3A5C</color>
-    <color name="stroke">#2A3B55</color>
-    <color name="strokeFocus">#4CC2FF</color>
-    <color name="textPrimary">#F2F6FC</color>
-    <color name="textSecondary">#9FB0C7</color>
-    <color name="accent">#4CC2FF</color>
-    <color name="green">#4ADE80</color>
-    <color name="red">#FF6B6B</color>
-    <color name="amber">#FFC857</color>
+    <color name="bg">#0B0B0E</color>
+    <color name="bgDeep">#08080A</color>
+    <color name="surface">#16161A</color>
+    <color name="surfaceAlt">#121215</color>
+    <color name="surfaceFocus">#2A2116</color>
+    <color name="stroke">#26262C</color>
+    <color name="strokeFocus">#FFB020</color>
+    <color name="textPrimary">#F2F2F4</color>
+    <color name="textSecondary">#9A9AA2</color>
+    <color name="textMuted">#6B6B74</color>
+    <color name="accent">#FFB020</color>
+    <color name="accentDeep">#FF6A1F</color>
+    <color name="accentLight">#FFC24A</color>
+    <color name="green">#33D17A</color>
+    <color name="red">#F2545B</color>
+    <color name="amber">#FFC24A</color>
     <color name="white">#FFFFFF</color>
+    <color name="pillBg">#1A1A1F</color>
 </resources>

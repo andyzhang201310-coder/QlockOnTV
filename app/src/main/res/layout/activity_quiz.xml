@@ -1,10 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 题目与选项可滚动以容纳长成语解释；反馈/提示固定在屏幕底部，答错时始终看得见 -->
+<!--
+  答题页（v1.7.12 视觉）：顶栏品牌 + 状态胶囊，中部大题干 + 卡片式选项，底部固定反馈卡片。
+  题目与选项可滚动以容纳长成语解释；反馈/提示固定在屏幕底部，答错时始终看得见。
+  短答案时四个选项必须同屏可见，因此纵向间距按 TV 一屏高度收紧；反馈为空时由 Java 隐藏。
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg"
+    android:background="@drawable/bg_glow"
     android:orientation="vertical">
+
+    <!-- 顶栏：品牌 + 右上状态胶囊，参考项目 .topbar / .pill -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="56dp"
+        android:paddingTop="14dp"
+        android:paddingRight="56dp"
+        android:paddingBottom="2dp">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:contentDescription="题锁"
+            android:src="@mipmap/ic_launcher" />
+
+        <TextView
+            style="@style/BrandName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:text="题锁" />
+
+        <TextView
+            style="@style/BrandTagline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="14dp"
+            android:text="先学再看 · 让每一点进步被看见" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/tvMode"
+            style="@style/PillText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="答对全部题目才能继续看电视" />
+    </LinearLayout>
 
     <ScrollView
         android:id="@+id/quizScroll"
@@ -20,10 +68,11 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingLeft="56dp"
-            android:paddingTop="20dp"
+            android:paddingTop="10dp"
             android:paddingRight="56dp"
             android:paddingBottom="4dp">
 
+            <!-- 面包屑：学科胶囊 · 进度 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -35,51 +84,48 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_tag"
-                    android:paddingLeft="20dp"
-                    android:paddingTop="6dp"
-                    android:paddingRight="20dp"
-                    android:paddingBottom="6dp"
+                    android:paddingLeft="18dp"
+                    android:paddingTop="5dp"
+                    android:paddingRight="18dp"
+                    android:paddingBottom="5dp"
                     android:text="语文"
                     android:textColor="@color/accent"
-                    android:textSize="22sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:text="/"
+                    android:textColor="#4A4A52"
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/tvProgress"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="22dp"
                     android:layout_weight="1"
                     android:text="第 1 / 5 题"
                     android:textColor="@color/textSecondary"
-                    android:textSize="22sp" />
-
-                <TextView
-                    android:id="@+id/tvMode"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="答对全部题目才能继续看电视"
-                    android:textColor="@color/amber"
                     android:textSize="18sp" />
             </LinearLayout>
 
             <TextView
-            android:id="@+id/tvQuestion"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-                android:lineSpacingExtra="6dp"
-                android:text="题目"
-                android:textColor="@color/textPrimary"
-                android:textSize="38sp"
-                android:textStyle="bold" />
+                android:id="@+id/tvQuestion"
+                style="@style/QuizQuestion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="14dp"
+                android:text="题目" />
 
             <!-- 选项高度 wrap_content：长答案自动换行撑高，短答案由 minHeight 保底 -->
             <LinearLayout
                 android:id="@+id/optionBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
                 android:orientation="vertical" />
 
             <!-- 短答案时吃掉剩余空间；内容超一屏时自动让位，不影响滚动 -->
@@ -94,29 +140,35 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/bg"
         android:orientation="vertical"
         android:paddingLeft="56dp"
         android:paddingTop="2dp"
         android:paddingRight="56dp"
-        android:paddingBottom="10dp">
+        android:paddingBottom="12dp">
 
         <TextView
             android:id="@+id/tvFeedback"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/bg_feedback"
             android:minHeight="34dp"
+            android:paddingLeft="22dp"
+            android:paddingTop="9dp"
+            android:paddingRight="22dp"
+            android:paddingBottom="9dp"
             android:text=""
-            android:textColor="@color/amber"
-            android:textSize="22sp" />
+            android:textColor="@color/textSecondary"
+            android:textSize="21sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:text="@string/quiz_hint"
-            android:textColor="@color/textSecondary"
-            android:textSize="15sp" />
+            android:textColor="@color/textMuted"
+            android:textSize="14sp" />
 
     </LinearLayout>
 </LinearLayout>

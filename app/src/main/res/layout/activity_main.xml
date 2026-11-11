@@ -1,12 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 首次安装引导页 / 家长验证后的只读信息页。
-     结构：上面是可滚动的两栏内容，下面是固定不滚动的全屏操作条。
-     操作条横跨整屏，四个按钮各有约 165dp，不会被压到换行（旧版挤在右栏里约 88dp）。 -->
+<!--
+  首次安装引导页 / 家长验证后的只读信息页（v1.7.12 视觉）。
+  结构：顶栏品牌 → 可滚动的两栏内容（左扫码 / 右状态）→ 固定不滚动的全屏操作条。
+  操作条横跨整屏，四个按钮各有约 165dp，不会被压到换行（旧版挤在右栏里约 88dp）。
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg"
+    android:background="@drawable/bg_glow"
     android:orientation="vertical">
+
+    <!-- 顶栏：品牌 + 右上状态胶囊 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="48dp"
+        android:paddingTop="14dp"
+        android:paddingRight="48dp">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:contentDescription="题锁"
+            android:src="@mipmap/ic_launcher" />
+
+        <TextView
+            style="@style/BrandName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:text="题锁" />
+
+        <TextView
+            style="@style/BrandTagline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="14dp"
+            android:text="先学再看 · 让每一点进步被看见" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            style="@style/PillText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="家长管理 · 请用手机扫码" />
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -20,58 +64,43 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:paddingLeft="48dp"
-            android:paddingTop="28dp"
+            android:paddingTop="12dp"
             android:paddingRight="48dp"
-            android:paddingBottom="20dp">
+            android:paddingBottom="4dp">
 
-            <!-- 左栏：品牌 + 二维码 + 首次配置步骤 -->
+            <!-- 左栏：引导标题 + 白卡二维码 + 首次配置步骤 -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    style="@style/SectionLabel"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:text="第一步 · 连接" />
 
-                    <ImageView
-                        android:layout_width="52dp"
-                        android:layout_height="52dp"
-                        android:contentDescription="题锁"
-                        android:src="@mipmap/ic_launcher" />
+                <TextView
+                    style="@style/PageTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="用手机管理这台设备" />
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="14dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="手机扫码改设置"
-                            android:textColor="@color/textPrimary"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="微信「扫一扫」或手机浏览器打开"
-                            android:textColor="@color/textSecondary"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-                </LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="微信「扫一扫」或手机浏览器打开，和电视连同一个 WiFi"
+                    android:textColor="@color/textSecondary"
+                    android:textSize="15sp" />
 
                 <ImageView
                     android:id="@+id/ivQr"
-                    android:layout_width="220dp"
-                    android:layout_height="220dp"
-                    android:layout_marginTop="14dp"
+                    android:layout_width="196dp"
+                    android:layout_height="196dp"
+                    android:layout_marginTop="12dp"
                     android:background="@drawable/bg_qr"
                     android:contentDescription="管理后台二维码"
                     android:padding="10dp"
@@ -82,9 +111,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_pill"
+                    android:paddingLeft="14dp"
+                    android:paddingTop="6dp"
+                    android:paddingRight="14dp"
+                    android:paddingBottom="6dp"
                     android:text=""
                     android:textColor="@color/accent"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <!-- 四步配置压成两行速记，保证首屏不被底部操作条切掉 -->
@@ -92,10 +126,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:lineSpacingExtra="3dp"
+                    android:lineSpacingExtra="5dp"
                     android:text="首次配置：① 改管理密码 / 卸载码　② 允许后台弹窗\n③ 开启自启动　④ 激活防卸载设置"
                     android:textColor="@color/textSecondary"
-                    android:textSize="13.5sp" />
+                    android:textSize="14sp" />
             </LinearLayout>
 
             <!-- 右栏：运行状态 + 需要留意的事项 -->
@@ -107,20 +141,18 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/SectionLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="运行状态"
-                    android:textColor="@color/textPrimary"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:text="运行状态" />
 
                 <TextView
                     android:id="@+id/tvStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="8dp"
                     android:background="@drawable/bg_card"
-                    android:lineSpacingExtra="6dp"
+                    android:lineSpacingExtra="5dp"
                     android:padding="18dp"
                     android:text="加载中…"
                     android:textColor="@color/textPrimary"
@@ -130,8 +162,8 @@
                     android:id="@+id/tvWarn"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:lineSpacingExtra="4dp"
+                    android:layout_marginTop="6dp"
+                    android:lineSpacingExtra="5dp"
                     android:text=""
                     android:textColor="@color/amber"
                     android:textSize="14.5sp" />
@@ -139,11 +171,11 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
-                    android:lineSpacingExtra="4dp"
-                    android:text="以后要再看本页：在答题页连按 5 次「上键」并输入管理密码。\n电视端不提供参数修改，全部由手机管理页控制；答题通关后应用会自动退回后台继续计时。"
-                    android:textColor="@color/textSecondary"
-                    android:textSize="13.5sp" />
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="5dp"
+                    android:text="再进本页：答题页连按 5 次「上键」并输入管理密码。参数一律在手机后台修改。"
+                    android:textColor="@color/textMuted"
+                    android:textSize="14sp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
@@ -157,7 +189,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/surface"
+        android:background="@color/surfaceAlt"
         android:orientation="vertical"
         android:paddingLeft="48dp"
         android:paddingTop="12dp"
@@ -171,12 +203,10 @@
             android:orientation="horizontal">
 
             <TextView
+                style="@style/SectionLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="常用操作"
-                android:textColor="@color/textSecondary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:text="常用操作" />
 
             <TextView
                 android:layout_width="0dp"
@@ -184,7 +214,7 @@
                 android:layout_weight="1"
                 android:gravity="right"
                 android:text="方向键选择 · 按 OK 确认"
-                android:textColor="@color/textSecondary"
+                android:textColor="@color/textMuted"
                 android:textSize="13sp" />
         </LinearLayout>
 

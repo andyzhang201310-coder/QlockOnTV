@@ -1,37 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 底部操作条的主按钮（首次页是「开始答题」，家长页是「关闭」） -->
+<!-- 主按钮：暖橙渐变（#FFC24A → #FF6A1F），聚焦加外圈光晕 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="270"
-                android:endColor="#4CC2FF"
-                android:startColor="#8BDDFF" />
-            <corners android:radius="14dp" />
-            <stroke
-                android:width="3dp"
-                android:color="@color/white" />
-        </shape>
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="#59FF8A3D" />
+                    <corners android:radius="19dp" />
+                </shape>
+            </item>
+            <item android:left="3dp" android:top="3dp" android:right="3dp" android:bottom="3dp">
+                <shape android:shape="rectangle">
+                    <gradient
+                        android:angle="135"
+                        android:endColor="@color/accentDeep"
+                        android:startColor="@color/accentLight" />
+                    <corners android:radius="16dp" />
+                    <stroke
+                        android:width="2dp"
+                        android:color="#FFE0A0" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
             <gradient
-                android:angle="270"
-                android:endColor="#2F8FD8"
-                android:startColor="#6FD0FF" />
-            <corners android:radius="14dp" />
-            <stroke
-                android:width="2dp"
-                android:color="@color/white" />
+                android:angle="135"
+                android:endColor="#E85A12"
+                android:startColor="#F5B33C" />
+            <corners android:radius="16dp" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
             <gradient
-                android:angle="270"
-                android:endColor="#4CC2FF"
-                android:startColor="#2F8FD8" />
-            <corners android:radius="14dp" />
+                android:angle="135"
+                android:endColor="@color/accentDeep"
+                android:startColor="@color/accentLight" />
+            <corners android:radius="16dp" />
         </shape>
     </item>
 </selector>
