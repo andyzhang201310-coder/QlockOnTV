@@ -91,18 +91,20 @@
     </style>
 
     <!-- 答案高度自适应：允许多行、不省略、不拉伸，长成语解释完整显示
-         v1.7.24：选项 28sp → 25sp，字母徽标按实际字号计算会自动跟着缩 -->
+         v1.7.24：选项 28sp → 25sp，字母徽标按实际字号计算会自动跟着缩
+         v1.7.27：minHeight 72dp → 54dp、上下 padding 10dp → 7dp，
+                 四个选项 + 题干 + 底部反馈在 1080p 电视上一屏放得下，最后一项不再被裁 -->
     <style name="QuizOption" parent="TvButton">
         <item name="android:textSize">25sp</item>
-        <item name="android:minHeight">72dp</item>
+        <item name="android:minHeight">54dp</item>
         <item name="android:gravity">center_vertical|start</item>
         <item name="android:singleLine">false</item>
         <item name="android:ellipsize">none</item>
-        <item name="android:lineSpacingExtra">5dp</item>
+        <item name="android:lineSpacingExtra">4dp</item>
         <item name="android:paddingLeft">30dp</item>
         <item name="android:paddingRight">30dp</item>
-        <item name="android:paddingTop">10dp</item>
-        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingTop">7dp</item>
+        <item name="android:paddingBottom">7dp</item>
     </style>
 
     <style name="KeyButton" parent="TvButton">

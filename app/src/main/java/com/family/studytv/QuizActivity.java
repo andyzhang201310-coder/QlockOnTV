@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -277,6 +278,14 @@ public class QuizActivity extends Activity {
                     choosingGrade = false;
                     buildSession();
                     show(0);
+                }
+            });
+            b.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if (hasFocus) {
+                        ensureVisible(v);
+                    }
                 }
             });
             optionBox.addView(b);
@@ -584,6 +593,14 @@ public class QuizActivity extends Activity {
                     answer(choice);
                 }
             });
+            b.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if (hasFocus) {
+                        ensureVisible(v);
+                    }
+                }
+            });
             optionBox.addView(b);
         }
         if (optionBox.getChildCount() > 0) {
@@ -692,9 +709,44 @@ public class QuizActivity extends Activity {
         }
     }
 
+    /**
+     * v1.7.27：把指定选项滚动到可视区内。
+     * 底部反馈条出现时会挤压 ScrollView 高度，最后一个选项容易被裁掉半截，
+     * 焦点移动或反馈出现后调用一次，保证当前项始终完整可见。
+     */
+    private void ensureVisible(final View v) {
+        if (quizScroll == null || v == null) {
+            return;
+        }
+        quizScroll.post(new Runnable() {
+            @Override
+            public void run() {
+                if (!running) {
+                    return;
+                }
+                Rect r = new Rect();
+                try {
+                    quizScroll.offsetDescendantRectToMyCoords(v, r);
+                } catch (Throwable ignored) {
+                    return;
+                }
+                int viewH = quizScroll.getHeight();
+                int margin = Math.max(6, (int) (8 * getResources().getDisplayMetrics().density));
+                int dy = 0;
+                if (r.bottom + margin > viewH) {
+                    dy = r.bottom + margin - viewH;
+                } else if (r.top - margin < 0) {
+                    dy = r.top - margin;
+                }
+                if (dy != 0) {
+                    quizScroll.smoothScrollBy(0, dy);
+                }
+            }
+        });
+    }
+
     /** 换题后回到顶部，避免上一题滚动位置残留导致看不到题干 */
-    private void scrollToTop() {
-        if (quizScroll == null) {
+    private void scrollToTop() {        if (quizScroll == null) {
             return;
         }
         quizScroll.scrollTo(0, 0);
@@ -813,6 +865,14 @@ public class QuizActivity extends Activity {
         tvFeedback.setText(text);
         // 未答题时反馈卡片不占位，四个短答案选项能同屏显示完整
         tvFeedback.setVisibility(text == null || text.length() == 0 ? View.GONE : View.VISIBLE);
+        // 反馈条出现会挤压可视区，保证当前选项（尤其是最后一个）不被裁掉
+        if (tvFeedback.getVisibility() == View.VISIBLE) {
+            View focus = getCurrentFocus();
+            if (focus == null && optionBox.getChildCount() > 0) {
+                focus = optionBox.getChildAt(optionBox.getChildCount() - 1);
+            }
+            ensureVisible(focus);
+        }
     }
 
     private void pass() {

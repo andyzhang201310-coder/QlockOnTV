@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 高度跟随答案文字：长成语解释会自动换行撑高，短答案仍由 minHeight 保证点击区 -->
+<!-- 高度跟随答案文字：长成语解释会自动换行撑高，短答案仍由 minHeight 保证点击区
+     v1.7.27：选项间距 8dp → 5dp，四选项同屏时把纵向空间让给最后一项 -->
 <Button xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/QuizOption"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
+    android:layout_marginTop="5dp"
     android:text="选项" />

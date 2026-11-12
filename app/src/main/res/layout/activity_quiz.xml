@@ -69,9 +69,9 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingLeft="56dp"
-            android:paddingTop="10dp"
+            android:paddingTop="6dp"
             android:paddingRight="56dp"
-            android:paddingBottom="4dp">
+            android:paddingBottom="2dp">
 
             <!-- 面包屑：学科胶囊 · 进度 -->
             <LinearLayout
@@ -118,8 +118,8 @@
                 style="@style/QuizQuestion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="14dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 android:text="题目" />
 
             <!-- 选项高度 wrap_content：长答案自动换行撑高，短答案由 minHeight 保底 -->
@@ -145,7 +145,7 @@
         android:paddingLeft="56dp"
         android:paddingTop="2dp"
         android:paddingRight="56dp"
-        android:paddingBottom="12dp">
+        android:paddingBottom="8dp">
 
         <TextView
             android:id="@+id/tvFeedback"
@@ -154,9 +154,9 @@
             android:background="@drawable/bg_feedback"
             android:minHeight="34dp"
             android:paddingLeft="22dp"
-            android:paddingTop="9dp"
+            android:paddingTop="7dp"
             android:paddingRight="22dp"
-            android:paddingBottom="9dp"
+            android:paddingBottom="7dp"
             android:text=""
             android:textColor="@color/textSecondary"
             android:textSize="21sp"
@@ -166,7 +166,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="4dp"
             android:text="@string/quiz_hint"
             android:textColor="@color/textMuted"
             android:textSize="14sp" />
