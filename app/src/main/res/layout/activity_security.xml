@@ -96,13 +96,28 @@
                 android:text="开启防卸载" />
 
             <Button
-                android:id="@+id/btnOwner"
+                android:id="@+id/btnA11y"
                 style="@style/TvButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="12dp"
                 android:layout_weight="1"
+                android:text="开启界面拦截" />
+
+            <Button
+                android:id="@+id/btnOwner"
+                style="@style/TvButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="彻底锁定（需 adb）" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/btnUninstall"
@@ -111,7 +126,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginRight="12dp"
                 android:layout_weight="1"
-                android:text="卸载应用" />
+                android:text="卸载应用（需卸载码）" />
 
             <Button
                 android:id="@+id/btnBack"
@@ -127,7 +142,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:lineSpacingExtra="6dp"
-            android:text="说明：点「开启防卸载」会直接给本应用激活设备管理员，不需要去系统设置里找入口（电视通常没有这一项）；激活后孩子从系统设置卸载时会先被要求「停用设备管理员」。如果系统强制拦截、页面拉不起来，本页会给出两条 adb 命令，复制到电脑执行一次即可。想彻底置灰系统「卸载」按钮，用「彻底锁定（需 adb）」设为设备所有者。"
+            android:text="三道闸门，从弱到强：①「开启防卸载」激活设备管理员，系统卸载前会先要求停用；②「开启界面拦截」用无障碍服务盯着卸载页面，没有卸载码就把界面顶掉——设备管理员在这台电视上无效时，这一条才是真正挡住孩子的那道；③「彻底锁定」把系统卸载按钮直接置灰，仅设备所有者可用，需要电脑执行一次 adb 命令。"
             android:textColor="@color/textMuted"
             android:textSize="15sp" />
 

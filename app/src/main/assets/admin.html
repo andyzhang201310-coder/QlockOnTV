@@ -943,6 +943,8 @@
         <div class="row"><span>设备管理员</span><b id="stAdmin">—</b></div>
         <div class="row"><span>设备所有者</span><b id="stOwner">—</b></div>
         <div class="row"><span>系统卸载锁</span><b id="stBlock">—</b></div>
+        <div class="row"><span>界面拦截（无障碍）</span><b id="stA11y">—</b></div>
+        <div class="row"><span>已拦下卸载</span><b id="stA11yCount">—</b></div>
         <div class="row"><span>卸载码</span><b id="stCode">—</b></div>
         <div class="row">
           <span>开启防卸载保护</span>
@@ -954,8 +956,10 @@
         </div>
         <div class="btns">
           <button class="primary" id="btnActivateAdmin" style="max-width:300px">远程激活设备管理员</button>
+          <button id="btnOpenA11y" style="max-width:300px">开启界面拦截</button>
         </div>
         <div class="tip" id="activateTip">电视上没有「设备管理员」设置页时点这里：应用以自身身份直接激活，不用去系统设置里翻。激活成功后，卸载前必须先停用设备管理员。</div>
+        <div class="tip" id="a11yTip">设备管理员被系统裁掉（Sony BRAVIA 等）时，卸载拦不住，只能靠界面拦截：点「开启界面拦截」会在电视上打开无障碍页，勾选「题锁」即可。之后任何卸载「题锁」的页面都会自动退回，必须先在电视端输入卸载码才放行。</div>
         <label class="fl">当前卸载码（出厂默认 246810）</label>
         <input type="password" id="inOldCode" placeholder="验证身份用">
         <label class="fl">新卸载码（4–12 位数字或字母，留空表示不修改）</label>
@@ -982,6 +986,11 @@
         <div class="tip" id="ownerCmd" style="word-break:break-all;color:var(--accent)"></div>
         <div class="btns">
           <button id="btnCopyCmd" style="max-width:280px">复制命令</button>
+        </div>
+        <div class="tip">无障碍界面拦截命令（设备管理员被系统裁掉时用这条，重启后仍然保留）：</div>
+        <div class="tip" id="a11yCmd" style="word-break:break-all;color:var(--accent)"></div>
+        <div class="btns">
+          <button id="btnCopyA11yCmd" style="max-width:280px">复制界面拦截命令</button>
         </div>
       </div>
     </div>
@@ -1154,7 +1163,8 @@
     var g = !!state.uninstallGuard;
     $('stGuardMini').innerHTML = !g ? '<span class="badge off">已关闭</span>'
       : (state.uninstallBlocked ? '<span class="badge on">已锁定</span>'
-        : (state.isAdminActive ? '<span class="badge on">基础保护</span>' : '<span class="badge off">未生效</span>'));
+        : (state.isAdminActive ? '<span class="badge on">基础保护</span>'
+          : (state.a11yGuard ? '<span class="badge on">界面拦截</span>' : '<span class="badge off">未生效</span>')));
     var box = $('stSubjects');
     box.innerHTML = '';
     var m = state.countBySubject || {};
@@ -1192,6 +1202,8 @@
       $('stGuard').innerHTML = '<span class="badge on">已锁定</span>';
     } else if (state.isAdminActive) {
       $('stGuard').innerHTML = '<span class="badge on">基础保护</span>';
+    } else if (state.a11yGuard) {
+      $('stGuard').innerHTML = '<span class="badge on">界面拦截</span>';
     } else {
       $('stGuard').innerHTML = '<span class="badge off">未生效</span>';
     }
@@ -1210,10 +1222,22 @@
       codeTxt += ' <span style="color:var(--red)">（输错锁定 ' + Math.ceil(state.uninstallLockMs / 1000) + 's）</span>';
     }
     $('stCode').innerHTML = codeTxt;
+    var a11yOn = !!state.a11yGuard;
+    $('stA11y').innerHTML = a11yOn
+      ? '<span class="badge on">已开启</span>' : '<span class="badge off">未开启</span>';
+    var a11yCnt = state.a11yBlockCount || 0;
+    $('stA11yCount').innerHTML = a11yCnt > 0
+      ? ('<span class="badge on">' + a11yCnt + ' 次</span>')
+      : '<span style="color:var(--sub)">0 次</span>';
+    if (a11yOn) {
+      $('a11yTip').textContent = '界面拦截正在运行：没有卸载码时，从系统里点「卸载」会自动退回。'
+        + (state.uninstallAllowMs > 0 ? '当前处于放行窗口（剩余 ' + Math.ceil(state.uninstallAllowMs / 1000) + ' 秒），可正常卸载。' : '');
+    }
     $('swGuard').className = 'switch' + (g ? ' on' : '');
     $('swFactory').className = 'switch' + (state.blockFactoryReset ? ' on' : '');
     $('ownerCmd').textContent = state.deviceOwnerCmd || '';
     $('activeAdminCmd').textContent = state.activeAdminCmd || '';
+    $('a11yCmd').textContent = state.a11yCmd || '';
   }
 
   function loadState() {
@@ -1440,6 +1464,32 @@
         toast(e.message || '激活失败', 4000);
       })
       .then(function () { btn.disabled = false; });
+  };
+  $('btnOpenA11y').onclick = function () {
+    var btn = $('btnOpenA11y');
+    btn.disabled = true;
+    $('a11yTip').textContent = '正在电视上打开无障碍设置…';
+    api('/api/admin/a11y', { method: 'POST', body: '{}' })
+      .then(function (r) {
+        if (r.a11yGuard) {
+          $('a11yTip').textContent = '界面拦截已开启：没有卸载码时，系统卸载页会被自动退回。';
+        } else if (r.openedSettings) {
+          $('a11yTip').textContent = '已在电视上打开无障碍设置，请用遥控器勾选「题锁」。勾选后本行状态会变成「已开启」。';
+        } else {
+          $('a11yTip').textContent = '这台电视没有无障碍设置页（Android TV 常见）。请在电脑执行下面的命令启用；'
+            + '执行后若状态仍显示「未开启」，把电视关机再开一次即可：' + (r.a11yCmd || '');
+        }
+        toast(r.a11yGuard ? '界面拦截已开启' : '请按提示完成', 3400);
+        return loadState();
+      })
+      .catch(function (e) {
+        $('a11yTip').textContent = e.message || '操作失败';
+        toast(e.message || '操作失败', 4000);
+      })
+      .then(function () { btn.disabled = false; });
+  };
+  $('btnCopyA11yCmd').onclick = function () {
+    copyText((state && state.a11yCmd) || $('a11yCmd').textContent, '已复制，在电脑上执行即可启用界面拦截');
   };
   $('btnSaveCode').onclick = function () {
     var nv = $('inNewCode').value.trim();

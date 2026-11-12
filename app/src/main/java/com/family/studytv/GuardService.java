@@ -271,6 +271,11 @@ public class GuardService extends Service {
         if (!Prefs.isEnabled() || !Prefs.autoQuiz()) {
             return;
         }
+        // 家长已经输对卸载码、正在走系统卸载流程：这段时间绝不弹答题页，
+        // 否则答题页会把系统卸载界面盖掉，家长根本点不到「确定」。
+        if (Prefs.uninstallAllowUntil() > System.currentTimeMillis()) {
+            return;
+        }
         long now = System.currentTimeMillis();
         // quizShowing 卡住（界面没成功拉起）时，60 秒后重试
         if (QuizActivity.running) {

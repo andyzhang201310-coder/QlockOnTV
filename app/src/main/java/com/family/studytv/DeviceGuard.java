@@ -170,6 +170,112 @@ public final class DeviceGuard {
     }
 
     /**
+     * 无障碍拦截服务是否真的在跑。
+     *
+     * <p>系统把开关状态存在两个地方：{@code accessibility_enabled} 总开关，
+     * 以及 {@code enabled_accessibility_services} 名单。只看总开关不够，
+     * 用户可能开了别的服务却没开本应用。
+     */
+    public static boolean isA11yEnabled(Context c) {
+        try {
+            android.content.ContentResolver cr = c.getContentResolver();
+            int on = android.provider.Settings.Secure.getInt(cr,
+                    android.provider.Settings.Secure.ACCESSIBILITY_ENABLED, 0);
+            if (on != 1) {
+                return false;
+            }
+            String list = android.provider.Settings.Secure.getString(cr,
+                    android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            if (list == null || list.length() == 0) {
+                return false;
+            }
+            ComponentName cn = new ComponentName(c, UninstallGuardService.class);
+            String flat = cn.flattenToString();
+            String shortFlat = cn.flattenToShortString();
+            for (String s : list.split(":")) {
+                if (s.equalsIgnoreCase(flat) || s.equalsIgnoreCase(shortFlat)) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    /**
+     * 电视上到底有没有无障碍设置页。
+     *
+     * <p>Android TV 普遍没把这一页做出来，但系统仍然会为 {@code ACCESSIBILITY_SETTINGS}
+     * 解析到一个占位实现（{@code com.google.android.tv.frameworkpackagestubs.Stubs}）。
+     * 直接 startActivity 会打开一个空白/提示「不可用」的页面，让家长以为是自己点错了。
+     * 所以先查一遍解析结果，全是 stub 就当作没有。
+     */
+    public static boolean hasA11ySettingsPage(Context c) {
+        try {
+            Intent i = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+            java.util.List<android.content.pm.ResolveInfo> list =
+                    c.getPackageManager().queryIntentActivities(i, 0);
+            for (android.content.pm.ResolveInfo ri : list) {
+                String p = ri.activityInfo == null ? null : ri.activityInfo.packageName;
+                if (p == null) {
+                    continue;
+                }
+                String lp = p.toLowerCase(java.util.Locale.ROOT);
+                if (!lp.contains("frameworkpackagestubs") && !lp.contains("stub")) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    /** 打开系统无障碍设置页；电视上页面被裁掉时返回 false */
+    public static boolean openA11ySettings(Context c) {
+        if (!hasA11ySettingsPage(c)) {
+            return false;
+        }
+        String[] candidates = {
+                "android.settings.ACCESSIBILITY_SETTINGS",
+                "com.android.tv.settings/.accessibility.AccessibilityActivity",
+                "com.android.tv.settings/.accessibility.AccessibilitySettingsActivity",
+        };
+        for (String c2 : candidates) {
+            try {
+                Intent i;
+                if (c2.startsWith("com.")) {
+                    ComponentName cn = ComponentName.unflattenFromString(c2);
+                    if (cn == null) {
+                        continue;
+                    }
+                    i = new Intent();
+                    i.setComponent(cn);
+                } else {
+                    i = new Intent(c2);
+                }
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                c.startActivity(i);
+                return true;
+            } catch (Throwable ignored) {
+            }
+        }
+        return false;
+    }
+
+    /** 电视上找不到无障碍设置页时，用 adb 直接启用（两条命令一次粘贴） */
+    public static String adbA11yCommand(Context c) {
+        String flat = new ComponentName(c, UninstallGuardService.class).flattenToString();
+        return "adb shell settings put secure enabled_accessibility_services " + flat
+                + " && adb shell settings put secure accessibility_enabled 1";
+    }
+
+    /** 执行完 adb 命令后仍未生效时的说明（Android 9 上系统要到开机时才重新扫描无障碍服务） */
+    public static String a11yRebootHint() {
+        return "执行后如果状态还是「未开启」，把电视关机再开一次（Android 9 只在开机时重新扫描无障碍服务），"
+                + "开机后会自动生效，不用再执行命令。";
+    }
+
+    /**
      * 按当前设置同步系统状态。返回系统卸载锁是否真的生效（只有设备所有者才能生效）。
      */
     public static boolean sync(Context c) {
@@ -204,6 +310,13 @@ public final class DeviceGuard {
      * 卸载码校验通过后的解锁流程：解除系统锁 → 退出设备所有者 → 注销设备管理员 → 跳系统卸载页。
      */
     public static boolean release(Context c) {
+        // 先开一个 10 分钟放行窗口，否则无障碍拦截会把紧接着弹出的系统卸载页自己顶掉
+        Prefs.setUninstallAllowUntil(UninstallShield.allowUntilFrom(System.currentTimeMillis()));
+        // 同时清掉「本轮未答」状态并让答题页退出：答题页会抢占前台，把系统卸载界面压到后面
+        try {
+            GuardService.applyUnlock(c);
+        } catch (Throwable ignored) {
+        }
         boolean ok = true;
         try {
             if (isDeviceOwner(c)) {
@@ -270,6 +383,7 @@ public final class DeviceGuard {
         if (!Prefs.uninstallGuard()) {
             return "已关闭（系统里可直接卸载）";
         }
+        boolean a11y = isA11yEnabled(c);
         if (isUninstallBlocked(c)) {
             return "已锁定（系统卸载按钮已禁用，必须输入卸载码）";
         }
@@ -277,9 +391,14 @@ public final class DeviceGuard {
             return "设备所有者已就绪，但系统锁未生效，请开关一次防卸载";
         }
         if (isAdminActive(c)) {
-            return "基础保护（卸载前必须先停用设备管理员）";
+            return a11y
+                    ? "基础保护 + 界面拦截（系统卸载页会被强制退回）"
+                    : "基础保护（卸载前必须先停用设备管理员）";
         }
-        return "未生效（请先激活设备管理员）";
+        if (a11y) {
+            return "界面拦截已生效（系统卸载页会被强制退回）";
+        }
+        return "未生效（设备管理员不可用，请开启「界面拦截」）";
     }
 
     /** 设备所有者设置步骤，电视端弹窗与手机管理页共用 */

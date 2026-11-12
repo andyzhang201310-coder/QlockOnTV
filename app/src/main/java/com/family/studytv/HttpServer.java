@@ -860,6 +860,33 @@ public class HttpServer {
             return;
         }
 
+        // v1.7.29：界面拦截（无障碍）。远程只能拉起电视上的无障碍设置页，
+        // 真正的勾选必须在电视上完成——普通应用没有 WRITE_SECURE_SETTINGS，
+        // 无法自己改 accessibility_enabled。返回 adb 命令作为兜底。
+        if (path.equals("/api/admin/a11y") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            boolean on = DeviceGuard.isA11yEnabled(ctx);
+            boolean opened = false;
+            if (!on) {
+                Prefs.setUninstallGuard(true);
+                opened = DeviceGuard.openA11ySettings(ctx);
+            }
+            JSONObject o = new JSONObject();
+            o.put("ok", true);
+            o.put("a11yGuard", on);
+            o.put("openedSettings", opened);
+            o.put("a11yCmd", DeviceGuard.adbA11yCommand(ctx));
+            o.put("a11yHint", DeviceGuard.a11yRebootHint());
+            if (!on && !opened) {
+                o.put("error", "电视上没有无障碍设置页，请用 adb 命令启用");
+            }
+            respondJson(socket, 200, o.toString());
+            return;
+        }
+
         if (path.equals("/api/restore") && method.equals("POST")) {
             if (!authed) {
                 unauthorized(socket);
@@ -1086,6 +1113,12 @@ public class HttpServer {
             o.put("uninstallLockMs", Prefs.uninstallLockRemainMs());
             o.put("deviceOwnerCmd", DeviceGuard.adbCommand(ctx));
             o.put("activeAdminCmd", DeviceGuard.adbActiveAdminCommand(ctx));
+            // v1.7.29 界面拦截：设备管理员不可用（Sony 等裁掉 DPM 的电视）时唯一能挡住卸载的手段
+            o.put("a11yGuard", DeviceGuard.isA11yEnabled(ctx));
+            o.put("a11yBlockCount", Prefs.a11yBlockCount());
+            o.put("a11yBlockAt", Prefs.a11yBlockAt());
+            o.put("uninstallAllowMs", Math.max(0L, Prefs.uninstallAllowUntil() - System.currentTimeMillis()));
+            o.put("a11yCmd", DeviceGuard.adbA11yCommand(ctx));
         } catch (Throwable ignored) {
         }
         return o;

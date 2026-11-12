@@ -4,4 +4,5 @@
     <string name="quiz_hint">用遥控器方向键选择，按「确定 / OK」作答。答错会显示正确答案，并换一组新题重新开始。</string>
     <string name="admin_label">题锁 防卸载保护</string>
     <string name="admin_desc">防止孩子未经允许卸载题锁。卸载需要先输入卸载码。</string>
+    <string name="a11y_desc">用来拦住系统里的卸载界面：没有输入卸载码时，一旦出现卸载「题锁」的页面会自动退回。不读取其他内容，也不会上传任何数据。</string>
 </resources>

@@ -441,6 +441,38 @@ public final class Prefs {
         return false;
     }
 
+    /**
+     * 卸载码校验通过后的放行截止时间戳。在此期间无障碍拦截服务不再顶掉卸载界面，
+     * 家长可以从系统里正常卸载。0 表示没有放行。
+     */
+    public static long uninstallAllowUntil() {
+        return sp().getLong("uninstallAllowUntil", 0L);
+    }
+
+    public static void setUninstallAllowUntil(long v) {
+        sp().edit().putLong("uninstallAllowUntil", v).apply();
+    }
+
+    /** 无障碍拦截累计次数，用来让家长确认这道闸门真的在工作 */
+    public static int a11yBlockCount() {
+        return sp().getInt("a11yBlockCount", 0);
+    }
+
+    public static long a11yBlockAt() {
+        return sp().getLong("a11yBlockAt", 0L);
+    }
+
+    public static void recordA11yBlock() {
+        sp().edit()
+                .putInt("a11yBlockCount", a11yBlockCount() + 1)
+                .putLong("a11yBlockAt", System.currentTimeMillis())
+                .apply();
+    }
+
+    public static void resetA11yBlockCount() {
+        sp().edit().putInt("a11yBlockCount", 0).putLong("a11yBlockAt", 0L).apply();
+    }
+
     /** 设备管理员被停用的时间点，用于主界面提醒 */
     public static long adminDisabledAt() {
         return sp().getLong("adminDisabledAt", 0L);

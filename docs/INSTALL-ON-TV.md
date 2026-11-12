@@ -231,7 +231,56 @@ adb shell dumpsys device_policy | head -6      # Enabled Device Admins 下面有
   `SecurityException: Shell cannot change component state for ... to 3`（系统应用组件 shell 无权改）。
 - 该机 `adb root` 不可用（`adbd cannot run as root in production builds`），也没有第三方 DPC。
 
-结论：**这一机型在系统层无法阻止卸载**，只能靠「应用内卸载需输卸载码」这一层（孩子若走系统设置 → 应用 → 卸载仍可绕过）。
+结论：**这一机型在系统层无法阻止卸载**。设备管理员 / 设备所有者都走不通，只能改用下面第 3 条「界面拦截」。
+
+### 界面拦截（无障碍）— v1.7.29 起，这类机型的唯一解
+
+思路：系统卸载界面由 `com.android.packageinstaller` 的 `UninstallerActivity` 呈现，第三方应用拿不到回调，
+但**无障碍服务能看到这个窗口**。看到就执行一次「返回」，把卸载流程顶掉；只有在本应用里输对卸载码后
+（写入 10 分钟放行窗口），才允许系统卸载界面停留。
+
+开启方式（二选一）：
+
+```bash
+# 方式 A：电视上有无障碍设置页
+# 电视 → 设置 → 无障碍 → 题锁 → 打开
+
+# 方式 B：没有设置页（Sony BRAVIA / 多数 Android TV）用 adb
+adb shell settings put secure enabled_accessibility_services \
+  com.family.studytv/com.family.studytv.UninstallGuardService
+adb shell settings put secure accessibility_enabled 1
+```
+
+方式 B 的两个坑（都实测过）：
+
+- Android TV 的 `android.settings.ACCESSIBILITY_SETTINGS` 只解析到
+  `com.google.android.tv.frameworkpackagestubs.Stubs$SettingsStub`，是个占位页。应用会识别这种情况，
+  直接给 adb 命令，不再打开空白页。
+- Android 9 的无障碍管理器**不会因为 settings 变化立刻绑定服务**：写完后 `dumpsys accessibility`
+  里 `services:{}` 仍为空。**关机再开一次**，开机扫描时才绑定；之后一直有效。
+
+验证：
+
+```bash
+adb shell dumpsys accessibility | head -6
+# 应出现 services:{Service[label=题锁 防卸载保护, ...]}
+
+adb shell am start -a android.intent.action.DELETE -d package:com.family.studytv
+# 界面应该在 0.1~0.3 秒内消失，焦点回到桌面/设置页
+```
+
+后台 `/api/state` 里 `a11yGuard` 为 `true`，`a11yBlockCount` 随每次拦截 +1。
+
+已知边界（不掩饰）：
+
+- **更新应用后要重新开**：`install -r` 会让系统解绑无障碍服务（实测 `services:{}` 归零），
+  需要再执行一次命令并重启。
+- **孩子若会进无障碍设置关掉它，就失效**（这台电视没有设置页，反而关不掉）。
+- 拦截粒度是「卸载确认界面」，不影响正常安装 / 更新（`PackageInstallerActivity` 不在拦截范围，有单测覆盖）。
+- 拦不住 `adb shell pm uninstall` —— 那是 shell 权限，不是小孩的路径。
+- 答题页会抢占前台。输对卸载码时 `release()` 会同时清掉待答状态并写入放行窗口，
+  避免答题页把系统卸载界面盖到后面（v1.7.29 修复）。
+
 
 ### 仍然想要硬锁的可行做法
 

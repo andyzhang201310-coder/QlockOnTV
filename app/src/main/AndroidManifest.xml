@@ -72,6 +72,23 @@
             android:exported="false"
             android:stopWithTask="false" />
 
+        <!--
+            卸载界面拦截（无障碍）。设备管理员在部分机型（Sony BRAVIA / Android 9）是空壳，
+            只能用无障碍监听系统卸载界面并强制退回，这是普通应用权限内唯一能拦住卸载的路。
+        -->
+        <service
+            android:name=".UninstallGuardService"
+            android:exported="true"
+            android:label="@string/admin_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"

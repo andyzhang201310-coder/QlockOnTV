@@ -27,6 +27,7 @@ public class SecurityActivity extends Activity {
 
     private TextView tvGuard;
     private Button btnGuard;
+    private Button btnA11y;
     /** 是否已经切到系统激活页（用来判断那个页面到底有没有真的起来） */
     private boolean leftForAdminPage;
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
@@ -44,11 +45,18 @@ public class SecurityActivity extends Activity {
 
         tvGuard = (TextView) findViewById(R.id.tvGuard);
         btnGuard = (Button) findViewById(R.id.btnGuard);
+        btnA11y = (Button) findViewById(R.id.btnA11y);
 
         btnGuard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 toggleGuard();
+            }
+        });
+        btnA11y.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openA11y();
             }
         });
         findViewById(R.id.btnOwner).setOnClickListener(new View.OnClickListener() {
@@ -93,16 +101,28 @@ public class SecurityActivity extends Activity {
         boolean admin = DeviceGuard.isAdminActive(this);
         boolean owner = DeviceGuard.isDeviceOwner(this);
         boolean blocked = DeviceGuard.isUninstallBlocked(this);
+        boolean a11y = DeviceGuard.isA11yEnabled(this);
 
         StringBuilder sb = new StringBuilder();
         sb.append("保护状态：").append(DeviceGuard.statusLine(this)).append("\n");
-        sb.append("设备管理员：").append(admin ? "已激活" : "未激活");
+        sb.append("设备管理员：").append(admin ? "已激活" : "未激活（本机系统不支持）");
         if (owner) {
             sb.append("　设备所有者：已生效");
         } else if (admin) {
             sb.append("　设备所有者：未设置");
         }
         sb.append("\n");
+        sb.append("界面拦截：").append(a11y ? "已开启" : "未开启");
+        int blockedTimes = Prefs.a11yBlockCount();
+        if (blockedTimes > 0) {
+            sb.append("（已拦下 ").append(blockedTimes).append(" 次卸载）");
+        }
+        sb.append("\n");
+        long allowLeft = Prefs.uninstallAllowUntil() - System.currentTimeMillis();
+        if (allowLeft > 0) {
+            sb.append("放行中：还剩 ").append(UninstallCode.describeLock(allowLeft))
+                    .append("，可从系统里正常卸载\n");
+        }
         if (owner) {
             sb.append("系统卸载锁：").append(blocked ? "已锁定" : "未锁定");
             sb.append("　恢复出厂：").append(Prefs.blockFactoryReset() && blocked ? "已禁止" : "允许");
@@ -121,6 +141,56 @@ public class SecurityActivity extends Activity {
         }
         tvGuard.setText(sb.toString());
         btnGuard.setText(on ? "关闭防卸载" : "开启防卸载");
+        btnA11y.setText(a11y ? "界面拦截已开启" : "开启界面拦截");
+    }
+
+    /**
+     * 打开系统无障碍页让用户勾选本应用。电视厂商常把这一页裁掉，
+     * 拉不起来时直接给 adb 命令，不让人在设置里瞎找。
+     */
+    private void openA11y() {
+        if (DeviceGuard.isA11yEnabled(this)) {
+            new AlertDialog.Builder(this)
+                    .setTitle("界面拦截已开启")
+                    .setMessage("没有卸载码时，从系统里点「卸载」会自动退回。\n\n"
+                            + "要临时关掉，去 设置 → 无障碍 取消勾选「题锁」；"
+                            + "也可以在下方复制命令用 adb 关闭。\n\n"
+                            + "关闭命令：\n"
+                            + "adb shell settings put secure accessibility_enabled 0")
+                    .setPositiveButton("知道了", null)
+                    .setNeutralButton("复制启用命令", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface d, int w) {
+                            copyText("启用命令", DeviceGuard.adbA11yCommand(SecurityActivity.this));
+                        }
+                    })
+                    .show();
+            return;
+        }
+        if (!Prefs.uninstallGuard()) {
+            Prefs.setUninstallGuard(true);
+        }
+        if (DeviceGuard.openA11ySettings(this)) {
+            Toast.makeText(this, "在列表里找到「题锁」并打开开关", Toast.LENGTH_LONG).show();
+            return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("电视上没有无障碍设置页")
+                .setMessage("Android TV 通常不做这一页，系统里只有一个占位入口。"
+                        + "用电脑连一次电视，执行下面这条命令：\n\n"
+                        + DeviceGuard.adbA11yCommand(this) + "\n\n"
+                        + DeviceGuard.a11yRebootHint() + "\n\n"
+                        + "连接方法：电视 设置 → 关于 → 连点「版本号」7 次 → 开发者选项 → 打开 USB 调试；"
+                        + "电视和电脑同一个 WiFi，电脑执行 adb connect 电视IP:5555。\n\n"
+                        + "命令给的是包名+类名，已经填好，直接复制粘贴即可。")
+                .setPositiveButton("复制命令", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface d, int w) {
+                        copyText("启用命令", DeviceGuard.adbA11yCommand(SecurityActivity.this));
+                    }
+                })
+                .setNegativeButton("知道了", null)
+                .show();
     }
 
     private void toggleGuard() {
