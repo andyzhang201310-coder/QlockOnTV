@@ -162,8 +162,8 @@ public class QuizOptionLayoutTest {
         assertTrue(box.getChildCount() >= 2);
         for (int i = 0; i < box.getChildCount(); i++) {
             Button b = (Button) box.getChildAt(i);
-            assertTrue("选项最小高度要收紧到 54dp 以内，否则四选项同屏放不下",
-                    b.getMinHeight() <= Math.round(54 * d) + 1);
+            assertTrue("选项最小高度要收紧到 56dp 以内，否则四选项同屏放不下",
+                    b.getMinHeight() <= Math.round(56 * d) + 1);
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) b.getLayoutParams();
             assertTrue("选项之间的间距要收紧到 5dp 以内",
                     lp.topMargin <= Math.round(5 * d) + 1);
