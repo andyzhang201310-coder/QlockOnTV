@@ -52,6 +52,13 @@ public class StudyStatsTest {
         assertEquals("语法", type("英语", "q18", "「box」的复数形式是？"));
         assertEquals("句子翻译", type("英语", "q19", "句子「I like fish.」应该翻译成哪句中文？"));
         assertEquals("情景交际", type("英语", "q20", "别人帮了你，应该怎么说？"));
+        // v7 起题首的【题型名】优先于关键词推断，学习统计能直接显示新题型
+        assertEquals("形近字辨析", type("语文", "v7-1",
+                "【形近字辨析】下面哪一组词语中的形近字全部使用正确？"));
+        assertEquals("诗词鉴赏", type("语文", "v7-2",
+                "【诗词鉴赏】「碧玉妆成一树高」这句诗把柳树比作什么？"));
+        assertEquals("统计与可能性", type("数学", "v7-3",
+                "【统计与可能性】盒子里有 5 个红球和 1 个白球，摸到哪种球的可能性更大？"));
     }
 
     private static String type(String subject, String id, String q) {

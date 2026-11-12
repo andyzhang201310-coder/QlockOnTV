@@ -40,6 +40,15 @@ public final class QType {
         String sub = subject == null ? "" : subject.trim();
         String t = text == null ? "" : text;
         String qid = id == null ? "" : id;
+        // v1.7.23 起新题在题首用【题型名】显式标注（形近字辨析、诗词鉴赏、
+        // 统计与可能性 …）。有标签时直接采用，比关键词推断准确，也让题库
+        // 以后加新题型不必再改这套推断规则。
+        if (t.startsWith("【")) {
+            int end = t.indexOf("】");
+            if (end > 1) {
+                return t.substring(1, end);
+            }
+        }
         if ("语文".equals(sub)) {
             return chinese(t, qid);
         }

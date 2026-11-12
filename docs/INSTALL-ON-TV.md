@@ -11,7 +11,7 @@
 
 ```bash
 gradle :app:assembleRelease        # 产物 app/build/outputs/apk/release/app-release.apk
-cp app/build/outputs/apk/release/app-release.apk dist/QlockOnTV-1.7.22.apk
+cp app/build/outputs/apk/release/app-release.apk dist/QlockOnTV-1.7.23.apk
 ```
 
 或者把别人给你的 APK 用 `--apk <路径>` 指过去。然后在仓库根目录执行：
@@ -48,7 +48,7 @@ python tools/tv_scan.py --json       # 给脚本 / AI agent 读
 ```
 发现 2 台题锁设备：
   192.168.3.15    版本=需密码      题量=-        adb=offline
-  192.168.3.19    版本=1.7.22      题量=19739    adb=device (MuMu)
+  192.168.3.19    版本=1.7.23      题量=24704    adb=device (MuMu)
 ```
 
 > 需要密码才能读版本是正常的（题锁不登录不给看题库和版本细节）。
@@ -69,7 +69,7 @@ python tools/tv_install.py --auto --json          # 结构化结果，便于其�
 
 ```bash
 adb connect <电视IP>:5555
-adb install -r dist/QlockOnTV-1.7.22.apk
+adb install -r dist/QlockOnTV-1.7.23.apk
 adb shell am start -n com.family.studytv/.MainActivity   # 覆盖安装会把进程停掉，拉起来
 ```
 
@@ -86,6 +86,49 @@ adb shell am start -n com.family.studytv/.MainActivity   # 覆盖安装会把进
 开好后 `python tools/tv_scan.py --adb` 里那台会变成 `adb=device`（第一次连接电视上可能弹「允许调试」，
 要用遥控器点允许）。
 
+#### Sony（BRAVIA）专项
+
+Sony 的菜单层级和国产电视不一样，按系统分两套：
+
+**Android TV 版（2015–2020 年 BRAVIA）**
+
+1. 设置 → **设备偏好设置** → 关于 → 连点「**版本**」7 次（提示"您已处于开发者模式"）；
+2. 返回 → 设备偏好设置 → **开发者选项**；
+3. 打开「**USB 调试**」；
+4. 同一页往下找「**网络调试**」（部分机型写作 *ADB over network*）→ 打开。
+
+> 只开「USB 调试」不会监听 5555，**必须再开「网络调试」**，这是 Sony 上最常见的坑。
+
+**Google TV 版（2021 年起的 BRAVIA XR / 部分 2022+ 机型）**
+
+1. 设置 → **系统** → 关于 → 连点「**版本**」7 次；
+2. 返回 → 系统 → **开发者选项**；
+3. 同样打开「USB 调试」+「通过网络调试」。
+
+**开完后的第一次连接**
+
+```bash
+adb connect 192.168.3.15:5555      # 换成电视实际 IP
+```
+
+电视上会弹「允许 USB 调试吗？」，用遥控器勾选「**一律允许使用这台计算机进行调试**」再点允许，
+否则电脑侧会一直停在 `unauthorized`。
+
+**开发者选项里没有「网络调试」怎么办**（部分 Sony 固件被裁掉）
+
+用一根 **USB 双公头线**（A 对 A）把电视 USB 口连到电脑：
+
+```bash
+adb devices                 # 应出现电视序列号
+adb tcpip 5555              # 把 adbd 切到网络模式（只需做一次）
+adb connect 192.168.3.15:5555
+```
+
+`adb tcpip 5555` 之后就能拔线走 WiFi，但**电视重启后恢复成 USB 模式**，需要重新插线执行一次。
+
+**注意**：如果电视是 2014 年以前的 Sony 智能电视（Opera TV / 非 Android 系统），
+既没有开发者选项也装不了 APK，只能放弃。判断方法：电视上有没有 Google Play 商店。
+
 ---
 
 ## 3. 电视开不了网络调试：走浏览器下载
@@ -98,7 +141,7 @@ python tools/tv_install.py --serve
 
 ```
 下载页已启动：http://192.168.3.211:8900  （电视浏览器打开这个地址）
-直接用文件地址也行：http://192.168.3.211:8900/QlockOnTV-1.7.22.apk
+直接用文件地址也行：http://192.168.3.211:8900/QlockOnTV-1.7.23.apk
 ```
 
 电视上用自带浏览器（或在应用商店装个浏览器）打开这个地址 → 点「下载并安装」→
@@ -106,7 +149,7 @@ python tools/tv_install.py --serve
 
 电视上找不到浏览器时，还有两条：
 
-- **U 盘**：把 `dist/QlockOnTV-1.7.22.apk` 拷到 U 盘插电视，用电视的「文件管理 / 本地媒体」打开安装；
+- **U 盘**：把 `dist/QlockOnTV-1.7.23.apk` 拷到 U 盘插电视，用电视的「文件管理 / 本地媒体」打开安装；
 - **电视助手类 App**：手机装「电视助手」类工具，把 APK 推到电视上安装。
 
 ---

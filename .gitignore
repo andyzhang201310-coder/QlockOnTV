@@ -17,3 +17,8 @@ dist/*
 
 # 题库扩充脚本的生成产物（可用 tools/extend_question_bank.py 复现，不入库）
 tools/extra_questions.json
+
+# 网页抓取缓存：原始 HTML 与站点 JS 可随时重抓，JSON 语料保留
+tools/data/tiku_raw/*.html
+tools/data/tiku_raw/*.js
+tools/data/tiku_raw/__pycache__/

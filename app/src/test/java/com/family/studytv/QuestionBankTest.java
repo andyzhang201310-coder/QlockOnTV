@@ -35,16 +35,20 @@ public class QuestionBankTest {
     public void seedBankLoadsAllThreeSubjects() {
         QuestionBank bank = QuestionBank.get();
         bank.ensureSeeded();
-        assertEquals("内置题库 = 原有 18000 题 + v5 追加 + v6 复合诗词题", 19739, bank.count());
-        assertEquals(Integer.valueOf(6867), bank.countBySubject().get("语文"));
-        assertEquals(Integer.valueOf(6576), bank.countBySubject().get("数学"));
-        assertEquals(Integer.valueOf(6296), bank.countBySubject().get("英语"));
+        assertEquals("内置题库 = 原有 18000 题 + v5 + v6 复合诗词题 + v7 扩充题",
+                24704, bank.count());
+        assertEquals(Integer.valueOf(7940), bank.countBySubject().get("语文"));
+        assertEquals(Integer.valueOf(8229), bank.countBySubject().get("数学"));
+        assertEquals(Integer.valueOf(8535), bank.countBySubject().get("英语"));
         assertTrue("每个年级至少还有原有的 3000 题", bank.countByGrade().get(3) >= 3000);
 
         // 原有题库必须逐题保留：每个年级、每个学科恰好 1000 题（id 不以 ext- 开头）
         int[][] perGradeSubject = new int[7][3];
         int extra = 0;
         for (QuestionBank.Question q : bank.all()) {
+            if (q.id != null && q.id.startsWith("v7-")) {
+                continue;   // v7 扩充题单独由 v7QuestionsFollowFormat 校验
+            }
             if (q.id != null && q.id.startsWith("ext-")) {
                 extra++;
                 continue;
@@ -142,6 +146,44 @@ public class QuestionBankTest {
             }
         }
         assertTrue("单要素诗词题应基本清理干净，实际还剩 " + solo, solo < 10);
+    }
+
+    /** v7：新增题型、判断题、题型标签与分类器的一致性 */
+    @Test
+    public void v7QuestionsFollowFormat() {
+        QuestionBank bank = QuestionBank.get();
+        int total = 0, judgement = 0, tagged = 0;
+        java.util.Set<String> types = new java.util.HashSet<String>();
+        for (QuestionBank.Question q : bank.all()) {
+            if (q.id == null || !q.id.startsWith("v7-")) {
+                continue;
+            }
+            total++;
+            assertTrue("v7 题答案下标合法", q.answer >= 0 && q.answer < q.options.size());
+            assertTrue("v7 题选项不能重复",
+                    new java.util.HashSet<String>(q.options).size() == q.options.size());
+            assertTrue("v7 题选项至少 2 个", q.options.size() >= 2);
+            assertTrue("v7 题年级 1–6", q.grade >= 1 && q.grade <= 6);
+            assertTrue("v7 题难度 1–5", q.difficulty >= 1 && q.difficulty <= 5);
+            if (q.options.size() == 2) {
+                judgement++;
+                assertEquals("判断题选项固定为说法正误", "说法正确", q.options.get(0));
+                assertEquals("判断题选项固定为说法正误", "说法错误", q.options.get(1));
+            }
+            if (q.q.startsWith("【") && q.q.indexOf('】') > 1) {
+                tagged++;
+                String tag = q.q.substring(1, q.q.indexOf('】'));
+                types.add(tag);
+                assertEquals("题型标签应被分类器直接采用", tag, QType.of(q));
+            }
+        }
+        assertEquals("v7 题量", 4965, total);
+        assertTrue("应含足够多的判断题", judgement > 500);
+        assertTrue("绝大多数新题应带题型标签", tagged > 4900);
+        assertTrue("语文 7 类新题型都要出现", types.contains("形近字辨析")
+                && types.contains("错别字辨析") && types.contains("词义字义辨析")
+                && types.contains("歇后语谚语") && types.contains("文言字词")
+                && types.contains("诗词鉴赏") && types.contains("文学常识"));
     }
 
     @Test
