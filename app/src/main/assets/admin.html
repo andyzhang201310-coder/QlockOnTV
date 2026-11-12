@@ -26,6 +26,52 @@
     --accent:#3c5241;      /* 代码 / 命令文字 */
     --shadow:0 1px 2px rgba(38,48,32,.03);
   }
+  /* v1.7.25 护眼配色：只换变量，结构完全不动；数据来自 /api/state 的 themes */
+  :root[data-theme="paper"]{
+    --bg:#f2ead8;--shell:#f7f1e2;--side:#f4ecd9;--card:#fbf4e4;
+    --line:#dccfb2;--line-soft:#e8dcc2;--txt:#3b3427;--txt2:#6b5f49;--sub:#8a7c63;
+    --ink:#6b5533;--soft:#f3e8ce;--green:#3e7a4f;--red:#a15048;--accent:#8a6322;
+    --shadow:0 1px 2px rgba(80,64,32,.05)}
+  :root[data-theme="green"]{
+    --bg:#e4efe2;--shell:#eef6eb;--side:#eaf3e6;--card:#f4faf1;
+    --line:#cadcc8;--line-soft:#dbe8d7;--txt:#26382b;--txt2:#5a6e5c;--sub:#849686;
+    --ink:#2f4a38;--soft:#e6f1e2;--green:#3f7a50;--red:#a5504c;--accent:#3f6b46;
+    --shadow:0 1px 2px rgba(38,64,40,.05)}
+  :root[data-theme="blue"]{
+    --bg:#e6edf2;--shell:#eef4f8;--side:#eaf1f6;--card:#f5f9fc;
+    --line:#c8d6e0;--line-soft:#dbe5ec;--txt:#263542;--txt2:#5a6b78;--sub:#8495a2;
+    --ink:#35485a;--soft:#e4edf3;--green:#397a70;--red:#a55060;--accent:#3c627e;
+    --shadow:0 1px 2px rgba(32,52,68,.05)}
+  :root[data-theme="night"]{
+    --bg:#10151a;--shell:#161e25;--side:#141c22;--card:#1a222a;
+    --line:#2a3640;--line-soft:#243039;--txt:#c7d1d8;--txt2:#8a98a3;--sub:#66747e;
+    --ink:#2f4354;--soft:#202b34;--green:#6fb58a;--red:#d08080;--accent:#8fb0c4;
+    --shadow:none}
+  /* 夜间：少数写死的浅底单独压暗，避免白块刺眼 */
+  :root[data-theme="night"] .qedit{background:#1e2831}
+  :root[data-theme="night"] textarea,:root[data-theme="night"] .sb-brand img{background:#151d24;color:var(--txt)}
+  :root[data-theme="night"] .conn.bad{background:#37242a;border-color:#5a3238}
+  :root[data-theme="night"] .badge.on,:root[data-theme="night"] .badge.ok{background:#20362a}
+  :root[data-theme="night"] .badge.off,:root[data-theme="night"] .badge.err{background:#3a262a}
+  :root[data-theme="night"] .qrow .ops button.del,:root[data-theme="night"] .win .del,
+  :root[data-theme="night"] .opts .opt .rm:hover{background:#332227;border-color:#5a3238}
+  :root[data-theme="night"] button.unlock{background:#20362a;border-color:#355c43}
+  :root[data-theme="night"] .hbar{background:#243039}
+  :root[data-theme="night"] .hbar .track,:root[data-theme="night"] .strow .rt i{background:#243039}
+  :root[data-theme="night"] .kpi{background:#1e2831}
+  :root[data-theme="night"] #pinWarn{background:#2a2418!important;border-color:#5a4a2a!important}
+  :root[data-theme="night"] .qtag{background:var(--soft)}
+  /* 风格选择卡片 */
+  .themes{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .themechip{flex:1 1 150px;min-width:140px;max-width:none;display:flex;align-items:center;
+    gap:9px;padding:10px 11px;text-align:left;border:1px solid var(--line);border-radius:10px;
+    background:var(--card);color:var(--txt);font-size:12.5px;line-height:1.4;cursor:pointer}
+  .themechip:hover{background:var(--soft)}
+  .themechip.on{border-color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink);font-weight:600}
+  .themechip .sw{width:28px;height:28px;flex:0 0 28px;border-radius:8px;
+    border:1px solid rgba(0,0,0,.14)}
+  .themechip b{display:block;font-size:12.5px;font-weight:600}
+  .themechip small{display:block;color:var(--sub);font-size:11px;line-height:1.35;margin-top:2px}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;padding:16px;background:var(--bg);color:var(--txt);
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
@@ -49,12 +95,13 @@
   .sb-item{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--txt2);
     font-size:13.5px;padding:8px 9px;border-radius:8px;margin:1px 0;white-space:nowrap;
     font-weight:500;cursor:pointer;transition:background .15s,color .15s}
-  .sb-item:hover{background:#eef0e4;color:var(--txt)}
+  .sb-item:hover{background:var(--soft);color:var(--txt)}
   .sb-item .ic{width:17px;height:17px;flex:0 0 auto;display:flex;align-items:center;
     justify-content:center;opacity:.75}
   .sb-item .ic svg{width:16px;height:16px;display:block}
   .sb-item .tx{overflow:hidden;text-overflow:ellipsis}
-  .sb-item.on{background:#e9ecdf;color:var(--txt);font-weight:600}
+  .sb-item.on{background:var(--soft);color:var(--txt);font-weight:600;
+    box-shadow:inset 0 0 0 1px var(--line)}
   .sb-item.on .ic{opacity:1}
   .sb-foot{border-top:1px solid var(--line-soft);margin-top:10px;padding:10px 4px 0}
   .sb-foot .dev{display:flex;align-items:center;gap:7px;color:var(--sub);font-size:11.5px;
@@ -65,7 +112,7 @@
   .sb-foot button{width:100%;min-width:0;padding:8px;font-size:12.5px;font-weight:500;
     background:transparent;border-color:transparent;color:var(--sub);text-align:left;
     justify-content:flex-start;display:flex;align-items:center;gap:7px}
-  .sb-foot button:hover{background:#eef0e4;color:var(--txt2)}
+  .sb-foot button:hover{background:var(--soft);color:var(--txt2)}
 
   /* ---------------- 内容区 ---------------- */
   .content{flex:1;min-width:0;padding:20px 30px 56px}
@@ -517,6 +564,11 @@
           「立即解锁」= 家长远程放行：关掉电视上正在显示的答题弹窗，孩子可以正常看电视；下一轮从现在重新计时。
         </div>
       </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>护眼配色</h2>
+      <div class="tip" style="margin:0">家长后台与电视答题页一起换底色。羊皮纸 / 豆沙绿 / 雾蓝灰都是低饱和浅色，夜间墨黑压低亮度；选完立即生效并自动保存。</div>
+      <div class="themes" id="themeBox"></div>
     </div>
     <div class="tip">
       · <b>启用拦截</b>：总开关，关掉后电视上完全不弹题、也不拦任何东西，只保留后台与远程控制；<br>
@@ -1111,6 +1163,7 @@
     $('stErr').textContent = state.serverError ? ('服务提示：' + state.serverError) : '';
     // 题库页的「科目 · 年级」题量跟着状态刷新（首次进页面时 state 可能还没到）
     renderBankSubjects();
+    syncThemes();
 
     // ---- 快捷操作
     $('swAutoQuiz').className = 'switch' + (state.autoQuiz ? ' on' : '');
@@ -1210,6 +1263,48 @@
       setBadge(badge, 'err', '保存失败');
       toast('保存失败：' + e.message, 3400);
     });
+  }
+
+  // ============================================================ 护眼配色（v1.7.25）
+  var lastAppliedTheme = '';
+  function applyTheme(key) {
+    key = key || 'default';
+    var changed = lastAppliedTheme !== key;
+    lastAppliedTheme = key;
+    document.documentElement.setAttribute('data-theme', key);
+    Array.prototype.forEach.call(document.querySelectorAll('.themechip'), function (b) {
+      b.className = 'themechip' + (b.dataset.theme === key ? ' on' : '');
+    });
+    // 雷达图的网格是内联 SVG，换风格时按新变量重画一次
+    if (changed && curView === 'stats' && typeof openStats === 'function') { openStats(); }
+  }
+  // 刷新时先用上次的风格，避免闪一下默认米绿
+  try { var cachedTheme = localStorage.getItem('qlock_theme'); if (cachedTheme) applyTheme(cachedTheme); } catch (e) {}
+  var themesRendered = false;
+  function renderThemes() {
+    var list = (state && state.themes) || [], box = $('themeBox');
+    box.innerHTML = '';
+    list.forEach(function (t) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'themechip'; b.dataset.theme = t.key;
+      b.innerHTML = '<span class="sw" style="background:linear-gradient(135deg,' + esc(t.bg) +
+        ' 0 50%,' + esc(t.card) + ' 50% 100%);box-shadow:inset 0 0 0 2px ' + esc(t.accent) +
+        '"></span><span><b>' + esc(t.name) + '</b><small>' + esc(t.tip) + '</small></span>';
+      b.onclick = function () {
+        state.theme = t.key;
+        applyTheme(t.key);
+        try { localStorage.setItem('qlock_theme', t.key); } catch (e) {}
+        queueSettings({ theme: t.key }, '护眼配色已保存：' + t.name);
+      };
+      box.appendChild(b);
+    });
+    themesRendered = true;
+  }
+  function syncThemes() {
+    if (!state) { return; }
+    if (!themesRendered) { renderThemes(); }
+    applyTheme(state.theme || 'default');
+    try { localStorage.setItem('qlock_theme', state.theme || 'default'); } catch (e) {}
   }
 
   // ============================================================ 快捷操作
@@ -2346,6 +2441,10 @@
       return [cx + Math.cos(a) * R * ratio, cy + Math.sin(a) * R * ratio];
     }
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="薄弱题型雷达图">';
+    // 网格颜色跟着当前护眼风格走，夜间不出现浅色块
+    var rc = getComputedStyle(document.documentElement);
+    var radarFill = (rc.getPropertyValue('--card') || '#ffffff').trim() || '#ffffff';
+    var radarLine = (rc.getPropertyValue('--line') || '#e4e7d9').trim() || '#e4e7d9';
     // 四圈网格 + 轴
     for (var ring = 4; ring >= 1; ring--) {
       var ringPts = [];
@@ -2354,12 +2453,12 @@
         ringPts.push(p[0].toFixed(1) + ',' + p[1].toFixed(1));
       }
       svg += '<polygon points="' + ringPts.join(' ') + '" fill="' +
-        (ring === 4 ? '#fbfcf7' : 'none') + '" stroke="#e4e7d9" stroke-width="1"/>';
+        (ring === 4 ? radarFill : 'none') + '" stroke="' + radarLine + '" stroke-width="1"/>';
     }
     for (var i = 0; i < n; i++) {
       var e = pt(i, 1);
       svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + e[0].toFixed(1) + '" y2="' +
-        e[1].toFixed(1) + '" stroke="#eceee3" stroke-width="1"/>';
+        e[1].toFixed(1) + '" stroke="' + radarLine + '" stroke-width="1"/>';
     }
     var dPts = [], dots = '';
     for (var i = 0; i < n; i++) {

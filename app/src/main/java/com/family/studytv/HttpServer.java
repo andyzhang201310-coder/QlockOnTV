@@ -633,6 +633,10 @@ public class HttpServer {
                 if (in.has("autoQuiz")) {
                     Prefs.setAutoQuiz(in.optBoolean("autoQuiz", true));
                 }
+                // 护眼配色：Theme.normalize 会把非法值回落到默认；Prefs.setTheme 里广播给答题页
+                if (in.has("theme")) {
+                    Prefs.setTheme(in.optString("theme", Theme.DEFAULT));
+                }
                 if (in.has("quietEnabled")) {
                     Prefs.setQuietEnabled(in.optBoolean("quietEnabled", false));
                 }
@@ -981,6 +985,8 @@ public class HttpServer {
             o.put("quizCount", Prefs.quizCount());
             o.put("bootQuiz", Prefs.bootQuiz());
             o.put("autoQuiz", Prefs.autoQuiz());
+            o.put("theme", Prefs.theme());
+            o.put("themes", Theme.catalog());
             o.put("quietEnabled", Prefs.quietEnabled());
             o.put("quietStart", QuietHours.format(Prefs.quietStartMin()));
             o.put("quietEnd", QuietHours.format(Prefs.quietEndMin()));

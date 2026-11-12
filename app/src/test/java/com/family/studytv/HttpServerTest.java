@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import android.content.Context;
 
 import org.junit.After;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -458,6 +459,31 @@ public class HttpServerTest {
     }
 
     // ---------------------------------------------------------------- 自动弹窗 / 免打扰
+
+    /** v1.7.25：护眼配色经 /api/settings 保存、/api/state 回显，非法值回落默认 */
+    @Test
+    public void eyeCareThemeRoundTripsThroughApi() throws Exception {
+        String cookie = login();
+        try {
+            String[] st = request("GET", "/api/state", null, null, cookie);
+            assertEquals("200", st[0]);
+            JSONObject state = new JSONObject(st[1]);
+            assertEquals(Theme.DEFAULT, state.getString("theme"));
+            assertEquals(Theme.KEYS.length, state.getJSONArray("themes").length());
+
+            assertEquals("200", request("POST", "/api/settings",
+                    "{\"theme\":\"paper\"}", "1234", cookie)[0]);
+            assertEquals("paper", Prefs.theme());
+            assertEquals("paper", new JSONObject(
+                    request("GET", "/api/state", null, null, cookie)[1]).getString("theme"));
+
+            assertEquals("200", request("POST", "/api/settings",
+                    "{\"theme\":\"not-a-theme\"}", "1234", cookie)[0]);
+            assertEquals(Theme.DEFAULT, Prefs.theme());
+        } finally {
+            Prefs.setTheme(Theme.DEFAULT);
+        }
+    }
 
     @Test
     public void settingsPersistAutoQuizAndQuietHours() throws Exception {

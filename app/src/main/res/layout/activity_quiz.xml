@@ -5,6 +5,7 @@
   短答案时四个选项必须同屏可见，因此纵向间距按 TV 一屏高度收紧；反馈为空时由 Java 隐藏。
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/quizRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_glow"

@@ -1,6 +1,7 @@
 package com.family.studytv;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 
 /**
@@ -15,6 +16,22 @@ public final class Prefs {
 
     private static SharedPreferences sp() {
         return App.get().getSharedPreferences(FILE, Context.MODE_PRIVATE);
+    }
+
+    /** 护眼配色（v1.7.25）：后台快捷操作选，电视答题页同步换色 */
+    public static String theme() {
+        return Theme.normalize(sp().getString("ui_theme", Theme.DEFAULT));
+    }
+
+    public static void setTheme(String v) {
+        String key = Theme.normalize(v);
+        sp().edit().putString("ui_theme", key).apply();
+        // 答题页是 singleInstance，保存后主动广播，别等它重建才换色
+        try {
+            App.get().sendBroadcast(new Intent(Theme.ACTION_CHANGED)
+                    .setPackage(App.get().getPackageName()));
+        } catch (Throwable ignored) {
+        }
     }
 
     public static boolean isEnabled() {

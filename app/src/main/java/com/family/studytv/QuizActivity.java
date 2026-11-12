@@ -98,11 +98,16 @@ public class QuizActivity extends Activity {
     /** 家长后台保存规则（含「学习页字号」）后即时刷新，不等 Activity 重建 */
     private final BroadcastReceiver rulesReceiver = new BroadcastReceiver() {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, final Intent intent) {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (!isFinishing()) {
+                    if (isFinishing()) {
+                        return;
+                    }
+                    if (Theme.ACTION_CHANGED.equals(intent.getAction())) {
+                        applyTheme();
+                    } else {
                         refreshFontScale();
                     }
                 }
@@ -111,12 +116,18 @@ public class QuizActivity extends Activity {
     };
     private boolean rulesReceiverRegistered = false;
 
+    /** 当前护眼配色；默认深色，后台改风格后由广播换成对应色板 */
+    private Theme.Palette theme = Theme.of(Theme.DEFAULT);
+    /** 反馈文字的角色（ok / bad / warn / neutral），换配色时按角色重新取色 */
+    private String feedbackRole = "neutral";
+
     /** 隐藏手势的计数状态 */
     private int upHits = 0;
     private long lastUpAt = 0;
 
     private TextView tvProgress;
     private TextView tvSubject;
+    private TextView tvMode;
     private TextView tvQuestion;
     private TextView tvFeedback;
     private LinearLayout optionBox;
@@ -177,6 +188,7 @@ public class QuizActivity extends Activity {
 
         tvProgress = (TextView) findViewById(R.id.tvProgress);
         tvSubject = (TextView) findViewById(R.id.tvSubject);
+        tvMode = (TextView) findViewById(R.id.tvMode);
         tvQuestion = (TextView) findViewById(R.id.tvQuestion);
         tvFeedback = (TextView) findViewById(R.id.tvFeedback);
         optionBox = (LinearLayout) findViewById(R.id.optionBox);
@@ -188,7 +200,9 @@ public class QuizActivity extends Activity {
         baseOptionPx = probe.getTextSize();
 
         try {
-            registerReceiver(rulesReceiver, new IntentFilter(Rules.ACTION_CONFIG_CHANGED));
+            IntentFilter filter = new IntentFilter(Rules.ACTION_CONFIG_CHANGED);
+            filter.addAction(Theme.ACTION_CHANGED);
+            registerReceiver(rulesReceiver, filter);
             rulesReceiverRegistered = true;
         } catch (Throwable ignored) {
         }
@@ -199,6 +213,8 @@ public class QuizActivity extends Activity {
         GuardService.start(this);
         Prefs.setPending(true);
         loadRules();
+        // 护眼配色：先把静态布局染成当前风格，随后 show() 里新建的选项直接用同一色板
+        applyTheme();
         if (needsGradeChoice()) {
             showGradePicker();
         } else {
@@ -251,7 +267,7 @@ public class QuizActivity extends Activity {
         for (int k = 0; k < levels.size(); k++) {
             final int g = levels.get(k);
             Button b = (Button) getLayoutInflater().inflate(R.layout.item_option, optionBox, false);
-            setOptionText(b, k, g + " 年级", null);
+            setOptionText(b, k, g + " 年级", null, null);
             b.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -283,14 +299,96 @@ public class QuizActivity extends Activity {
         }
     }
 
+    /** 选项文字按角色取色：换配色时只要角色不变，重画后颜色自动跟着走 */
+    private int optionTextColor(String role) {
+        if ("ok".equals(role)) {
+            return theme.ok;
+        }
+        if ("bad".equals(role)) {
+            return theme.bad;
+        }
+        if ("dim".equals(role)) {
+            return theme.muted;
+        }
+        return theme.text;
+    }
+
     /**
-     * 统一渲染一个选项：把原始文本与反馈后缀记在 tag 里。
-     * 字母徽标与悬挂缩进都按当前字号绘制，字号一变必须重画，光改 textSize 会错位。
+     * 统一渲染一个选项：把原始文本、反馈后缀、颜色角色记在 tag 里。
+     * 字母徽标与悬挂缩进都按当前字号绘制，字号 / 配色一变必须重画，
+     * 光改 textSize 或 textColor 会让徽标错位。
      */
-    private void setOptionText(Button b, int k, String text, String suffix) {
+    private void setOptionText(Button b, int k, String text, String suffix, String role) {
         applyOptionFont(b);
-        b.setTag(new String[]{text, suffix == null ? "" : suffix});
-        b.setText(optionText(b, k, text, suffix));
+        String r = role == null ? "" : role;
+        b.setTag(new String[]{text, suffix == null ? "" : suffix, r});
+        b.setTextColor(optionTextColor(r));
+        b.setBackground(Theme.optionBackground(b, theme));
+        b.setText(optionText(b, k, text, suffix, theme));
+    }
+
+    /** 按当前配色与字号重画已显示的选项，不改题目、不改进度、不打断揭示 */
+    private void repaintOptions() {
+        for (int k = 0; k < optionBox.getChildCount(); k++) {
+            View v = optionBox.getChildAt(k);
+            if (!(v instanceof Button)) {
+                continue;
+            }
+            Button b = (Button) v;
+            Object tag = b.getTag();
+            if (!(tag instanceof String[])) {
+                continue;
+            }
+            String[] parts = (String[]) tag;
+            setOptionText(b, k, parts[0],
+                    parts[1].length() == 0 ? null : parts[1],
+                    parts.length > 2 ? parts[2] : "");
+        }
+    }
+
+    private static int px(View v, float dp) {
+        return (int) android.util.TypedValue.applyDimension(
+                android.util.TypedValue.COMPLEX_UNIT_DIP, dp, v.getResources().getDisplayMetrics());
+    }
+
+    /** 家长后台换护眼风格后立刻生效：重涂底色、文字、徽标与反馈，不重抽题 */
+    private void applyTheme() {
+        theme = Theme.of(Prefs.theme());
+        // 必须染在布局根节点上：它自己带 bg_glow 背景，染到 content 上会被盖住
+        View root = findViewById(R.id.quizRoot);
+        if (root == null) {
+            return;
+        }
+        root.setBackground(Theme.background(root, theme));
+        Theme.tintTextTree(root, theme);
+        tvMode.setBackground(Theme.card(tvMode, theme.pillBg, theme.stroke, 999f,
+                Math.max(1, px(tvMode, 1))));
+        tvSubject.setBackground(Theme.card(tvSubject, theme.tagBg, theme.accent, 999f,
+                Math.max(1, px(tvSubject, 2))));
+        tvFeedback.setBackground(Theme.card(tvFeedback, theme.feedbackBg, theme.stroke, 16f,
+                Math.max(1, px(tvFeedback, 2))));
+        if (!items.isEmpty() && index >= 0 && index < items.size()) {
+            renderSubject(items.get(index).q);   // 星级颜色跟着换
+        }
+        repaintOptions();
+        applyFeedbackColor();
+    }
+
+    private int feedbackColor() {
+        if ("ok".equals(feedbackRole)) {
+            return theme.ok;
+        }
+        if ("bad".equals(feedbackRole)) {
+            return theme.bad;
+        }
+        if ("warn".equals(feedbackRole)) {
+            return theme.warn;
+        }
+        return theme.text2;
+    }
+
+    private void applyFeedbackColor() {
+        tvFeedback.setTextColor(feedbackColor());
     }
 
     /**
@@ -304,19 +402,7 @@ public class QuizActivity extends Activity {
         }
         fontScale = next;
         applyQuestionFont();
-        for (int k = 0; k < optionBox.getChildCount(); k++) {
-            View v = optionBox.getChildAt(k);
-            if (!(v instanceof Button)) {
-                continue;
-            }
-            Button b = (Button) v;
-            Object tag = b.getTag();
-            if (!(tag instanceof String[])) {
-                continue;
-            }
-            String[] parts = (String[]) tag;
-            setOptionText(b, k, parts[0], parts[1].length() == 0 ? null : parts[1]);
-        }
+        repaintOptions();
     }
 
     @Override
@@ -453,7 +539,7 @@ public class QuizActivity extends Activity {
         int start = head.length() + 4;
         for (int k = 0; k < stars.length(); k++) {
             char ch = stars.charAt(k);
-            int color = ch == '★' ? 0xFFFFC24A : 0xFF6B6B74;
+            int color = ch == '★' ? theme.starOn : theme.starOff;
             s.setSpan(new android.text.style.ForegroundColorSpan(color),
                     start + k, start + k + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
@@ -489,7 +575,7 @@ public class QuizActivity extends Activity {
         optionBox.removeAllViews();
         for (int k = 0; k < it.options.size(); k++) {
             Button b = (Button) getLayoutInflater().inflate(R.layout.item_option, optionBox, false);
-            setOptionText(b, k, it.options.get(k), null);
+            setOptionText(b, k, it.options.get(k), null, null);
             final int choice = k;
             b.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -509,14 +595,19 @@ public class QuizActivity extends Activity {
      * A/B/C 画成方块字母徽标；换行后的行首与徽标后的正文对齐（悬挂缩进），
      * 长成语解释不会顶回行首。按钮高度由 wrap_content 自行决定，文本不做任何截断。
      */
+    /** 兼容单测里的旧调用；正式渲染都走带配色参数的重载 */
     static CharSequence optionText(Button b, int k, String text, String suffix) {
+        return optionText(b, k, text, suffix, Theme.of(Theme.DEFAULT));
+    }
+
+    static CharSequence optionText(Button b, int k, String text, String suffix, Theme.Palette p) {
         String label = letter(k) + "    ";
         SpannableString s = new SpannableString(label + text + (suffix == null ? "" : suffix));
         float textSize = b.getTextSize();
         int indent = (int) (badgeWidth(textSize) + b.getPaint().measureText("    "));
         s.setSpan(new LeadingMarginSpan.Standard(0, indent), 0, s.length(),
                 Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-        s.setSpan(new LetterSpan(letter(k), textSize), 0, 1,
+        s.setSpan(new LetterSpan(letter(k), textSize, p), 0, 1,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return s;
     }
@@ -530,11 +621,13 @@ public class QuizActivity extends Activity {
         private final String ch;
         private final float box;
         private final float gap;
+        private final Theme.Palette p;
 
-        LetterSpan(String ch, float textSize) {
+        LetterSpan(String ch, float textSize, Theme.Palette p) {
             this.ch = ch;
             this.box = textSize * 1.05f;
             this.gap = textSize * 0.42f;
+            this.p = p;
         }
 
         @Override
@@ -554,8 +647,8 @@ public class QuizActivity extends Activity {
         public void draw(Canvas canvas, CharSequence text, int start, int end,
                          float x, int top, int y, int bottom, Paint paint) {
             int body = paint.getColor();
-            boolean right = body == 0xFF33D17A;
-            boolean wrong = body == 0xFFF2545B;
+            boolean right = p.isOk(body);
+            boolean wrong = p.isBad(body);
             float cy = (top + bottom) / 2f;
             RectF r = new RectF(x, cy - box / 2f, x + box, cy + box / 2f);
 
@@ -563,10 +656,10 @@ public class QuizActivity extends Activity {
             float textSize = paint.getTextSize();
             Typeface tf = paint.getTypeface();
 
-            paint.setColor(right ? 0xFF33D17A : (wrong ? 0xFFF2545B : 0xFF2A2A30));
+            paint.setColor(right ? p.ok : (wrong ? p.bad : p.badgeBg));
             canvas.drawRoundRect(r, box * 0.28f, box * 0.28f, paint);
 
-            paint.setColor(right ? 0xFF06210F : (wrong ? 0xFF2A0507 : 0xFFC9C9CF));
+            paint.setColor(right || wrong ? p.surface : p.badgeText);
             paint.setTextAlign(Paint.Align.CENTER);
             paint.setTextSize(box * 0.56f);
             paint.setTypeface(Typeface.DEFAULT_BOLD);
@@ -608,7 +701,7 @@ public class QuizActivity extends Activity {
             totalCorrect++;
             Rules.clearWrong(this, it.q.id);   // 答对就把这题从错题库移出
             StudyStats.record(this, it.q.subject, QType.of(it.q), true);
-            feedback(0xFF33D17A, "答对了！继续下一题");
+            feedback(theme.ok, "答对了！继续下一题");
             if ("streak".equals(playMode) && streak >= targetCount) {
                 pass("连对 " + targetCount + " 题，可以继续看电视啦");
                 return;
@@ -627,7 +720,7 @@ public class QuizActivity extends Activity {
         Rules.noteWrong(this, it.q.id);
         StudyStats.record(this, it.q.subject, QType.of(it.q), false);
         revealAnswer(it, choice);
-        feedback(0xFFF2545B, "答错了！正确答案是 " + letter(it.answer)
+        feedback(theme.bad, "答错了！正确答案是 " + letter(it.answer)
                 + "、" + it.options.get(it.answer) + "，看清答案再继续");
         handler.postDelayed(new Runnable() {
             @Override
@@ -665,7 +758,7 @@ public class QuizActivity extends Activity {
     private void rebuild(String msg) {
         buildSession();   // 重新随机抽一组，尽量不重复刚才这套题
         show(0);
-        feedback(0xFF9A9AA2, msg);
+        feedback(theme.text2, msg);
     }
 
     /** 揭示答案：正确项标绿并加文字，选错项标红，其余变暗，同时锁住点击 */
@@ -678,15 +771,12 @@ public class QuizActivity extends Activity {
             }
             Button b = (Button) v;
             if (k == it.answer) {
-                setOptionText(b, k, it.options.get(k), "    ← 正确答案");
-                b.setTextColor(0xFF33D17A);
+                setOptionText(b, k, it.options.get(k), "    ← 正确答案", "ok");
                 correctView = b;
             } else if (k == choice) {
-                setOptionText(b, k, it.options.get(k), "    ← 你选的");
-                b.setTextColor(0xFFF2545B);
+                setOptionText(b, k, it.options.get(k), "    ← 你选的", "bad");
             } else {
-                setOptionText(b, k, it.options.get(k), null);
-                b.setTextColor(0xFF6B6B74);
+                setOptionText(b, k, it.options.get(k), null, "dim");
             }
             b.setOnClickListener(null);
             b.setClickable(false);
@@ -697,6 +787,9 @@ public class QuizActivity extends Activity {
     }
 
     private void feedback(int color, String text) {
+        feedbackRole = color == theme.ok ? "ok"
+                : (color == theme.bad ? "bad"
+                : (color == theme.warn ? "warn" : "neutral"));
         tvFeedback.setTextColor(color);
         tvFeedback.setText(text);
         // 未答题时反馈卡片不占位，四个短答案选项能同屏显示完整
@@ -722,7 +815,7 @@ public class QuizActivity extends Activity {
             startService(new Intent(this, GuardService.class).setAction(GuardService.ACTION_QUIZ_PASSED));
         } catch (Throwable ignored) {
         }
-        feedback(0xFF33D17A, msg);
+        feedback(theme.ok, msg);
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
         // 通关即收工：关掉界面退回电视/桌面，守护服务继续在后台计时
         handler.postDelayed(new Runnable() {
@@ -738,7 +831,7 @@ public class QuizActivity extends Activity {
     private void askManagePin() {
         long remain = Prefs.pinLockRemainMs();
         if (remain > 0) {
-            feedback(0xFFFFC24A, "密码输错次数过多，请 "
+            feedback(theme.warn, "密码输错次数过多，请 "
                     + UninstallCode.describeLock(remain) + "后再试");
             return;
         }
@@ -780,7 +873,7 @@ public class QuizActivity extends Activity {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         } catch (Throwable e) {
             managing = false;
-            feedback(0xFFFFC24A, "打不开管理页，请重试");
+            feedback(theme.warn, "打不开管理页，请重试");
         }
     }
 
@@ -830,7 +923,7 @@ public class QuizActivity extends Activity {
             if ("practice".equals(playMode) && !choosingGrade && !passed) {
                 pass("练习结束，可以继续看电视啦");
             } else {
-                feedback(0xFFFFC24A, "答完题才能继续看电视哦");
+                feedback(theme.warn, "答完题才能继续看电视哦");
             }
             return true;
         }
@@ -880,7 +973,7 @@ public class QuizActivity extends Activity {
         if ("practice".equals(playMode) && !choosingGrade && !passed) {
             pass("练习结束，可以继续看电视啦");
         } else {
-            feedback(0xFFFFC24A, "答完题才能继续看电视哦");
+            feedback(theme.warn, "答完题才能继续看电视哦");
         }
     }
 }

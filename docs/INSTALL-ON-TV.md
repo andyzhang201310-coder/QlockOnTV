@@ -11,7 +11,7 @@
 
 ```bash
 gradle :app:assembleRelease        # 产物 app/build/outputs/apk/release/app-release.apk
-cp app/build/outputs/apk/release/app-release.apk dist/QlockOnTV-1.7.24.apk
+cp app/build/outputs/apk/release/app-release.apk dist/QlockOnTV-1.7.25.apk
 ```
 
 或者把别人给你的 APK 用 `--apk <路径>` 指过去。然后在仓库根目录执行：
@@ -48,7 +48,7 @@ python tools/tv_scan.py --json       # 给脚本 / AI agent 读
 ```
 发现 2 台题锁设备：
   192.168.3.15    版本=需密码      题量=-        adb=offline
-  192.168.3.19    版本=1.7.24      题量=24704    adb=device (MuMu)
+  192.168.3.19    版本=1.7.25      题量=24704    adb=device (MuMu)
 ```
 
 > 需要密码才能读版本是正常的（题锁不登录不给看题库和版本细节）。
@@ -69,7 +69,7 @@ python tools/tv_install.py --auto --json          # 结构化结果，便于其�
 
 ```bash
 adb connect <电视IP>:5555
-adb install -r dist/QlockOnTV-1.7.24.apk
+adb install -r dist/QlockOnTV-1.7.25.apk
 adb shell am start -n com.family.studytv/.MainActivity   # 覆盖安装会把进程停掉，拉起来
 ```
 
@@ -141,7 +141,7 @@ python tools/tv_install.py --serve
 
 ```
 下载页已启动：http://192.168.3.211:8900  （电视浏览器打开这个地址）
-直接用文件地址也行：http://192.168.3.211:8900/QlockOnTV-1.7.24.apk
+直接用文件地址也行：http://192.168.3.211:8900/QlockOnTV-1.7.25.apk
 ```
 
 电视上用自带浏览器（或在应用商店装个浏览器）打开这个地址 → 点「下载并安装」→
@@ -149,7 +149,7 @@ python tools/tv_install.py --serve
 
 电视上找不到浏览器时，还有两条：
 
-- **U 盘**：把 `dist/QlockOnTV-1.7.24.apk` 拷到 U 盘插电视，用电视的「文件管理 / 本地媒体」打开安装；
+- **U 盘**：把 `dist/QlockOnTV-1.7.25.apk` 拷到 U 盘插电视，用电视的「文件管理 / 本地媒体」打开安装；
 - **电视助手类 App**：手机装「电视助手」类工具，把 APK 推到电视上安装。
 
 ---

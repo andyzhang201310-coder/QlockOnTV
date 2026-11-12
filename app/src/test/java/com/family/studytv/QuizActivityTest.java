@@ -156,6 +156,33 @@ public class QuizActivityTest {
         }
     }
 
+    /** v1.7.25：后台换护眼风格后，已显示的答题页立即换色，不重抽题 */
+    @Test
+    public void savedEyeCareThemeRepaintsLiveQuizImmediately() {
+        TextView question = (TextView) activity.findViewById(R.id.tvQuestion);
+        LinearLayout box = (LinearLayout) activity.findViewById(R.id.optionBox);
+        Button first = (Button) box.getChildAt(0);
+        String stem0 = question.getText().toString();
+        Theme.Palette paper = Theme.of("paper");
+        try {
+            Prefs.setTheme("paper");
+            shadowOf(Looper.getMainLooper()).idle();
+            assertEquals("题干换成羊皮纸文字色", paper.text, question.getCurrentTextColor());
+            assertEquals("选项换成羊皮纸文字色", paper.text, first.getCurrentTextColor());
+            assertEquals("换配色不该重抽题", stem0, question.getText().toString());
+            assertNotNull("页面底色要被重涂",
+                    activity.findViewById(R.id.quizRoot).getBackground());
+
+            Prefs.setTheme(Theme.DEFAULT);
+            shadowOf(Looper.getMainLooper()).idle();
+            assertEquals("切回默认要还原成默认文字色",
+                    Theme.of(Theme.DEFAULT).text, question.getCurrentTextColor());
+        } finally {
+            Prefs.setTheme(Theme.DEFAULT);
+            shadowOf(Looper.getMainLooper()).idle();
+        }
+    }
+
     @Test
     public void openingQuizMarksPendingAndShowsFirstQuestion() {
         assertTrue("弹窗打开即视为未完成答题", Prefs.isPending());
