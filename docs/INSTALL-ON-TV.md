@@ -11,7 +11,7 @@
 
 ```bash
 gradle :app:assembleRelease        # 产物 app/build/outputs/apk/release/app-release.apk
-cp app/build/outputs/apk/release/app-release.apk dist/QlockOnTV-1.7.27.apk
+cp app/build/outputs/apk/release/app-release.apk dist/QlockOnTV-1.7.28.apk
 ```
 
 或者把别人给你的 APK 用 `--apk <路径>` 指过去。然后在仓库根目录执行：
@@ -48,7 +48,7 @@ python tools/tv_scan.py --json       # 给脚本 / AI agent 读
 ```
 发现 2 台题锁设备：
   192.168.3.15    版本=需密码      题量=-        adb=offline
-  192.168.3.19    版本=1.7.27      题量=24704    adb=device (MuMu)
+  192.168.3.19    版本=1.7.28      题量=24704    adb=device (MuMu)
 ```
 
 > 需要密码才能读版本是正常的（题锁不登录不给看题库和版本细节）。
@@ -69,7 +69,7 @@ python tools/tv_install.py --auto --json          # 结构化结果，便于其�
 
 ```bash
 adb connect <电视IP>:5555
-adb install -r dist/QlockOnTV-1.7.27.apk
+adb install -r dist/QlockOnTV-1.7.28.apk
 adb shell am start -n com.family.studytv/.MainActivity   # 覆盖安装会把进程停掉，拉起来
 ```
 
@@ -134,14 +134,14 @@ adb connect 192.168.3.15:5555
 ## 3. 电视开不了网络调试：走浏览器下载
 
 ```bash
-python tools/tv_install.py --serve --serve-port 8080 --apk dist/QlockOnTV-1.7.27.apk
+python tools/tv_install.py --serve --serve-port 8080 --apk dist/QlockOnTV-1.7.28.apk
 ```
 
 会打印（端口以 `--serve-port` 指定值为准，脚本默认是 8900）：
 
 ```
 下载页已启动：http://192.168.3.211:8080  （电视浏览器打开这个地址）
-直接用文件地址也行：http://192.168.3.211:8080/QlockOnTV-1.7.27.apk
+直接用文件地址也行：http://192.168.3.211:8080/QlockOnTV-1.7.28.apk
 ```
 
 电视上用自带浏览器（或在应用商店装个浏览器）打开这个地址 → 点「下载并安装」→
@@ -149,7 +149,7 @@ python tools/tv_install.py --serve --serve-port 8080 --apk dist/QlockOnTV-1.7.27
 
 电视上找不到浏览器时，还有两条：
 
-- **U 盘**：把 `dist/QlockOnTV-1.7.27.apk` 拷到 U 盘插电视，用电视的「文件管理 / 本地媒体」打开安装；
+- **U 盘**：把 `dist/QlockOnTV-1.7.28.apk` 拷到 U 盘插电视，用电视的「文件管理 / 本地媒体」打开安装；
 - **电视助手类 App**：手机装「电视助手」类工具，把 APK 推到电视上安装。
 
 ---
@@ -202,3 +202,41 @@ python tools/tv_install.py --auto --pin <管理密码>
 | 扫描结果里有 502 | 电脑开着代理，脚本已绕开；手工 curl 时加 `--noproxy "*"` |
 | 版本回读显示 `?` | 没传 `--pin`，或电视改过密码（出厂默认 1234） |
 | 脚本说「找不到 APK」 | 仓库里没有打包产物，先 `gradle :app:assembleRelease`，或用 `--apk` 指定路径 |
+
+## 7. 防卸载：哪些电视能做、哪些做不了
+
+防卸载依赖 Android 的 DevicePolicyManager，分两级：
+
+| 级别 | 所需条件 | 效果 |
+| --- | --- | --- |
+| 设备管理员 | 系统有 `android.software.device_admin` 特性 | 卸载前必须先「停用设备管理员」，孩子走不完 |
+| 设备所有者 | 同一特性 + 电视上没有登录账号 + 单用户 | 系统「卸载」按钮直接置灰，必须回应用输卸载码 |
+
+先查这台电视支不支持：
+
+```bash
+adb shell pm list features | grep device_admin
+adb shell dumpsys device_policy | head -6      # Enabled Device Admins 下面有没有条目
+```
+
+### 已实测：Sony BRAVIA 4K GB ATV3（Android 9）不支持
+
+- `pm list features` 里**没有** `android.software.device_admin`。
+- 设置里没有 `DeviceAdminAdd` 页面，隐式 Intent 和 5 个候选组件都 `ActivityNotFoundException`。
+- `adb shell dpm set-active-admin ...` 会打印 `Success`，但 `dumpsys device_policy` 的
+  `Enabled Device Admins (User 0)` 始终为空，`/data/system/device_policies.xml` 也不生成 —— 命令假成功。
+- `adb shell dpm set-device-owner ...` 直接抛 `Can't set package ... as device owner`。
+- 应用内用反射调 `setActiveAdmin`（`POST /api/admin/activate`）同样不落地，返回激活码 `code=3`。
+- `adb shell pm disable-user com.android.tv.settings/<activity>` 被拒：
+  `SecurityException: Shell cannot change component state for ... to 3`（系统应用组件 shell 无权改）。
+- 该机 `adb root` 不可用（`adbd cannot run as root in production builds`），也没有第三方 DPC。
+
+结论：**这一机型在系统层无法阻止卸载**，只能靠「应用内卸载需输卸载码」这一层（孩子若走系统设置 → 应用 → 卸载仍可绕过）。
+
+### 仍然想要硬锁的可行做法
+
+1. 换设备：选支持 `device_admin` 特性的盒子 / 电视，装完执行 `dpm set-device-owner`。
+2. 把题锁设为电视桌面（Home）通道：`adb shell cmd package set-home-activity com.family.studytv/.MainActivity`，
+   孩子按 Home 只回到学习页、进不去系统设置；副作用是原生主页（流媒体入口）一起没了，执行前要确认。
+   恢复：`adb shell cmd package set-home-activity <原桌面组件>`（原组件可用 `cmd package resolve-activity -a android.intent.action.MAIN -c android.intent.category.HOME` 查）。
+3. 家长侧兜底：定期在后台看 `/api/state` 的 `appVersion`，或在手机上用局域网扫描脚本 `python tools/tv_scan.py` 确认应用还在。

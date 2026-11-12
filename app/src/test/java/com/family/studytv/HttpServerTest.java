@@ -307,6 +307,24 @@ public class HttpServerTest {
     }
 
     @Test
+    public void adminActivateEndpointRequiresLoginAndReportsState() throws Exception {
+        assertEquals("401",
+                request("POST", "/api/admin/activate", "{}", null)[0]);
+
+        String cookie = login();
+        String[] r = request("POST", "/api/admin/activate", "{}", null, cookie);
+        // Robolectric 没有真实 DevicePolicyManager，激活会失败，但接口必须给出明确结果
+        assertTrue("状态码应为 200 或 409，实际 " + r[0],
+                "200".equals(r[0]) || "409".equals(r[0]));
+        org.json.JSONObject o = new org.json.JSONObject(r[1]);
+        assertTrue("必须返回 isAdminActive", o.has("isAdminActive"));
+        assertTrue("必须返回 uninstallBlocked", o.has("uninstallBlocked"));
+        if (!o.optBoolean("isAdminActive")) {
+            assertTrue("失败时要带上 adb 兜底命令", o.has("activeAdminCmd"));
+        }
+    }
+
+    @Test
     public void canReplaceQuestionBank() throws Exception {
         String payload = "{\"json\":\"{\\\"questions\\\":[{\\\"subject\\\":\\\"语文\\\",\\\"q\\\":\\\"接口测试题\\\",\\\"options\\\":[\\\"对\\\",\\\"错\\\"],\\\"answer\\\":0}]}\"}";
         String cookie = login();

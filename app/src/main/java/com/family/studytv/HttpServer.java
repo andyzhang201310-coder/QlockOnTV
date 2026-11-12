@@ -835,6 +835,31 @@ public class HttpServer {
             return;
         }
 
+        // v1.7.28：远程激活防卸载。电视上没有「设备管理员」设置页时，
+        // 靠 adb 命令在部分机型（Sony 等裁掉 device_admin 特性的电视）会被系统静默忽略，
+        // 只有应用以自身身份调 setActiveAdmin 才可能生效，这里给后台一个触发入口。
+        if (path.equals("/api/admin/activate") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            int code = DeviceGuard.activate(ctx);
+            boolean active = DeviceGuard.isAdminActive(ctx);
+            boolean locked = DeviceGuard.sync(ctx);
+            JSONObject o = new JSONObject();
+            o.put("ok", active);
+            o.put("code", code);
+            o.put("isAdminActive", active);
+            o.put("isDeviceOwner", DeviceGuard.isDeviceOwner(ctx));
+            o.put("uninstallBlocked", locked);
+            if (!active) {
+                o.put("error", "系统拒绝激活设备管理员（该机型可能裁掉了 DevicePolicyManager 能力）");
+                o.put("activeAdminCmd", DeviceGuard.adbActiveAdminCommand(ctx));
+            }
+            respondJson(socket, active ? 200 : 409, o.toString());
+            return;
+        }
+
         if (path.equals("/api/restore") && method.equals("POST")) {
             if (!authed) {
                 unauthorized(socket);

@@ -952,6 +952,10 @@
           <span>同时禁止「恢复出厂设置」</span>
           <div class="switch" id="swFactory"><i></i></div>
         </div>
+        <div class="btns">
+          <button class="primary" id="btnActivateAdmin" style="max-width:300px">远程激活设备管理员</button>
+        </div>
+        <div class="tip" id="activateTip">电视上没有「设备管理员」设置页时点这里：应用以自身身份直接激活，不用去系统设置里翻。激活成功后，卸载前必须先停用设备管理员。</div>
         <label class="fl">当前卸载码（出厂默认 246810）</label>
         <input type="password" id="inOldCode" placeholder="验证身份用">
         <label class="fl">新卸载码（4–12 位数字或字母，留空表示不修改）</label>
@@ -1418,6 +1422,24 @@
     if (isNaN(v) || v < 1024 || v > 65500) { toast('端口需在 1024–65500 之间，未保存', 3200); return; }
     if (state && v === state.port) { return; }
     queueSettings({ port: v }, '端口已保存');
+  };
+  $('btnActivateAdmin').onclick = function () {
+    var btn = $('btnActivateAdmin');
+    btn.disabled = true;
+    $('activateTip').textContent = '正在激活…（电视端会自己调用系统接口，不会弹窗）';
+    api('/api/admin/activate', { method: 'POST', body: '{}' })
+      .then(function (r) {
+        $('activateTip').textContent = r.isAdminActive
+          ? '设备管理员已激活，卸载前必须先停用设备管理员。'
+          : '系统拒绝激活。若 adb 已在同一网络，可在电脑执行下方命令；仍失败说明该机型裁掉了设备管理能力。';
+        toast(r.isAdminActive ? '设备管理员已激活' : '激活失败', 3000);
+        return loadState();
+      })
+      .catch(function (e) {
+        $('activateTip').textContent = e.message || '激活失败';
+        toast(e.message || '激活失败', 4000);
+      })
+      .then(function () { btn.disabled = false; });
   };
   $('btnSaveCode').onclick = function () {
     var nv = $('inNewCode').value.trim();
