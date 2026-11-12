@@ -1,6 +1,7 @@
 package com.family.studytv;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 
 import org.json.JSONArray;
@@ -29,6 +30,9 @@ import java.util.Set;
  * 播放器的规则（免费时长、每日上限、强制休息、视频学习、星级奖励）不在本类里伪装实现。
  */
 public final class Rules {
+
+    /** 规则保存后广播：答题页收到即刻重读字号，不必等下一次重新创建 Activity */
+    public static final String ACTION_CONFIG_CHANGED = "com.family.studytv.action.CONFIG_CHANGED";
 
     private static final String FILE = "studytv";
     private static final String KEY_CONFIG = "rules_json";
@@ -176,6 +180,12 @@ public final class Rules {
             if (lv != null) {
                 Prefs.setGrades(join(strList(lv), ","));
             }
+        } catch (Throwable ignored) {
+        }
+        // 显式广播（限定本应用包）：答题页是 singleInstance，保存规则后不会自己重建，
+        // 必须由这里主动通知它刷新字号，否则家长改「学习页字号」要等到下次冷启动才看得见。
+        try {
+            c.sendBroadcast(new Intent(ACTION_CONFIG_CHANGED).setPackage(c.getPackageName()));
         } catch (Throwable ignored) {
         }
         return o;

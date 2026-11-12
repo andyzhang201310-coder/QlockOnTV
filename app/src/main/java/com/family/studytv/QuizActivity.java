@@ -1,7 +1,10 @@
 package com.family.studytv;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
@@ -92,6 +95,22 @@ public class QuizActivity extends Activity {
     private float baseQuestionPx = 0f;
     private float baseOptionPx = 0f;
 
+    /** 家长后台保存规则（含「学习页字号」）后即时刷新，不等 Activity 重建 */
+    private final BroadcastReceiver rulesReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (!isFinishing()) {
+                        refreshFontScale();
+                    }
+                }
+            });
+        }
+    };
+    private boolean rulesReceiverRegistered = false;
+
     /** 隐藏手势的计数状态 */
     private int upHits = 0;
     private long lastUpAt = 0;
@@ -168,6 +187,12 @@ public class QuizActivity extends Activity {
         Button probe = (Button) getLayoutInflater().inflate(R.layout.item_option, optionBox, false);
         baseOptionPx = probe.getTextSize();
 
+        try {
+            registerReceiver(rulesReceiver, new IntentFilter(Rules.ACTION_CONFIG_CHANGED));
+            rulesReceiverRegistered = true;
+        } catch (Throwable ignored) {
+        }
+
         running = true;
         active = this;
         // 任何进入答题的路径都确保守护服务（含局域网后台）在跑
@@ -226,8 +251,7 @@ public class QuizActivity extends Activity {
         for (int k = 0; k < levels.size(); k++) {
             final int g = levels.get(k);
             Button b = (Button) getLayoutInflater().inflate(R.layout.item_option, optionBox, false);
-            applyOptionFont(b);
-            b.setText(optionText(b, k, g + " 年级", null));
+            setOptionText(b, k, g + " 年级", null);
             b.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -259,6 +283,42 @@ public class QuizActivity extends Activity {
         }
     }
 
+    /**
+     * 统一渲染一个选项：把原始文本与反馈后缀记在 tag 里。
+     * 字母徽标与悬挂缩进都按当前字号绘制，字号一变必须重画，光改 textSize 会错位。
+     */
+    private void setOptionText(Button b, int k, String text, String suffix) {
+        applyOptionFont(b);
+        b.setTag(new String[]{text, suffix == null ? "" : suffix});
+        b.setText(optionText(b, k, text, suffix));
+    }
+
+    /**
+     * 家长后台改「学习页字号」后立即生效：不重抽题、不重置进度、不打断答错揭示，
+     * 只按新的 fontScale 重画题干与已显示的选项（含「← 正确答案」后缀）。
+     */
+    private void refreshFontScale() {
+        float next = Math.max(0.75f, Math.min(2f, Rules.get(this).optInt("fontScale", 100) / 100f));
+        if (Math.abs(next - fontScale) < 0.001f) {
+            return;
+        }
+        fontScale = next;
+        applyQuestionFont();
+        for (int k = 0; k < optionBox.getChildCount(); k++) {
+            View v = optionBox.getChildAt(k);
+            if (!(v instanceof Button)) {
+                continue;
+            }
+            Button b = (Button) v;
+            Object tag = b.getTag();
+            if (!(tag instanceof String[])) {
+                continue;
+            }
+            String[] parts = (String[]) tag;
+            setOptionText(b, k, parts[0], parts[1].length() == 0 ? null : parts[1]);
+        }
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -273,6 +333,8 @@ public class QuizActivity extends Activity {
         upHits = 0;
         handler.removeCallbacks(relaunch);
         hideSystemUi();
+        // 兜底：广播漏掉时（如后台保存时页面不在前台），回到前台也按最新规则重画
+        refreshFontScale();
     }
 
     @Override
@@ -287,6 +349,13 @@ public class QuizActivity extends Activity {
     @Override
     protected void onDestroy() {
         running = false;
+        if (rulesReceiverRegistered) {
+            try {
+                unregisterReceiver(rulesReceiver);
+            } catch (Throwable ignored) {
+            }
+            rulesReceiverRegistered = false;
+        }
         if (active == this) {
             active = null;
         }
@@ -420,8 +489,7 @@ public class QuizActivity extends Activity {
         optionBox.removeAllViews();
         for (int k = 0; k < it.options.size(); k++) {
             Button b = (Button) getLayoutInflater().inflate(R.layout.item_option, optionBox, false);
-            applyOptionFont(b);   // 先定字号，optionText 才能按实际字号算徽标与悬挂缩进
-            b.setText(optionText(b, k, it.options.get(k), null));
+            setOptionText(b, k, it.options.get(k), null);
             final int choice = k;
             b.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -610,14 +678,14 @@ public class QuizActivity extends Activity {
             }
             Button b = (Button) v;
             if (k == it.answer) {
-                b.setText(optionText(b, k, it.options.get(k), "    ← 正确答案"));
+                setOptionText(b, k, it.options.get(k), "    ← 正确答案");
                 b.setTextColor(0xFF33D17A);
                 correctView = b;
             } else if (k == choice) {
-                b.setText(optionText(b, k, it.options.get(k), "    ← 你选的"));
+                setOptionText(b, k, it.options.get(k), "    ← 你选的");
                 b.setTextColor(0xFFF2545B);
             } else {
-                b.setText(optionText(b, k, it.options.get(k), null));
+                setOptionText(b, k, it.options.get(k), null);
                 b.setTextColor(0xFF6B6B74);
             }
             b.setOnClickListener(null);

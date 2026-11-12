@@ -186,6 +186,8 @@
   .f .lbl b{display:block;font-size:13.5px;font-weight:600;color:var(--txt)}
   .f .lbl small{display:block;color:var(--sub);font-size:12px;line-height:1.65;margin-top:3px}
   .f .ctl{flex:0 0 auto;display:flex;align-items:center;gap:6px}
+  .f .ctl button.mini{flex:0 0 auto;min-width:0;max-width:none;width:auto;
+    padding:6px 10px;margin-left:4px;font-size:12px;line-height:1.4}
   .stepper{display:flex;align-items:center;gap:4px}
   .stepper button{width:30px;height:30px;min-width:0;padding:0;border:1px solid var(--line);
     border-radius:7px;background:var(--card);color:var(--txt);font-size:16px;line-height:1}
@@ -251,7 +253,7 @@
     border-radius:6px;padding:1px 7px;font-size:11.5px;color:var(--txt2);
     white-space:nowrap;line-height:1.7}
   .qtag.qid{background:transparent;border-color:transparent;color:var(--sub);font-size:10.5px}
-  .qrow .body{flex:1;min-width:0;font-size:13px;line-height:1.65;color:var(--txt);
+  .qrow .body{flex:1;min-width:0;font-size:12.5px;line-height:1.65;color:var(--txt);
     word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
     overflow:hidden}
   .qrow .ops{flex:0 0 auto;display:flex;gap:6px}
@@ -278,12 +280,13 @@
   .starpick span.on{color:#e8a91b}
   .starpick span:hover{color:#e8a91b}
   .starpick em{font-style:normal;color:var(--sub);font-size:12.5px;margin-left:6px}
-  textarea.qtext{font-family:inherit;font-size:13.5px;height:78px;background:var(--card);
+  /* v1.7.24：编辑卡里的题干与选项文字略微缩小，长题面少折行 */
+  textarea.qtext{font-family:inherit;font-size:13px;height:78px;background:var(--card);
     line-height:1.65;padding:10px 12px}
   .opts .opt{display:flex;align-items:center;gap:9px;margin-bottom:8px}
   .opts .opt input[type=radio]{flex:0 0 auto;width:16px;height:16px;margin:0;
     accent-color:#1f2b24;cursor:pointer}
-  .opts .opt input[type=text]{flex:1;min-width:0}
+  .opts .opt input[type=text]{flex:1;min-width:0;font-size:13px}
   .opts .opt .mark{flex:0 0 auto;color:var(--sub);font-size:12px;width:14px}
   .opts .opt .rm{flex:0 0 auto;min-width:0;max-width:none;width:28px;height:32px;padding:0;
     font-size:15px;line-height:1;color:var(--sub);background:var(--card);
@@ -696,8 +699,8 @@
             <div class="ctl"><div class="switch" data-bool="shuffleOptions"><i></i></div></div></div>
           <div class="f"><div class="lbl"><b>答错后查看解析</b><small>期间不能提前进入下一题；0 表示几乎不停留</small></div>
             <div class="ctl"><div class="stepper" data-key="wrongReviewSeconds" data-min="0" data-max="300"></div><span class="unit">秒</span></div></div>
-          <div class="f"><div class="lbl"><b>学习页字号</b><small>电视上题干与选项文字一起缩放</small></div>
-            <div class="ctl"><div class="stepper" data-key="fontScale" data-min="75" data-max="200" data-step="5"></div><span class="unit">%</span></div></div>
+          <div class="f"><div class="lbl"><b>学习页字号</b><small>电视上题干与选项文字一起缩放；保存后正在答题的页面立即生效，没答题时点「预览效果」弹出一题查看</small></div>
+            <div class="ctl"><div class="stepper" data-key="fontScale" data-min="75" data-max="200" data-step="5"></div><span class="unit">%</span><button id="btnFontPreview" class="mini">预览效果</button></div></div>
           <div class="f"><div class="lbl"><b>启用每日轮数上限</b><small>按「实际弹出答题页」计数，跨天自动清零</small></div>
             <div class="ctl"><div class="switch" data-bool="roundsLimitEnabled"><i></i></div></div></div>
           <div class="f" data-when="roundsLimit"><div class="lbl"><b>每天最多弹题</b></div>
@@ -1216,6 +1219,19 @@
     $('swAutoQuiz').className = 'switch' + (state.autoQuiz ? ' on' : '');
     queueSettings({ autoQuiz: state.autoQuiz },
       state.autoQuiz ? '自动弹题已开启（已保存）' : '已永久停止自动弹题（已保存）');
+  };
+  // 字号预览：先强制把当前配置存下去（不等 0.7 秒防抖），再弹一题看实际效果
+  $('btnFontPreview').onclick = function () {
+    if (!cfg) { return; }
+    clearTimeout(saveTimer);
+    saving = false; failedSig = '';
+    api('/api/rules', { method: 'POST', body: JSON.stringify({ config: cfg }) }).then(function (r) {
+      if (r && r.config) { cfg = r.config; syncSteppers(); }
+      setBadge('ruleBadge', 'ok', '已自动保存');
+      return api('/api/test', { method: 'POST', body: '{}' });
+    }).then(function () {
+      toast('已弹出题目，电视上可直接看新字号');
+    }).catch(function (e) { toast(e.message, 3200); });
   };
   $('btnTest').onclick = function () {
     api('/api/test', { method: 'POST', body: '{}' }).then(function () {

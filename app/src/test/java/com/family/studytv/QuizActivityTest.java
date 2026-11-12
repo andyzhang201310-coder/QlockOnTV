@@ -20,6 +20,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.json.JSONObject;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
@@ -116,6 +117,43 @@ public class QuizActivityTest {
         }
         assertNotNull("应能定位到目标选项", target);
         target.performClick();
+    }
+
+    /** v1.7.24：家长后台改「学习页字号」后，已显示的答题页必须立刻跟着变，不重抽题 */
+    @Test
+    public void savedFontScaleRefreshesLiveQuizImmediately() throws Exception {
+        TextView question = (TextView) activity.findViewById(R.id.tvQuestion);
+        LinearLayout box = (LinearLayout) activity.findViewById(R.id.optionBox);
+        Button first = (Button) box.getChildAt(0);
+        float q0 = question.getTextSize();
+        float o0 = first.getTextSize();
+        String stem0 = question.getText().toString();
+        String opt0 = first.getText().toString();
+        assertTrue("Robolectric 应能读出布局里的基准字号", q0 > 0f && o0 > 0f);
+
+        try {
+            JSONObject bigger = Rules.get(activity);
+            bigger.put("fontScale", 150);
+            Rules.save(activity, bigger);          // 内部广播 ACTION_CONFIG_CHANGED
+            shadowOf(Looper.getMainLooper()).idle();
+            assertTrue("题干放大到 150%", question.getTextSize() > q0 * 1.4f);
+            assertTrue("选项放大到 150%", first.getTextSize() > o0 * 1.4f);
+            assertEquals("刷新字号不该重抽题", stem0, question.getText().toString());
+            assertEquals("刷新字号不该改选项内容", opt0, first.getText().toString());
+
+            JSONObject smaller = Rules.get(activity);
+            smaller.put("fontScale", 75);
+            Rules.save(activity, smaller);
+            shadowOf(Looper.getMainLooper()).idle();
+            assertTrue("题干缩小到 75%", question.getTextSize() < q0);
+            assertTrue("选项缩小到 75%", first.getTextSize() < o0);
+            assertEquals(stem0, question.getText().toString());
+        } finally {
+            JSONObject back = Rules.get(activity);
+            back.put("fontScale", 100);
+            Rules.save(activity, back);
+            shadowOf(Looper.getMainLooper()).idle();
+        }
     }
 
     @Test
