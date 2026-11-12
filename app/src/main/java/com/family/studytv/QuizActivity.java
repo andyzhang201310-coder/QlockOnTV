@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.text.Layout;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.LeadingMarginSpan;
@@ -594,6 +595,7 @@ public class QuizActivity extends Activity {
     /**
      * A/B/C 画成方块字母徽标；换行后的行首与徽标后的正文对齐（悬挂缩进），
      * 长成语解释不会顶回行首。按钮高度由 wrap_content 自行决定，文本不做任何截断。
+     * 徽标按整个文本块垂直居中，两行 / 三行答案也不会贴在第一行。
      */
     /** 兼容单测里的旧调用；正式渲染都走带配色参数的重载 */
     static CharSequence optionText(Button b, int k, String text, String suffix) {
@@ -607,9 +609,20 @@ public class QuizActivity extends Activity {
         int indent = (int) (badgeWidth(textSize) + b.getPaint().measureText("    "));
         s.setSpan(new LeadingMarginSpan.Standard(0, indent), 0, s.length(),
                 Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-        s.setSpan(new LetterSpan(letter(k), textSize, p), 0, 1,
+        s.setSpan(new LetterSpan(letter(k), textSize, p, b), 0, 1,
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return s;
+    }
+
+    /**
+     * 徽标的垂直中心：单行沿用第一行中心（保持原观感）；多行改成整个文本块的中心。
+     *
+     * <p>ReplacementSpan 只在第一行被绘制，默认会把 A/B/C/D 钉在首行；TextView 绘制前
+     * 已把 canvas 平移到文本起点，span 收到的 top/bottom 与 layout.getHeight() 同属
+     * Layout 坐标系，所以文本块中心就是高度的一半，用它即可让徽标随行数自动居中。
+     */
+    static float badgeCenterY(int lineCount, float blockHeight, float firstLineCenter) {
+        return lineCount > 1 ? blockHeight / 2f : firstLineCenter;
     }
 
     private static float badgeWidth(float textSize) {
@@ -622,12 +635,15 @@ public class QuizActivity extends Activity {
         private final float box;
         private final float gap;
         private final Theme.Palette p;
+        /** 需要读取宿主 TextView 的 Layout 行数，才能把徽标放到整个文本块中心 */
+        private final TextView host;
 
-        LetterSpan(String ch, float textSize, Theme.Palette p) {
+        LetterSpan(String ch, float textSize, Theme.Palette p, TextView host) {
             this.ch = ch;
             this.box = textSize * 1.05f;
             this.gap = textSize * 0.42f;
             this.p = p;
+            this.host = host;
         }
 
         @Override
@@ -649,7 +665,10 @@ public class QuizActivity extends Activity {
             int body = paint.getColor();
             boolean right = p.isOk(body);
             boolean wrong = p.isBad(body);
-            float cy = (top + bottom) / 2f;
+            float firstLineCenter = (top + bottom) / 2f;
+            Layout layout = host == null ? null : host.getLayout();
+            float cy = badgeCenterY(layout == null ? 1 : layout.getLineCount(),
+                    layout == null ? 0f : layout.getHeight(), firstLineCenter);
             RectF r = new RectF(x, cy - box / 2f, x + box, cy + box / 2f);
 
             Paint.Align align = paint.getTextAlign();

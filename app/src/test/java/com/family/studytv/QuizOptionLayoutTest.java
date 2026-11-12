@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import android.text.Layout;
 import android.text.Spanned;
 import android.text.style.LeadingMarginSpan;
 import android.view.View;
@@ -110,6 +111,44 @@ public class QuizOptionLayoutTest {
         assertNull("不能省略尾部文字", longOne.getEllipsize());
         assertEquals("长短答案共享同一最小点击高度",
                 shortOne.getMinHeight(), longOne.getMinHeight());
+    }
+
+    /**
+     * v1.7.26：A/B/C/D 徽标必须按整个文本块垂直居中。ReplacementSpan 只在首行绘制，
+     * 以前两行答案的徽标会贴在第一行；现在行数一变，中心跟着文本块高度走。
+     */
+    @Test
+    public void badgeCenterFollowsWholeTextBlockNotFirstLine() {
+        float firstLineCenter = 30f;
+        assertEquals("单行仍保持原来的第一行中心",
+                firstLineCenter, QuizActivity.badgeCenterY(1, 60f, firstLineCenter), 0f);
+        for (int lines = 2; lines <= 5; lines++) {
+            float blockHeight = lines * 60f;
+            assertEquals(lines + " 行时徽标要落在整个文本块正中",
+                    blockHeight / 2f,
+                    QuizActivity.badgeCenterY(lines, blockHeight, firstLineCenter), 0f);
+        }
+        assertTrue("两行答案的徽标必须从第一行下移",
+                QuizActivity.badgeCenterY(2, 120f, firstLineCenter) > firstLineCenter);
+        assertEquals("首帧还没有 Layout 时退回第一行中心，不能崩",
+                firstLineCenter, QuizActivity.badgeCenterY(1, 0f, firstLineCenter), 0f);
+    }
+
+    @Test
+    public void multiLineButtonSuppliesItsLayoutLineCount() {
+        Button b = (Button) optionBox().getChildAt(0);
+        b.setText(QuizActivity.optionText(b, 2, "第一行文字\n第二行文字\n第三行文字", null));
+        b.measure(View.MeasureSpec.makeMeasureSpec(600, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        b.layout(0, 0, 600, Math.max(1, b.getMeasuredHeight()));
+        Layout layout = b.getLayout();
+        assertNotNull("测量后应能拿到文本 Layout", layout);
+        assertTrue("显式换行的答案应有多行", layout.getLineCount() >= 3);
+        float first = (layout.getLineTop(0) + layout.getLineBottom(0)) / 2f;
+        assertEquals("徽标中心应等于文本块高度的一半", layout.getHeight() / 2f,
+                QuizActivity.badgeCenterY(layout.getLineCount(), layout.getHeight(), first), 0f);
+        assertTrue("多行时不能再用第一行中心",
+                QuizActivity.badgeCenterY(layout.getLineCount(), layout.getHeight(), first) > first);
     }
 
     @Test
