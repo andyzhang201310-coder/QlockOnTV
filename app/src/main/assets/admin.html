@@ -578,6 +578,7 @@
     </div>
     <div class="tip">
       · <b>启用拦截</b>：总开关，关掉后电视上完全不弹题、也不拦任何东西，只保留后台与远程控制；<br>
+      · <b>电视待机时一律不弹题</b>（v1.7.33，优先级最高）：待机/休眠时到点也不弹，避免把睡着的电视点亮；欠下的一轮留着，电视一唤醒立刻补，关电视逃不掉，「立即弹一次题」也不会叫醒电视；<br>
       · <b>是否开启自动弹题</b>：关掉后到点不弹、待机中的电视也不会被叫醒，「立即弹一次题」仍可手动催；<br>
       · <b>开机立即弹一次题</b>：孩子关机逃避后一开机就先答题，重启、升级都保持该设置。<br>
       三个开关改完自动保存，也都不会重置「下次弹题」倒计时。
@@ -772,8 +773,10 @@
     <div id="tab-time" class="hidden">
       <div class="panel">
         <h2>此刻会不会弹题</h2>
-        <p class="desc">这一页就是全部时间规则，从上到下依次判断：免打扰 → 例外时段 → 今日时段表。命中前面任一条就不再往下看。改完回到这里看一眼，就知道有没有生效。</p>
+        <p class="desc">这一页就是全部时间规则，从上到下依次判断：电视是否醒着 → 免打扰 → 例外时段 → 今日时段表。命中前面任一条就不再往下看。改完回到这里看一眼，就知道有没有生效。</p>
         <div class="body">
+          <div class="f"><div class="lbl"><b>电视状态</b><small id="calDeviceHint">待机时一律不弹题，避免把睡着的电视点亮</small></div>
+            <div class="ctl"><span class="unit" id="calDevice">—</span></div></div>
           <div class="f"><div class="lbl"><b>判定结果</b><small id="calReason">读取中…</small></div>
             <div class="ctl"><span class="badge ok" id="calAllowed">读取中…</span></div></div>
           <div class="f"><div class="lbl"><b>今天 / 下次允许弹题</b><small id="calNext">—</small></div>
@@ -790,7 +793,7 @@
       </div>
 
       <div class="note" style="margin-bottom:14px">
-        <b>判定顺序</b>：① 免打扰 → ② 例外时段（固定每周几的大人豁免 / 网课）→ ③ 今日时段表。
+        <b>判定顺序</b>：⓿ 电视待机（不弹，唤醒后补）→ ① 免打扰 → ② 例外时段（固定每周几的大人豁免 / 网课）→ ③ 今日时段表。
         前两级命中一律不弹题；今日时段表默认按上学日 / 周末 / 法定假期自动切换，关掉「按日类型自动切换」才改用最下方的按星期时间表。
       </div>
 
@@ -1333,7 +1336,7 @@
 
   function loadState() {
     return api('/api/state').then(function (s) {
-      state = s; render();
+      state = s; render(); renderDeviceStatus(s);
       // 首次 state 到达后重画科目/年级多选（init 时 state 还是 null，会显示「题库里还没有科目」）
       if (cfg && curView && curView.indexOf('rules') === 0) { renderScope(); }
     }).catch(function (e) {
@@ -1341,6 +1344,22 @@
       $('connBadge').className = 'conn bad';
       $('connBadge').textContent = '连接失败';
     });
+  }
+
+  // v1.7.33：电视待机时一律不弹题（最高优先级），诊断卡常驻显示，免得家长以为规则又没生效
+  function renderDeviceStatus(s) {
+    var el = $('calDevice');
+    if (!el) { return; }
+    var awake = !s || s.awake !== false;
+    el.textContent = awake ? '使用中（正常计时）' : ((s.deviceStatus || '待机') + '（弹题已暂缓）');
+    el.style.color = awake ? '' : '#8a4a45';
+    var hint = $('calDeviceHint');
+    if (!hint) { return; }
+    if (!awake && s.asleepDeferAt) {
+      hint.textContent = '到点但电视在待机，已暂缓（' + hhmm(s.asleepDeferAt) + ' 记过一次）；唤醒后立刻补弹，关电视逃不掉';
+    } else {
+      hint.textContent = '待机时一律不弹题，避免把睡着的电视点亮';
+    }
   }
 
   // ============================================================ 参数类设置：改完即存
@@ -1443,12 +1462,20 @@
       if (r && r.config) { cfg = r.config; syncSteppers(); }
       setBadge('ruleBadge', 'ok', '已自动保存');
       return api('/api/test', { method: 'POST', body: '{}' });
-    }).then(function () {
+    }).then(function (r) {
+      if (r && r.ok === false && r.reason === 'asleep') {
+        toast('字号已保存；电视正在待机，下次唤醒后按新字号显示', 4200);
+        return;
+      }
       toast('已弹出题目，电视上可直接看新字号');
     }).catch(function (e) { toast(e.message, 3200); });
   };
   $('btnTest').onclick = function () {
-    api('/api/test', { method: 'POST', body: '{}' }).then(function () {
+    api('/api/test', { method: 'POST', body: '{}' }).then(function (r) {
+      if (r && r.ok === false && r.reason === 'asleep') {
+        toast('电视正在待机，弹题已延后到下次唤醒（不会叫醒电视）', 4200);
+        return loadState();
+      }
       toast('电视端已弹出题目');
     }).catch(function (e) { toast(e.message, 3200); });
   };

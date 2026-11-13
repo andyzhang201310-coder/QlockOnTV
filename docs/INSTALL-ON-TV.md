@@ -376,6 +376,46 @@ Sony BRAVIA 4K GB ATV3 / Android 9 实测（v1.7.30）：
 - 隐藏后家长自己也要走上面两条恢复路径，别把管理密码和 adb 都忘了。
 
 
+### 待机不唤醒（v1.7.33）：到点先看电视是不是睡着
+
+给电视机装题锁最容易踩的坑不是「不弹」，而是**半夜自己把电视点亮**：答题页带
+`FLAG_TURN_SCREEN_ON`，只要 Activity 一 create，面板就亮。v1.7.33 起把这条判定放到所有规则之前：
+
+| 顺序 | 判定 | 结果 |
+|---|---|---|
+| 0 | 电视是否醒着（`DeviceAwake`） | 待机 / 休眠 → 不弹、不计轮数、不动 `dueAt`，只记一笔 `asleepDeferAt` |
+| 1 | 总开关 / 自动弹题 | 关 → 不弹、不留闹钟 |
+| 2 | 卸载放行窗口 | 家长正在走卸载流程 → 不弹 |
+| 3 | 免打扰 / 例外时段 / 今日时段表 | 命中禁用 → 顺延到下一个允许时刻 |
+
+实现要点：
+
+- 判定两层：`PowerManager.isInteractive()` + `Display.getState()`（排除 `STATE_OFF` / `STATE_DOZE_SUSPEND`）。
+  有些电视只关背光、`isInteractive` 仍为 true，只有一层会漏判；取不到状态时按「醒着」处理，
+  宁可弹题也不让孩子靠异常逃避。
+- 三处闸门：`GuardService.checkDue()`、`GuardService.showQuiz()`、`QuizActivity.onCreate()`。
+  最后一处是兜底——即使系统把排队的 Activity 拉起来，待机状态下也会立刻 `finish()`。
+- 唤醒补弹：`GuardService` 动态注册 `ACTION_SCREEN_ON` / `ACTION_USER_PRESENT`，亮屏约 1 秒后
+  立刻跑一次 `checkDue()`，不再等 15 秒轮询，孩子开电视后没有空窗期。
+- 后台联动：诊断卡新增「电视状态」行；`/api/test` 在待机时返回 `{ok:false, reason:"asleep"}`，
+  页面提示「已延后到下次唤醒」，不会叫醒电视。
+
+真机实测（Sony BRAVIA 4K GB ATV3 / Android 9，1.7.33）：
+
+| 场景 | 操作 | 结果 |
+|---|---|---|
+| 待机信号 | `input keyevent KEYCODE_SLEEP` | `mWakefulness=Asleep`、`Display Power: state=OFF`，两层判定都翻成「待机」 |
+| 待机 + 欠题重启 | 待机状态下让进程崩溃（`am crash`），前台服务自启 → `bootstrap` → `showSoon` | 30 秒后仍是 `Asleep` / `OFF`，`QuizActivity` 未拉起（前台还是电视桌面）。改动前这一步会把屏幕点亮 |
+| 唤醒补弹 | `input keyevent KEYCODE_WAKEUP` | 6 秒内 `QuizActivity` 回到前台（新 task），待机期间欠的那一轮补上 |
+| 覆盖安装 | 1.7.32 → 1.7.33 `install -r` | `versionName=1.7.33`（code 42）；`LEANBACK_LAUNCHER` 命中数仍为 0，隐藏状态保持 |
+| 常规弹题 | 醒着状态下到点 | 答题页正常弹出，去掉 `FLAG_TURN_SCREEN_ON` 不影响正常显示 |
+
+边界：
+
+- 深度待机断网的机型，后台 `/api/state` 本身就连不上（既有边界，与本次改动无关）。
+- 屏保 / Ambient 模式下屏幕是亮的，`isInteractive` 为 true，算「使用中」，会正常弹题——屏幕本来就亮。
+- 待机期间到点不清零 `dueAt`：一开电视就补弹，这是有意为之，否则关电视就能逃过一整轮。
+
 ### 仍然想要硬锁的可行做法
 
 1. 换设备：选支持 `device_admin` 特性的盒子 / 电视，装完执行 `dpm set-device-owner`。

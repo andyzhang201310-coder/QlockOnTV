@@ -7,8 +7,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -50,6 +52,30 @@ public class GuardService extends Service {
     private long lastShowAt = 0L;
     /** 家长最近一次「立即解锁」的时间，用于避免启动自检把主动放行误判成 BAL 拦截 */
     private long unlockedAt = 0L;
+    private boolean wakeReceiverRegistered = false;
+
+    /**
+     * 电视被唤醒（屏幕亮起）时立刻补一次到点检查（v1.7.33）。
+     * 只靠 15 秒轮询的话，孩子开电视后有最多 15 秒的空窗能正常看；既然待机期间不弹，
+     * 醒来的第一时间就要把欠下的那一轮补上。
+     */
+    private final BroadcastReceiver wakeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (handler == null) {
+                return;
+            }
+            handler.removeCallbacks(wakeTick);
+            handler.postDelayed(wakeTick, 1200);   // 等系统界面稳定，别刚亮屏就被盖住
+        }
+    };
+
+    private final Runnable wakeTick = new Runnable() {
+        @Override
+        public void run() {
+            checkDue();
+        }
+    };
 
     public static GuardService get() {
         return alive;
@@ -126,6 +152,7 @@ public class GuardService extends Service {
             }
         }, "calendar-sync").start();
         startHttpServer();
+        registerWakeReceiver();
         handler.post(ticker);
     }
 
@@ -160,6 +187,7 @@ public class GuardService extends Service {
     @Override
     public void onDestroy() {
         alive = null;
+        unregisterWakeReceiver();
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
         }
@@ -170,6 +198,37 @@ public class GuardService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    // ------------------------------------------------------------------ 屏幕状态
+
+    private void registerWakeReceiver() {
+        if (wakeReceiverRegistered) {
+            return;
+        }
+        try {
+            IntentFilter f = new IntentFilter(Intent.ACTION_SCREEN_ON);
+            f.addAction(Intent.ACTION_USER_PRESENT);
+            registerReceiver(wakeReceiver, f);
+            wakeReceiverRegistered = true;
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void unregisterWakeReceiver() {
+        if (!wakeReceiverRegistered) {
+            return;
+        }
+        try {
+            unregisterReceiver(wakeReceiver);
+        } catch (Throwable ignored) {
+        }
+        wakeReceiverRegistered = false;
+    }
+
+    /** 电视待机时不能弹题；这条判定排在所有规则之前 */
+    private static boolean awake(Context c) {
+        return DeviceAwake.isAwake(c);
     }
 
     // ------------------------------------------------------------------ 规则时段
@@ -284,6 +343,20 @@ public class GuardService extends Service {
     }
 
     private void checkDue() {
+        // ---- 最高优先级：电视待机 / 休眠时一律不弹（v1.7.33）----
+        // 答题页带 FLAG_TURN_SCREEN_ON，一拉起就会点亮面板，晚上到点等于自己把电视叫醒。
+        // 这里不弹、不计轮数、不动 dueAt、也不重排闹钟：欠下的那一轮留着，
+        // 电视一唤醒（wakeReceiver）立刻补上，孩子不能靠关电视逃避。
+        if (!awake(this)) {
+            long asleepNow = System.currentTimeMillis();
+            long asleepDue = Prefs.dueAt();
+            // 到点却被待机挡下：记一笔给后台看，5 分钟内只记一次，别每 15 秒写盘
+            if (asleepDue > 0 && asleepDue <= asleepNow
+                    && asleepNow - Prefs.asleepDeferAt() > 300000L) {
+                Prefs.setAsleepDeferAt(asleepNow);
+            }
+            return;
+        }
         if (!Prefs.isEnabled() || !Prefs.autoQuiz()) {
             return;
         }
@@ -332,6 +405,15 @@ public class GuardService extends Service {
 
     private void showQuiz() {
         if (QuizActivity.running) {
+            return;
+        }
+        // 兜底闸门：showSoon / 开机补题 / 后台「立即弹一次」都会走到这里，
+        // 待机时一律不拉起答题页，避免把睡着的电视点亮。
+        if (!awake(this)) {
+            long t = System.currentTimeMillis();
+            if (t - Prefs.asleepDeferAt() > 300000L) {
+                Prefs.setAsleepDeferAt(t);
+            }
             return;
         }
         quizShowing = true;
@@ -391,6 +473,10 @@ public class GuardService extends Service {
             public void run() {
                 // 家长刚点了「立即解锁」，界面消失是预期行为，不要写成 BAL_BLOCK 或补发全屏通知
                 if (System.currentTimeMillis() - unlockedAt < 5000L) {
+                    return;
+                }
+                // 电视在这 2.5 秒里睡着了（或本来就待机）：不算启动失败，别污染诊断
+                if (!awake(GuardService.this)) {
                     return;
                 }
                 if (QuizActivity.running) {
@@ -564,6 +650,10 @@ public class GuardService extends Service {
 
     @SuppressWarnings("deprecation")
     private void postFullScreenFallback() {
+        // 全屏通知在部分机型上会把屏幕点亮，待机时干脆不发，靠唤醒后的补弹兜住
+        if (!awake(this)) {
+            return;
+        }
         try {
             Intent i = new Intent(this, QuizActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);

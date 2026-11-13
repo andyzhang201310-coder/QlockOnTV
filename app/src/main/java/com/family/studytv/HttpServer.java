@@ -909,6 +909,16 @@ public class HttpServer {
                 unauthorized(socket);
                 return;
             }
+            // 电视待机时不弹：弹了就会把屏幕点亮，家长手动催题也不该叫醒电视。
+            // 直接回原因给后台，页面上提示「已延后到下次唤醒」。
+            if (!DeviceAwake.isAwake(ctx)) {
+                JSONObject defer = new JSONObject();
+                defer.put("ok", false);
+                defer.put("reason", "asleep");
+                defer.put("asleepDeferAt", Prefs.asleepDeferAt());
+                respondJson(socket, 200, defer.toString());
+                return;
+            }
             Intent i = new Intent(ctx, GuardService.class);
             i.setAction(GuardService.ACTION_SHOW_NOW);
             GuardService.start(ctx, i);
@@ -1187,6 +1197,10 @@ public class HttpServer {
             o.put("quizRunning", QuizActivity.running);
             o.put("dueAt", Prefs.dueAt());
             o.put("lastPassAt", Prefs.lastPassAt());
+            // v1.7.33：电视醒着才弹题，待机时暂缓到下次唤醒
+            o.put("awake", DeviceAwake.isAwake(ctx));
+            o.put("deviceStatus", DeviceAwake.statusName(ctx));
+            o.put("asleepDeferAt", Prefs.asleepDeferAt());
             o.put("serverError", error);
             o.put("now", System.currentTimeMillis());
 

@@ -256,6 +256,18 @@ public final class Prefs {
         sp().edit().putLong("balBlockedAt", v).apply();
     }
 
+    /**
+     * 最近一次「到点但电视处于待机、于是暂缓弹题」的时间（v1.7.33）。
+     * 0 表示还没发生过；dueAt 不会被清掉，电视一唤醒就补弹，孩子不能靠关电视逃避。
+     */
+    public static long asleepDeferAt() {
+        return sp().getLong("asleepDeferAt", 0L);
+    }
+
+    public static void setAsleepDeferAt(long v) {
+        sp().edit().putLong("asleepDeferAt", v).apply();
+    }
+
     /** 启用的学科，逗号分隔 */
     public static String subjects() {
         return sp().getString("subjects", "语文,数学,英语");

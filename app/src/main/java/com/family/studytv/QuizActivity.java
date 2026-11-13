@@ -54,6 +54,12 @@ public class QuizActivity extends Activity {
     /** 当前显示在屏幕上的答题页，供手机后台「立即解锁」远程关闭 */
     private static volatile QuizActivity active = null;
 
+    /**
+     * 电视待机时被系统拉起来，onCreate 里直接 finish 掉（v1.7.33）。
+     * 标记下来，避免 onResume/onPause 去碰还没创建的控件。
+     */
+    private boolean bailed = false;
+
     /** 答错后停留多久再换新题（毫秒），留足看正确答案的时间；规则可改 */
     private static final long REVEAL_MS = 4500;
     /** 通关后停留多久自动关闭 */
@@ -158,18 +164,7 @@ public class QuizActivity extends Activity {
     };
 
     private boolean screenOn() {
-        try {
-            android.os.PowerManager pm = (android.os.PowerManager) getSystemService(android.content.Context.POWER_SERVICE);
-            if (pm == null) {
-                return true;
-            }
-            if (android.os.Build.VERSION.SDK_INT >= 20) {
-                return pm.isInteractive();
-            }
-            return pm.isScreenOn();
-        } catch (Throwable e) {
-            return true;
-        }
+        return DeviceAwake.isAwake(this);
     }
 
     private static final class Item {
@@ -181,8 +176,16 @@ public class QuizActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 电视待机时被系统拉起来（服务侧拦下后仍可能有排队 Activity 被 create）：
+        // 直接退出，绝不点亮面板。
+        if (!DeviceAwake.isAwake(this)) {
+            bailed = true;
+            finish();
+            return;
+        }
+        // v1.7.33 起不再加 FLAG_TURN_SCREEN_ON：能走到这里说明屏幕本来就亮着，
+        // 加它只会在息屏场景把睡着的电视点亮。
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-                | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
                 | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                 | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
         setContentView(R.layout.activity_quiz);
@@ -424,6 +427,9 @@ public class QuizActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (bailed) {
+            return;
+        }
         // 从管理页回来，恢复「离开就拉回」的约束
         managing = false;
         upHits = 0;
