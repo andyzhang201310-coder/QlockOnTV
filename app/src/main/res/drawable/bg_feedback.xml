@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 答题页底部反馈条：做成一张薄卡片，正确/错误文字颜色由 Java 动态设置
-     v1.8.3：去掉 2dp 描边、圆角 16dp → 10dp，与选项保持一致 -->
+     v1.8.3：去掉 2dp 描边；v1.8.4：全站圆角统一 6dp -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <solid android:color="@color/surfaceAlt" />
-    <corners android:radius="10dp" />
+    <corners android:radius="6dp" />
 </shape>

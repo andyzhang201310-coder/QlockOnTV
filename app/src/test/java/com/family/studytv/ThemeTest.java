@@ -95,23 +95,28 @@ public class ThemeTest {
     }
 
     /**
-     * v1.8.2 起答案项默认无边框、圆角 10dp，只有被选中（聚焦 / 按下）才描边。
+     * 答案项默认无边框、圆角 6dp（v1.8.4 全站统一），只有被选中（聚焦 / 按下）才描边。
      * 这里逐套配色核对：默认态无描边、选中态有描边、三态圆角与边界完全一致。
      */
     @Test
     public void optionsHaveNoBorderUnlessSelected() throws Exception {
         View v = new View(RuntimeEnvironment.getApplication());
         for (String key : Theme.KEYS) {
-            assertBorderOnlyWhenFocused(key, Theme.optionBackground(v, Theme.of(key)));
+            assertBorderOnlyWhenFocused(key, Theme.optionBackground(v, Theme.of(key)), dpOf(v, 6));
         }
         Drawable xml = RuntimeEnvironment.getApplication().getDrawable(R.drawable.bg_quiz_option);
         assertTrue("XML 版选项背景也应是三态 selector", xml instanceof StateListDrawable);
-        assertBorderOnlyWhenFocused("bg_quiz_option.xml", (StateListDrawable) xml);
+        assertBorderOnlyWhenFocused("bg_quiz_option.xml", (StateListDrawable) xml, dpOf(v, 6));
+    }
+
+    private static float dpOf(View v, float value) {
+        return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_DIP,
+                value, v.getResources().getDisplayMetrics());
     }
 
     /** 状态顺序固定为：聚焦(0) / 按下(1) / 默认(2)，与 optionBackground 的添加顺序一致 */
-    private static void assertBorderOnlyWhenFocused(String label, StateListDrawable s)
-            throws Exception {
+    private static void assertBorderOnlyWhenFocused(String label, StateListDrawable s,
+            float expectedRadius) throws Exception {
         assertEquals(label + " 应有聚焦/按下/默认三态", 3, s.getStateCount());
 
         float radius = -1f;
@@ -132,7 +137,7 @@ public class ThemeTest {
             assertEquals(label + (i == 0 ? " 聚焦态必须描边" : i == 1
                     ? " 按下态必须描边" : " 默认态不能有边框"), i <= 1, framed);
         }
-        assertTrue(label + " 圆角应收到 10dp（比旧的 18dp 更小）", radius > 0f);
+        assertEquals(label + " 圆角应统一为 6dp", expectedRadius, radius, 0.5f);
     }
 
     /** 揭示答案：正确项描绿、错选项描红，「变暗」的其它项保持无框 */

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 选项 / 普通按钮：近黑卡片 + 细描边；聚焦时只换填充与描边颜色。
-     三态共用 18dp 圆角 / 2dp 描边 / 同一边界，选中项边框与其它选项完全重合。 -->
+     三态共用 6dp 圆角 / 2dp 描边 / 同一边界，选中项边框与其它选项完全重合。
+     v1.8.4：全站圆角统一 6dp。 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/surfaceFocus" />
-            <corners android:radius="18dp" />
+            <corners android:radius="6dp" />
             <stroke
                 android:width="2dp"
                 android:color="@color/strokeFocus" />
@@ -14,7 +15,7 @@
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
             <solid android:color="@color/surfaceFocus" />
-            <corners android:radius="18dp" />
+            <corners android:radius="6dp" />
             <stroke
                 android:width="2dp"
                 android:color="@color/accent" />
@@ -23,7 +24,7 @@
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@color/surface" />
-            <corners android:radius="18dp" />
+            <corners android:radius="6dp" />
             <stroke
                 android:width="2dp"
                 android:color="@color/stroke" />

@@ -507,3 +507,29 @@ Sony BRAVIA 4K GB ATV3 / Android 9 实测（v1.7.30）：
 
 单测覆盖（`QuizActivityTest`）：选项 `elevation == 0` 且 `stateListAnimator == null`、
 学科标签圆角 10dp 且有描边、反馈条圆角 10dp 且无描边。
+
+### 全站圆角统一 6dp（v1.8.4）
+
+电视端所有带圆角的控件统一到 **6dp**，不再出现「选项 10dp / 卡片 20dp / 胶囊 999dp」混排：
+
+| 位置 | 原圆角 |
+|---|---|
+| 答案选项（`bg_quiz_option` / `Theme.optionBackground`） | 10dp |
+| 底部反馈条（`bg_feedback`） | 10dp |
+| 学科标签（`bg_tag`） | 10dp |
+| 普通按钮 / 密码键盘（`bg_option`） | 18dp |
+| 卡片（`bg_card`：信息页、安全设置、PIN 面板） | 20dp |
+| 对话框（`bg_dialog`） | 24dp |
+| 二维码白底（`bg_qr`） | 24dp |
+| 状态胶囊（`bg_pill`：管理地址） | 999dp |
+| 主按钮（`bg_button_primary`：渐变 + 聚焦光晕层） | 19dp / 16dp |
+
+改法：drawable 里的 `android:radius` 一次性替换为 6dp；Java 侧只有两个入口 ——
+`Theme.OPTION_RADIUS_DP = 6f`（选项）与 `QuizActivity.applyTheme()` 里
+`Theme.card(..., 6f, ...)`（学科标签、反馈条）。
+
+二维码、时钟徽标这类图形本身（vector path）不属于「圆角」，未改动；
+管理后台网页（`admin.html`）的 CSS 圆角属于另一套视觉体系，也没动。
+
+单测：`ThemeTest` 断言五套配色的选项圆角都等于 6dp；`QuizActivityTest` 断言
+学科标签与反馈条圆角 6dp。

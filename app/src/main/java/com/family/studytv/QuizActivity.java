@@ -407,10 +407,10 @@ public class QuizActivity extends Activity {
         if (tvClock != null) {
             tvClock.setBackground(null);
         }
-        // v1.8.3：学科胶囊与底部反馈条统一收成 10dp 小圆角；反馈条去掉描边，只留底色
-        tvSubject.setBackground(Theme.card(tvSubject, theme.tagBg, theme.accent, 10f,
+        // v1.8.4：学科胶囊与底部反馈条统一收成 6dp 小圆角；反馈条去掉描边，只留底色
+        tvSubject.setBackground(Theme.card(tvSubject, theme.tagBg, theme.accent, 6f,
                 Math.max(1, px(tvSubject, 2))));
-        tvFeedback.setBackground(Theme.card(tvFeedback, theme.feedbackBg, 0, 10f, 0));
+        tvFeedback.setBackground(Theme.card(tvFeedback, theme.feedbackBg, 0, 6f, 0));
         if (!items.isEmpty() && index >= 0 && index < items.size()) {
             renderSubject(items.get(index).q);   // 星级颜色跟着换
         }

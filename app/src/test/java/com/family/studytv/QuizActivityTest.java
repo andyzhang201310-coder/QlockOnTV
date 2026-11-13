@@ -437,15 +437,15 @@ public class QuizActivityTest {
 
     @Test
     public void subjectTagAndFeedbackUseSmallRadius() {
-        // v1.8.3：学科标签与底部反馈条圆角统一收成 10dp，反馈条去掉描边
+        // v1.8.4：全站圆角统一 6dp，反馈条无描边
         View tag = activity.findViewById(R.id.tvSubject);
         GradientDrawable tagBg = (GradientDrawable) tag.getBackground();
-        assertEquals("学科标签圆角应为 10dp", dp(tag, 10), tagBg.getCornerRadius(), 0.5f);
+        assertEquals("学科标签圆角应为 6dp", dp(tag, 6), tagBg.getCornerRadius(), 0.5f);
         assertTrue("学科标签保留强调描边", strokeWidth(tagBg) > 0);
 
         View feedback = activity.findViewById(R.id.tvFeedback);
         GradientDrawable fbBg = (GradientDrawable) feedback.getBackground();
-        assertEquals("反馈条圆角应为 10dp", dp(feedback, 10), fbBg.getCornerRadius(), 0.5f);
+        assertEquals("反馈条圆角应为 6dp", dp(feedback, 6), fbBg.getCornerRadius(), 0.5f);
         assertTrue("反馈条不应有描边", strokeWidth(fbBg) <= 0);
     }
 

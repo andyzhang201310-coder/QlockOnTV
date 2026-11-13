@@ -246,8 +246,8 @@ public final class Theme {
         return g;
     }
 
-    /** 选项圆角：v1.8.2 起 18dp → 10dp，去掉描边后大圆角会显得「药丸化」，收小更利落 */
-    private static final float OPTION_RADIUS_DP = 10f;
+    /** 选项圆角：v1.8.4 起全站统一 6dp（原 18dp → 10dp → 6dp，边框弱化后小圆角更利落） */
+    private static final float OPTION_RADIUS_DP = 6f;
 
     /**
      * 选项三态背景：默认、聚焦（遥控器选中）、按下。
