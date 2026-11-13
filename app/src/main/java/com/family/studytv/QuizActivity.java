@@ -363,7 +363,8 @@ public class QuizActivity extends Activity {
         String r = role == null ? "" : role;
         b.setTag(new String[]{text, suffix == null ? "" : suffix, r});
         b.setTextColor(optionTextColor(r));
-        b.setBackground(Theme.optionBackground(b, theme));
+        // v1.8.2：默认无边框，只有选中项才有描边；答对/答错的项按角色描绿/描红
+        b.setBackground(Theme.optionBackground(b, theme, r));
         b.setText(optionText(b, k, text, suffix, theme));
     }
 

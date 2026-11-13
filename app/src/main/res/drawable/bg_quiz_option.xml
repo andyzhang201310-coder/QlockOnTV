@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 答题选项（v1.8.2）：默认态只有填充、没有边框，圆角收到 10dp；
+     只有被选中（聚焦 / 按下）的那一项才亮出 2dp 描边。
+     这是 inflate 瞬间的兜底外观，运行时由 Theme.optionBackground() 按配色与答题角色重画。
+     四态 padding 统一 2dp，避免「有框 / 无框」切换时文字左右挪动。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surfaceFocus" />
+            <corners android:radius="10dp" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/strokeFocus" />
+            <padding
+                android:left="2dp"
+                android:top="2dp"
+                android:right="2dp"
+                android:bottom="2dp" />
+        </shape>
+    </item>
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surfaceFocus" />
+            <corners android:radius="10dp" />
+            <stroke
+                android:width="2dp"
+                android:color="@color/accent" />
+            <padding
+                android:left="2dp"
+                android:top="2dp"
+                android:right="2dp"
+                android:bottom="2dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface" />
+            <corners android:radius="10dp" />
+            <padding
+                android:left="2dp"
+                android:top="2dp"
+                android:right="2dp"
+                android:bottom="2dp" />
+        </shape>
+    </item>
+</selector>

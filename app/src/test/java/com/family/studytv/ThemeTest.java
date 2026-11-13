@@ -94,35 +94,98 @@ public class ThemeTest {
         assertEquals(Theme.DEFAULT, Prefs.theme());
     }
 
+    /**
+     * v1.8.2 起答案项默认无边框、圆角 10dp，只有被选中（聚焦 / 按下）才描边。
+     * 这里逐套配色核对：默认态无描边、选中态有描边、三态圆角与边界完全一致。
+     */
     @Test
-    public void optionBordersAreAlignedAcrossAllStates() {
+    public void optionsHaveNoBorderUnlessSelected() throws Exception {
         View v = new View(RuntimeEnvironment.getApplication());
         for (String key : Theme.KEYS) {
-            assertAligned(key, Theme.optionBackground(v, Theme.of(key)));
+            assertBorderOnlyWhenFocused(key, Theme.optionBackground(v, Theme.of(key)));
         }
-        Drawable xml = RuntimeEnvironment.getApplication().getDrawable(R.drawable.bg_option);
+        Drawable xml = RuntimeEnvironment.getApplication().getDrawable(R.drawable.bg_quiz_option);
         assertTrue("XML 版选项背景也应是三态 selector", xml instanceof StateListDrawable);
-        assertAligned("bg_option.xml", (StateListDrawable) xml);
+        assertBorderOnlyWhenFocused("bg_quiz_option.xml", (StateListDrawable) xml);
     }
 
-    /** 三态同边界、同内边距、都是单层卡片；一旦有人再套内缩光晕层，这里会失败 */
-    private static void assertAligned(String label, StateListDrawable s) {
+    /** 状态顺序固定为：聚焦(0) / 按下(1) / 默认(2)，与 optionBackground 的添加顺序一致 */
+    private static void assertBorderOnlyWhenFocused(String label, StateListDrawable s)
+            throws Exception {
         assertEquals(label + " 应有聚焦/按下/默认三态", 3, s.getStateCount());
-        Rect firstPad = null;
+
+        float radius = -1f;
         for (int i = 0; i < s.getStateCount(); i++) {
             Drawable d = s.getStateDrawable(i);
             assertTrue(label + " 每态只能是单层圆角卡片，不能套光晕层",
                     d instanceof GradientDrawable);
-            d.setBounds(0, 0, 300, 90);
-            assertEquals(label + " 各态边界必须完全重合", new Rect(0, 0, 300, 90), d.getBounds());
-            Rect pad = new Rect();
-            d.getPadding(pad);
-            if (firstPad == null) {
-                firstPad = pad;
+            GradientDrawable g = (GradientDrawable) d;
+            g.setBounds(0, 0, 300, 90);
+            assertEquals(label + " 各态边界必须完全重合", new Rect(0, 0, 300, 90), g.getBounds());
+            if (radius < 0f) {
+                radius = g.getCornerRadius();
             } else {
-                assertEquals(label + " 各态内边距必须一致，选中时文字不位移", firstPad, pad);
+                assertEquals(label + " 各态圆角必须一致，选中时不能跳圆", radius,
+                        g.getCornerRadius(), 0.5f);
+            }
+            boolean framed = strokeWidth(g) > 0;
+            assertEquals(label + (i == 0 ? " 聚焦态必须描边" : i == 1
+                    ? " 按下态必须描边" : " 默认态不能有边框"), i <= 1, framed);
+        }
+        assertTrue(label + " 圆角应收到 10dp（比旧的 18dp 更小）", radius > 0f);
+    }
+
+    /** 揭示答案：正确项描绿、错选项描红，「变暗」的其它项保持无框 */
+    @Test
+    public void revealedOptionsCarryRoleBorderColor() throws Exception {
+        View v = new View(RuntimeEnvironment.getApplication());
+        for (String key : Theme.KEYS) {
+            Theme.Palette p = Theme.of(key);
+            assertEquals(key + " 正确项应是绿框", p.ok, strokeColor(Theme.optionBackground(v, p, "ok")));
+            assertEquals(key + " 错选项应是红框", p.bad, strokeColor(Theme.optionBackground(v, p, "bad")));
+            assertTrue(key + " 未选中的暗项不该有框",
+                    strokeWidth(plainOf(Theme.optionBackground(v, p, "dim"))) <= 0);
+        }
+    }
+
+    private static GradientDrawable plainOf(StateListDrawable s) {
+        return (GradientDrawable) s.getStateDrawable(2);
+    }
+
+    /** GradientDrawable 没有公开的描边读取接口，只能读内部字段（描边状态在 GradientState 里） */
+    private static int strokeWidth(GradientDrawable g) throws Exception {
+        Object state = field(g, "mGradientState");
+        return state instanceof Integer ? 0 : (Integer) field(state, "mStrokeWidth");
+    }
+
+    private static int strokeColor(StateListDrawable s) throws Exception {
+        GradientDrawable g = plainOf(s);
+        Object paint = null;
+        for (Object holder : new Object[]{field(g, "mGradientState"), g}) {
+            if (holder instanceof Integer) {
+                continue;
+            }
+            try {
+                paint = field(holder, "mStrokePaint");
+                break;
+            } catch (NoSuchFieldException ignored) {
             }
         }
+        return paint == null ? 0 : ((android.graphics.Paint) paint).getColor();
+    }
+
+    private static Object field(Object target, String name) throws Exception {
+        Class<?> c = target.getClass();
+        while (c != null) {
+            try {
+                java.lang.reflect.Field f = c.getDeclaredField(name);
+                f.setAccessible(true);
+                return f.get(target);
+            } catch (NoSuchFieldException e) {
+                c = c.getSuperclass();
+            }
+        }
+        throw new NoSuchFieldException(name);
     }
 
     @Test

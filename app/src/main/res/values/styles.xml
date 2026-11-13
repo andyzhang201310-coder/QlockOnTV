@@ -104,6 +104,9 @@
          v1.7.27：minHeight 72dp → 56dp、上下 padding 10dp → 8dp，
                  四个选项 + 题干 + 底部反馈在 1080p 电视上一屏放得下，最后一项不再被裁 -->
     <style name="QuizOption" parent="TvButton">
+        <!-- v1.8.2：答案项默认无边框、圆角 10dp，只有选中项才描边；
+             不继承 TvButton 的 bg_option，管理页按钮保持原样 -->
+        <item name="android:background">@drawable/bg_quiz_option</item>
         <item name="android:textSize">25sp</item>
         <item name="android:minHeight">56dp</item>
         <item name="android:gravity">center_vertical|start</item>

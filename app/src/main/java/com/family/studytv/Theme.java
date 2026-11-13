@@ -231,23 +231,52 @@ public final class Theme {
         return g;
     }
 
+    /** 选项圆角：v1.8.2 起 18dp → 10dp，去掉描边后大圆角会显得「药丸化」，收小更利落 */
+    private static final float OPTION_RADIUS_DP = 10f;
+
     /**
-     * 选项 / 按钮三态背景：默认、聚焦、按下。
+     * 选项三态背景：默认、聚焦（遥控器选中）、按下。
      *
-     * <p>三态必须共用同一边界、同一圆角、同一描边宽度：早期聚焦态先画一层外光，
-     * 再把带描边的卡片 inset 3dp，选中项的边框就比其它选项内缩 3dp、还多出一圈框，
-     * 遥控器上下移动时边框会跳。现在只换填充色与描边色，边框位置始终重合。
+     * <p>v1.8.2 起默认态**不画边框**，只留一层同色填充；只有被选中的项才高亮描边，
+     * 每道题视觉上就一条框，不再四框齐飞。三态的圆角与边界仍完全一致，
+     * 遥控器上下移动时框只换色、不跳位。
      */
     public static StateListDrawable optionBackground(View v, Palette p) {
+        return optionBackground(v, p, "");
+    }
+
+    /**
+     * 带角色的选项背景：揭示答案时正确项描绿、错选项描红（文字色之外再给一层框，
+     * 隔一米看电视也能一眼扫到）。普通态 / 「变暗」态一律无边框。
+     *
+     * @param role "ok"、"bad"，其余值按普通选项处理
+     */
+    public static StateListDrawable optionBackground(View v, Palette p, String role) {
         StateListDrawable s = new StateListDrawable();
-        int r = dp(v, 18);
+        int r = dp(v, OPTION_RADIUS_DP);
         int line = Math.max(1, dp(v, 2));
+
+        int mark = 0;
+        if ("ok".equals(role)) {
+            mark = p.ok;
+        } else if ("bad".equals(role)) {
+            mark = p.bad;
+        }
+        // 揭示态自己带框，颜色语义优先于焦点色：否则正确项一拿到焦点就被橙框盖掉
+        if (mark != 0) {
+            s.addState(new int[]{android.R.attr.state_focused},
+                    card(v, p.surfaceFocus, mark, r, line));
+            s.addState(new int[]{android.R.attr.state_pressed},
+                    card(v, p.surfaceFocus, mark, r, line));
+            s.addState(new int[]{}, card(v, p.surface, mark, r, line));
+            return s;
+        }
 
         s.addState(new int[]{android.R.attr.state_focused},
                 card(v, p.surfaceFocus, p.strokeFocus, r, line));
         s.addState(new int[]{android.R.attr.state_pressed},
                 card(v, p.surfaceFocus, p.accent, r, line));
-        s.addState(new int[]{}, card(v, p.surface, p.stroke, r, line));
+        s.addState(new int[]{}, card(v, p.surface, 0, r, 0));
         return s;
     }
 
