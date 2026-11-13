@@ -732,7 +732,6 @@
     <div class="seg" id="seg">
       <button data-tab="task" class="on">任务与解锁</button>
       <button data-tab="time">时间计划</button>
-      <button data-tab="calendar">日历计划</button>
       <button data-tab="scope">答题范围</button>
       <button data-tab="more">奖励与复习</button>
     </div>
@@ -769,14 +768,77 @@
       <div class="note">参考项目里的「公益视频学习、每日免费时长、每日使用上限、强制休息、剩余时间角标」依赖整机使用时长统计与系统设置拦截层。题锁采用「到点弹出全屏答题页、通关后退回电视继续计时」的模型，不统计别的 App 的观看时长，因此这些规则没有做假开关。对应可用的替代是上面的「每日轮数上限」和「时间计划」。</div>
     </div>
 
-    <!-- ---------- 时间计划 ---------- -->
+    <!-- ---------- 时间计划（v1.7.32：日历计划已合入，一页一条优先级链） ---------- -->
     <div id="tab-time" class="hidden">
-      <div class="note" id="timePlanNotice" style="margin-bottom:14px">读取中…</div>
       <div class="panel">
-        <h2>免打扰时段</h2>
-        <p class="desc">优先级最高：命中期间绝不弹题，并且闹钟改为「不唤醒设备」——电视夜里待机不会自己亮起来，白天开机后会自动补上欠的那一次。</p>
+        <h2>此刻会不会弹题</h2>
+        <p class="desc">这一页就是全部时间规则，从上到下依次判断：免打扰 → 例外时段 → 今日时段表。命中前面任一条就不再往下看。改完回到这里看一眼，就知道有没有生效。</p>
         <div class="body">
-          <div class="f"><div class="lbl"><b>开启免打扰</b><small>关掉后按下面的可用时段 / 周计划正常执行</small></div>
+          <div class="f"><div class="lbl"><b>判定结果</b><small id="calReason">读取中…</small></div>
+            <div class="ctl"><span class="badge ok" id="calAllowed">读取中…</span></div></div>
+          <div class="f"><div class="lbl"><b>今天 / 下次允许弹题</b><small id="calNext">—</small></div>
+            <div class="ctl"><span class="unit" id="calToday">—</span></div></div>
+          <div class="f"><div class="lbl"><b>当前时段模型</b><small id="calModelHint">—</small></div>
+            <div class="ctl"><span class="unit" id="calModel">—</span></div></div>
+          <div class="f"><div class="lbl"><b>总开关</b><small>自动弹题或整体暂停关闭时，任何时段都不会弹题</small></div>
+            <div class="ctl"><span class="unit" id="calMaster">—</span></div></div>
+          <div class="note" id="calConflict" style="display:none;background:#fdf5f4;border-color:#ecd6d4;color:#8a4a45">
+            检测到下面「② 例外时段」里还留着按星期设置的网课时段 / 大人豁免，它们优先级高于今日时段表，会盖住日历计划。
+            <button id="btnCalClean" class="mini" type="button" style="max-width:none;margin-left:8px">清理旧时段规则</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note" style="margin-bottom:14px">
+        <b>判定顺序</b>：① 免打扰 → ② 例外时段（固定每周几的大人豁免 / 网课）→ ③ 今日时段表。
+        前两级命中一律不弹题；今日时段表默认按上学日 / 周末 / 法定假期自动切换，关掉「按日类型自动切换」才改用最下方的按星期时间表。
+      </div>
+
+      <!-- ③ 今日时段表（日历计划） -->
+      <div class="panel">
+        <h2>③ 今日时段表 · 按上学日 / 假期自动切换</h2>
+        <p class="desc">默认模板：上学日 07:00–17:30 大人豁免（孩子上学、大人看电视不打扰），17:30–23:00 弹题；周末与法定假期 06:00–23:00 弹题。调休上班的周末按上学日算，四段时间都能改。</p>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>按日类型自动切换</b><small>开启时下面的日历时段表生效，旧的「全天可用 / 每天起止 / 按周涂色表」不参与判定；关掉则完全回到按星期时间表，老配置不受影响</small></div>
+            <div class="ctl"><div class="switch" data-bool="dayPlansEnabled"><i></i></div></div></div>
+          <div id="calPlans" data-when="calendarOn"></div>
+          <div class="note gray" data-when="calendarOn" style="margin-top:12px">大人豁免优先于弹题时段，留空表示不设豁免；时段可跨午夜。改动 0.7 秒后自动保存，并立刻重排下一次弹题闹钟。</div>
+          <div class="note" data-when="calendarOff" style="margin-top:12px"><b>当前使用按星期时间表</b>：请展开页面最下方的「兼容：按星期时间表」修改时段；本页日历时段与节假日数据暂时不参与判定。</div>
+        </div>
+      </div>
+
+      <div class="panel" data-when="calendarOn">
+        <h2>节假日日历</h2>
+        <p class="desc">内置国务院办公厅公布的 2027 年放假调休安排，电视断网也能用。联网时自动同步中国法定节假日 JSON（holiday-cn 格式），覆盖今年与明年；同步失败会保留上次结果与内置表，不会把日历弄空。</p>
+        <div class="body">
+          <div class="f" style="display:block"><div class="lbl"><b>数据源地址模板</b><small>{year} 会被替换成当前年与下一年；留空保存后恢复默认地址</small></div>
+            <input type="text" id="calUrl" placeholder="https://.../{year}.json" style="margin-top:8px"></div>
+          <div class="f"><div class="lbl"><b>同步状态</b><small id="calSyncStatus">读取中…</small></div>
+            <div class="ctl"><button id="btnCalSync" class="mini" type="button" style="max-width:none">立即同步</button></div></div>
+          <div class="f"><div class="lbl"><b>日历条目</b><small id="calCount">—</small></div>
+            <div class="ctl"><button id="btnCalClear" class="mini" type="button" style="max-width:none">恢复内置表</button></div></div>
+          <div class="lbl" style="padding-top:16px"><b>手动标记日期</b><small>临时调课、寒暑假、家里有事，直接把某一天指定成「上学日 / 周末 / 法定假期」，优先级高于同步数据，也高于按星期推断。</small></div>
+          <div class="win" style="margin-top:6px">
+            <div class="top">
+              <input type="date" id="calDate" style="flex:0 0 auto;width:auto;min-width:150px">
+              <select id="calType" style="width:auto">
+                <option value="school">按上学日</option>
+                <option value="weekend">按周末</option>
+                <option value="holiday">按法定假期</option>
+              </select>
+              <button id="btnCalAdd" class="mini" type="button" style="max-width:none">添加</button>
+            </div>
+          </div>
+          <div id="calOverrides" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- ① 免打扰 -->
+      <div class="panel">
+        <h2>① 免打扰时段（最高优先级）</h2>
+        <p class="desc">命中期间绝不弹题，并且闹钟改为「不唤醒设备」——电视夜里待机不会自己亮起来，白天开机后会自动补上欠的那一次。</p>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>开启免打扰</b><small>关掉后按下面的例外时段与今日时段表正常执行</small></div>
             <div class="ctl"><div class="switch" id="swQuiet"><i></i></div></div></div>
           <div class="f"><div class="lbl"><b>免打扰起止</b><small>可跨午夜（如 22:30 → 06:30）；时段内到点的答题顺延到结束时刻</small></div>
             <div class="ctl" style="gap:4px">
@@ -790,31 +852,11 @@
             </div></div>
         </div>
       </div>
+
+      <!-- ② 例外时段 -->
       <div class="panel">
-        <h2>可用时段</h2>
-        <p class="desc">优先级：免打扰 ＞ 大人豁免 ＞ 网课时段 ＞ 下面的可用时段；自动弹题总开关关掉时一律不弹。命中前三者都不会唤醒待机中的电视。</p>
-        <div class="body">
-          <div class="f"><div class="lbl"><b>时段用途</b><small>「只在时段内答题」＝放学后到睡前才管；「时段内自由观看」＝可用时段不弹题，其余时间照常弹</small></div>
-            <div class="ctl"><select id="scheduleMode">
-              <option value="control">只在时段内答题</option><option value="allow">时段内自由观看</option>
-            </select></div></div>
-          <div class="f"><div class="lbl"><b>全天可用</b><small>关掉后按下面的起止时间或按周时段表执行</small></div>
-            <div class="ctl"><div class="switch" data-bool="allDay"><i></i></div></div></div>
-          <div data-when="notAllDay">
-            <div class="f"><div class="lbl"><b>每天起止时间</b><small>可跨午夜；与下面的周计划表取交集</small></div>
-              <div class="ctl" id="windowRange"></div></div>
-            <div class="f" style="display:block">
-              <div class="lbl"><b>按周可用时段</b><small>每格 30 分钟，按住可拖动涂色；点左侧星期名可整行切换</small></div>
-              <div class="tpl" id="weekTpl"></div>
-              <div class="week-wrap"><div class="week" id="week"></div></div>
-              <div class="unit" id="weekStat">—</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="panel">
-        <h2>网课时段与大人豁免</h2>
-        <p class="desc">精确到分钟、可跨午夜、按星期生效。命中期间都不弹题，区别只在取名：网课是孩子上课，豁免是大人看电视。</p>
+        <h2>② 例外时段（优先于时段表）</h2>
+        <p class="desc">精确到分钟、可跨午夜、按星期生效。命中期间都不弹题，区别只在取名：网课是孩子上课，豁免是大人看电视。这里配的是固定每周几的时段，会与上面每类日子的「大人豁免」叠加生效；想只用日历时段表，点最上方诊断卡里的「清理旧时段规则」。</p>
         <div class="body">
           <div class="lbl" style="padding-top:10px"><b>网课时段</b></div>
           <div id="timePoints"></div>
@@ -824,69 +866,37 @@
           <button class="add" data-add="exemptWindows">＋ 添加大人豁免</button>
         </div>
       </div>
-      <div class="note gray">时间类规则都在这一个分段里了（免打扰 / 可用时段 / 周计划 / 网课 / 大人豁免），系统设置里不再重复一份。全部用「时 + 分」两个下拉选时间，避免部分手机浏览器里原生时间控件点不开、或被 15 秒状态刷新覆盖。</div>
-    </div>
 
-    <!-- ---------- 日历计划（v1.7.31） ---------- -->
-    <div id="tab-calendar" class="hidden">
-      <div class="panel">
-        <h2>此刻会不会弹题</h2>
-        <p class="desc">实时诊断：直接显示今天属于哪种日子、命中了哪条规则、此刻是否允许弹题。配完时间计划看这里就能确认到底有没有生效。</p>
-        <div class="body">
-          <div class="f"><div class="lbl"><b>判定结果</b><small id="calReason">读取中…</small></div>
-            <div class="ctl"><span class="badge ok" id="calAllowed">读取中…</span></div></div>
-          <div class="f"><div class="lbl"><b>今天 / 下次允许弹题</b><small id="calNext">—</small></div>
-            <div class="ctl"><span class="unit" id="calToday">—</span></div></div>
-          <div class="f"><div class="lbl"><b>总开关</b><small>自动弹题或整体暂停关闭时，任何时段都不会弹题</small></div>
-            <div class="ctl"><span class="unit" id="calMaster">—</span></div></div>
-          <div class="note" id="calConflict" style="display:none;background:#fdf5f4;border-color:#ecd6d4;color:#8a4a45">
-            检测到「时间计划」里还留着按星期设置的网课时段 / 大人豁免，它们优先级高于日历计划，会盖住新规则。
-            <button id="btnCalClean" class="mini" type="button" style="max-width:none;margin-left:8px">清理旧时段规则</button>
-          </div>
-        </div>
-      </div>
-      <div class="panel">
-        <h2>按上学日 / 假期自动切换</h2>
-        <p class="desc">默认模板：上学日 07:00–17:30 大人豁免（孩子上学、大人看电视不打扰），17:30–23:00 弹题；周末与法定假期 06:00–23:00 弹题。调休上班的周末按上学日算，四段时间都能改。</p>
-        <div class="body">
-          <div class="f"><div class="lbl"><b>启用日历计划</b><small>开启后「时间计划」里的全天可用、起止时间、周计划表不再参与判定；关掉即回到旧规则</small></div>
-            <div class="ctl"><div class="switch" data-bool="dayPlansEnabled"><i></i></div></div></div>
-          <div id="calPlans" data-when="calendarOn"></div>
-          <div class="note gray" style="margin-top:12px">大人豁免优先于弹题时段，留空表示不设豁免；时段可跨午夜。改动 0.7 秒后自动保存，并立刻重排下一次弹题闹钟。</div>
-        </div>
-      </div>
-      <div class="panel">
-        <h2>网络日历同步</h2>
-        <p class="desc">内置国务院办公厅公布的 2027 年放假调休安排，电视断网也能用。联网时自动同步中国法定节假日 JSON（holiday-cn 格式），覆盖今年与明年；同步失败会保留上次结果与内置表，不会把日历弄空。</p>
-        <div class="body">
-          <div class="f" style="display:block"><div class="lbl"><b>数据源地址模板</b><small>{year} 会被替换成当前年与下一年；留空保存后恢复默认地址</small></div>
-            <input type="text" id="calUrl" placeholder="https://.../{year}.json" style="margin-top:8px"></div>
-          <div class="f"><div class="lbl"><b>同步状态</b><small id="calSyncStatus">读取中…</small></div>
-            <div class="ctl"><button id="btnCalSync" class="mini" type="button" style="max-width:none">立即同步</button></div></div>
-          <div class="f"><div class="lbl"><b>日历条目</b><small id="calCount">—</small></div>
-            <div class="ctl"><button id="btnCalClear" class="mini" type="button" style="max-width:none">恢复内置表</button></div></div>
-        </div>
-      </div>
-      <div class="panel">
-        <h2>手动标记日期</h2>
-        <p class="desc">临时调课、寒暑假、家里有事，直接把某一天指定成「上学日 / 周末 / 法定假期」，优先级高于同步数据，也高于按星期推断。</p>
-        <div class="body">
-          <div class="f" style="display:block">
-            <div class="win" style="margin-top:6px">
-              <div class="top">
-                <input type="date" id="calDate" style="flex:0 0 auto;width:auto;min-width:150px">
-                <select id="calType" style="width:auto">
-                  <option value="school">按上学日</option>
-                  <option value="weekend">按周末</option>
-                  <option value="holiday">按法定假期</option>
-                </select>
-                <button id="btnCalAdd" class="mini" type="button" style="max-width:none">添加</button>
+      <!-- 兼容：按星期时间表，仅关闭日历计划时生效 -->
+      <div class="panel" style="padding:14px 18px">
+        <details id="legacyTimeWrap">
+          <summary>兼容：按星期时间表（关闭上方「按日类型自动切换」后才生效）</summary>
+          <div class="note" id="legacyTimeNotice" style="margin-top:10px">读取中…</div>
+          <div class="panel" style="margin-top:10px">
+            <h2>可用时段</h2>
+            <p class="desc">优先级：免打扰 ＞ 大人豁免 ＞ 网课时段 ＞ 下面的可用时段；自动弹题总开关关掉时一律不弹。命中前三者都不会唤醒待机中的电视。</p>
+            <div class="body">
+              <div class="f"><div class="lbl"><b>时段用途</b><small>「只在时段内答题」＝放学后到睡前才管；「时段内自由观看」＝可用时段不弹题，其余时间照常弹</small></div>
+                <div class="ctl"><select id="scheduleMode">
+                  <option value="control">只在时段内答题</option><option value="allow">时段内自由观看</option>
+                </select></div></div>
+              <div class="f"><div class="lbl"><b>全天可用</b><small>关掉后按下面的起止时间或按周时段表执行</small></div>
+                <div class="ctl"><div class="switch" data-bool="allDay"><i></i></div></div></div>
+              <div data-when="notAllDay">
+                <div class="f"><div class="lbl"><b>每天起止时间</b><small>可跨午夜；与下面的周计划表取交集</small></div>
+                  <div class="ctl" id="windowRange"></div></div>
+                <div class="f" style="display:block">
+                  <div class="lbl"><b>按周可用时段</b><small>每格 30 分钟，按住可拖动涂色；点左侧星期名可整行切换</small></div>
+                  <div class="tpl" id="weekTpl"></div>
+                  <div class="week-wrap"><div class="week" id="week"></div></div>
+                  <div class="unit" id="weekStat">—</div>
+                </div>
               </div>
             </div>
-            <div id="calOverrides" style="margin-top:10px"></div>
           </div>
-        </div>
+        </details>
       </div>
+      <div class="note gray">所有时间规则都在这一个分段里了（今日时段表 / 节假日日历 / 免打扰 / 例外时段 / 兼容的按星期时间表），系统设置里不再重复一份。全部用「时 + 分」两个下拉选时间，避免部分手机浏览器里原生时间控件点不开、或被 15 秒状态刷新覆盖。</div>
     </div>
 
     <!-- ---------- 答题范围 ---------- -->
@@ -1147,7 +1157,8 @@
   var LEGACY = {
     'sec-status': 'status', 'sec-rules': 'rules-task', 'sec-quick': 'quick',
     'sec-device': 'system', 'sec-security': 'system', 'sec-bank': 'bank',
-    'task': 'rules-task', 'time': 'rules-time', 'calendar': 'rules-calendar',
+    'task': 'rules-task', 'time': 'rules-time',
+    'calendar': 'rules-time', 'rules-calendar': 'rules-time',  // v1.7.32 日历计划已合入时间计划
     'scope': 'rules-scope', 'more': 'rules-more'
   };
   function normalizeHash(h) {
@@ -2202,6 +2213,7 @@
       sw.onclick = function () {
         if (!cfg) { return; }
         cfg[sw.dataset.bool] = !cfg[sw.dataset.bool];
+        if (sw.dataset.bool === 'dayPlansEnabled') { calendarRefreshPending = true; }
         syncBool(); conditional(); changed();
       };
     });
@@ -2239,27 +2251,56 @@
     $('passRatio').value = best;
     if (+$('passRatio').value !== r) { cfg.passRatio = +$('passRatio').value; }
   }
+  var lastCalendarOn = null;
+  var calendarRefreshPending = false;
   function conditional() {
     if (!cfg) { return; }
+    var on = !!cfg.dayPlansEnabled;
     var show = {
       round: (cfg.playMode === 'round'),
       roundsLimit: !!cfg.roundsLimitEnabled,
       notAllDay: !cfg.allDay,
-      calendarOn: !!cfg.dayPlansEnabled,
+      calendarOn: on,
+      calendarOff: !on,
       extra: !!cfg.extraEnabled,
       review: !!cfg.reviewEnabled
     };
     Array.prototype.forEach.call(document.querySelectorAll('[data-when]'), function (el) {
       el.classList.toggle('hidden', !show[el.dataset.when]);
     });
-    var notice = $('timePlanNotice');
-    if (notice) {
-      notice.innerHTML = show.calendarOn
-        ? '<b>日历计划已开启</b>：下方「全天可用 / 每天起止 / 按周时段表」暂不参与判定，请到「日历计划」分段查看与修改。免打扰、网课时段、大人豁免仍然有效。'
-        : '<b>日历计划已关闭</b>：下方时间计划正常生效。想按上学日 / 周末 / 法定假期自动切换，请到「日历计划」分段开启。';
+    // 合并后旧按星期时间表收进折叠区：只在开关状态变化时自动展开/收起，
+    // 家长手动展开后不会被每次自动保存重新合上。
+    var legacy = $('legacyTimeWrap');
+    if (legacy) {
+      legacy.style.opacity = on ? '0.62' : '1';
+      if (on !== lastCalendarOn) {
+        legacy.open = !on;
+        lastCalendarOn = on;
+      }
+    }
+    var note = $('legacyTimeNotice');
+    if (note) {
+      note.innerHTML = on
+        ? '<b>当前不参与判定</b>：上方「按日类型自动切换」已开启，今日时段由上学日 / 周末 / 法定假期决定。这里仅保留旧配置供查看，关掉上方开关后会自动展开并重新生效。'
+        : '<b>当前生效中</b>：日历计划已关闭，弹题时段按下面的「全天可用 / 每天起止 / 按周涂色表」判定。免打扰与例外时段仍然优先。';
+    }
+    // 诊断卡的「当前时段模型 / 冲突提示」跟着本地开关立刻变，
+    // 不能等 15 秒轮询的 /api/calendar 回来，否则关掉日历计划后还显示日历模型。
+    var model = $('calModel');
+    if (model) {
+      model.textContent = on ? '日历计划（按日类型）' : '按星期时间表（兼容）';
+      $('calModelHint').textContent = on
+        ? '上学日 / 周末 / 法定假期分别套用不同时段，在「③ 今日时段表」修改'
+        : '全天可用 + 每天起止 + 按周涂色表，展开页面底部的兼容区域修改';
+    }
+    var conflict = $('calConflict');
+    if (conflict) {
+      var legacyCount = (cfg.exemptWindows ? cfg.exemptWindows.length : 0) +
+                        (cfg.timePoints ? cfg.timePoints.length : 0);
+      conflict.style.display = (on && legacyCount > 0) ? '' : 'none';
     }
   }
-  var TABS = ['task', 'time', 'calendar', 'scope', 'more'];
+  var TABS = ['task', 'time', 'scope', 'more'];
   function activateTab(name) {
     if (TABS.indexOf(name) < 0) { name = 'task'; }
     Array.prototype.forEach.call($('seg').children, function (x) {
@@ -2269,7 +2310,7 @@
       var el = $('tab-' + t);
       if (el) { el.classList.toggle('hidden', t !== name); }
     });
-    if (name === 'time' && cfg) { renderWeek(); }
+    if (name === 'time' && cfg) { renderWeek(); loadCalendar(); }
   }
 
   // ---------- 时间选择（时 + 分两个下拉，替代点不开的原生控件）
@@ -2487,6 +2528,7 @@
         syncSteppers(); syncBool(); syncSelects(); conditional();
       }
       loadRulesStats();
+      if (calendarRefreshPending) { calendarRefreshPending = false; loadCalendar(); }
     }).catch(function (e) {
       saving = false; failedSig = sig;
       setBadge('ruleBadge', 'err', '保存失败');
@@ -2582,14 +2624,12 @@
       ? '下次允许弹题 ' + hhmm(calInfo.nextQuizAt) : '—';
     $('calMaster').textContent = !state ? '读取中…'
       : ((state.enabled && state.autoQuiz) ? '已开启' : '已暂停 / 自动弹题已关闭');
+    // 当前时段模型由 conditional() 用本地 cfg 即时维护（这里只刷新后端诊断数据）
     $('calSyncStatus').textContent = (calInfo.syncStatus || '—') +
       (calInfo.syncAt ? '（' + new Date(calInfo.syncAt).toLocaleString('zh-CN') + '）' : '');
     var synced = Math.max(0, (calInfo.days || []).length - (calInfo.builtinCount || 0));
     $('calCount').textContent = '内置 ' + (calInfo.builtinCount || 0) + ' 条 + 网络同步 ' + synced + ' 条';
     if (document.activeElement !== $('calUrl')) { $('calUrl').value = calInfo.url || ''; }
-    var legacy = ((cfg && cfg.exemptWindows) ? cfg.exemptWindows.length : 0) +
-                 ((cfg && cfg.timePoints) ? cfg.timePoints.length : 0);
-    $('calConflict').style.display = (legacy > 0 && calInfo.dayPlansEnabled) ? '' : 'none';
     renderOverrides();
   }
 
@@ -2656,13 +2696,14 @@
   /** 旧「网课时段 / 大人豁免」按星期生效且优先级更高，会盖住日历计划，给家长一键清理入口 */
   $('btnCalClean').onclick = function () {
     if (!cfg) { return; }
-    if (!confirm('清空「网课时段」与「大人豁免」里按星期设置的窗口，并把「全天可用」打开。日历计划里的时段不受影响。确定吗？')) { return; }
+    if (!confirm('清空「② 例外时段」里按星期设置的网课时段与大人豁免，并把「全天可用」打开。③ 今日时段表不受影响。确定吗？')) { return; }
     cfg.exemptWindows = [];
     cfg.timePoints = [];
     cfg.allDay = true;
     renderWindows('timePoints'); renderWindows('exemptWindows');
     syncBool(); conditional(); changed();
     toast('已清理旧时段规则');
+    calendarRefreshPending = true;
   };
 
   // ============================================================ 学习统计（v1.7.22）
