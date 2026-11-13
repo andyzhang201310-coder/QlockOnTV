@@ -369,6 +369,34 @@ public final class Prefs {
         sp().edit().putBoolean("launcherHidden", v).apply();
     }
 
+    // ------------------------------------------------------------ 日历计划（v1.7.31）
+
+    /** 网络日历同步下来的放假/调休条目（JSON 数组字符串）；断网时为空，由内置表兜底 */
+    public static String calendarDays() {
+        return sp().getString("calendarDays", "");
+    }
+
+    public static void setCalendarDays(String v) {
+        sp().edit().putString("calendarDays", v == null ? "" : v).apply();
+    }
+
+    /** 最近一次成功同步时间，0 表示从未同步过 */
+    public static long calendarSyncAt() {
+        return sp().getLong("calendarSyncAt", 0L);
+    }
+
+    public static void setCalendarSyncAt(long v) {
+        sp().edit().putLong("calendarSyncAt", v).apply();
+    }
+
+    public static String calendarSyncStatus() {
+        return sp().getString("calendarSyncStatus", "尚未同步（使用内置日历）");
+    }
+
+    public static void setCalendarSyncStatus(String v) {
+        sp().edit().putString("calendarSyncStatus", v == null ? "" : v).apply();
+    }
+
     /** 是否开启卸载保护，默认开启 */
     public static boolean uninstallGuard() {
         return sp().getBoolean("uninstallGuard", true);

@@ -148,6 +148,8 @@ public class RulesTest {
     @Test
     public void scheduleModeControlVsAllow() throws Exception {
         JSONObject cfg = Rules.defaults();
+        // v1.7.31：日历计划默认开启会接管时段判定，这里专测旧版 scheduleMode
+        cfg.put("dayPlansEnabled", false);
         cfg.put("allDay", false);
         cfg.put("windowStart", "18:00");
         cfg.put("windowEnd", "21:00");
@@ -178,8 +180,11 @@ public class RulesTest {
     }
 
     @Test
-    public void alignDueLeavesAllowedTimeUntouched() {
-        JSONObject cfg = Rules.defaults();
+    public void alignDueLeavesAllowedTimeUntouched() throws Exception {
+        // v1.7.31：旧版「全天可用」语义，显式关掉日历计划后再验证
+        JSONObject off = Rules.defaults();
+        off.put("dayPlansEnabled", false);
+        Rules.save(ctx, off);
         long t = at(Calendar.THURSDAY, 14, 0);
         // 全天可用 + 免打扰关闭：任何时刻都允许
         assertEquals(t, Rules.alignDue(ctx, t));

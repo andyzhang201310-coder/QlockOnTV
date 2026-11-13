@@ -109,6 +109,22 @@ public class GuardService extends Service {
             DeviceGuard.sync(this);
         } catch (Throwable ignored) {
         }
+        // 日历计划：每天最多一次异步同步网络节假日，断网时静默退回内置表。
+        // 必须放子线程：HTTP 请求不能落在主线程，且不能拖慢前台服务启动。
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String url = Rules.get(GuardService.this)
+                            .optString("calendarUrl", CalendarPlan.DEFAULT_URL);
+                    if (CalendarPlan.syncIfDue(GuardService.this, url)) {
+                        scheduleAlarm(GuardService.this);
+                        updateNotification();
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        }, "calendar-sync").start();
         startHttpServer();
         handler.post(ticker);
     }

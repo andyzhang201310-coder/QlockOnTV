@@ -94,6 +94,11 @@ public final class Rules {
             o.put("reviewGapRounds", 3);             // 错题至少隔 3 轮才再出现
             o.put("timePoints", new JSONArray());    // 网课时段：期间不弹题
             o.put("exemptWindows", new JSONArray());// 大人豁免：期间不弹题
+            // v1.7.31 日历计划：按上学日 / 周末 / 法定假期分别套用弹题时段
+            o.put("dayPlansEnabled", true);
+            o.put("dayPlans", CalendarPlan.defaultPlans());
+            o.put("calendarUrl", CalendarPlan.DEFAULT_URL);
+            o.put("calendarOverrides", new JSONObject());
         } catch (Throwable ignored) {
         }
         return o;
@@ -104,14 +109,19 @@ public final class Rules {
         JSONObject o = defaults();
         try {
             String raw = sp(c).getString(KEY_CONFIG, "");
-            if (raw == null || raw.length() == 0) {
-                return o;
+            if (raw != null && raw.length() > 0) {
+                JSONObject saved = new JSONObject(raw);
+                for (java.util.Iterator<String> it = saved.keys(); it.hasNext(); ) {
+                    String k = it.next();
+                    o.put(k, saved.get(k));
+                }
             }
-            JSONObject saved = new JSONObject(raw);
-            for (java.util.Iterator<String> it = saved.keys(); it.hasNext(); ) {
-                String k = it.next();
-                o.put(k, saved.get(k));
-            }
+        } catch (Throwable ignored) {
+        }
+        // 日历数据不写进规则 JSON：内置表 + Prefs 里的同步缓存合并后注入，判定永远用最新一份。
+        // 后台 POST 回来的 cfg 不带这个字段，sanitize 也不会把它落盘。
+        try {
+            o.put("calendarDays", CalendarPlan.mergedDays(Prefs.calendarDays()));
         } catch (Throwable ignored) {
         }
         return o;
@@ -222,9 +232,30 @@ public final class Rules {
             num(o, in, "reviewGapRounds", 1, 20);
             windows(o, in, "timePoints");
             windows(o, in, "exemptWindows");
+            // v1.7.31 日历计划：日计划走时间白名单，手动覆盖走日期白名单
+            bool(o, in, "dayPlansEnabled");
+            o.put("dayPlans", CalendarPlan.sanitizePlans(in.optJSONObject("dayPlans")));
+            o.put("calendarOverrides",
+                    CalendarPlan.sanitizeOverrides(in.optJSONObject("calendarOverrides")));
+            strUrl(o, in);
         } catch (Throwable ignored) {
         }
         return o;
+    }
+
+    /** 网络日历地址模板：只接受 http/https，且限制长度，避免畸形 URL 打进网络请求 */
+    private static void strUrl(JSONObject o, JSONObject in) {
+        try {
+            if (!in.has("calendarUrl")) {
+                return;
+            }
+            String v = in.optString("calendarUrl", "").trim();
+            if (v.length() <= 300 && (v.length() == 0
+                    || v.startsWith("http://") || v.startsWith("https://"))) {
+                o.put("calendarUrl", v);
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     private static void str(JSONObject o, JSONObject in, String k, String... allowed) {
@@ -498,6 +529,11 @@ public final class Rules {
         if (inNamedWindow(cfg.optJSONArray("timePoints"), ts)) {
             return false;
         }
+        // v1.7.31：日历计划开启时接管「可用时段」，按上学日 / 周末 / 法定假期分别判定；
+        // 关掉则完全回到旧的 allDay + 起止时间 + 周计划表逻辑，老配置不受影响。
+        if (cfg.optBoolean("dayPlansEnabled", false)) {
+            return CalendarPlan.quizAllowedAt(cfg, ts);
+        }
         boolean active = inActiveWindow(cfg, ts);
         // control = 只在可用时段内需要先答题；allow = 可用时段是自由观看时间，其余时间才弹题
         boolean control = !"allow".equals(cfg.optString("scheduleMode", "control"));
@@ -532,6 +568,32 @@ public final class Rules {
         int qs = Prefs.quietStartMin();
         int qe = Prefs.quietEndMin();
         return quizAllowedAt(cfg, raw, q, qs, qe) ? raw : nextQuizAt(cfg, raw, q, qs, qe);
+    }
+
+    /**
+     * 给后台诊断卡片用：此刻到底会不会弹题、为什么。
+     * 顺序与 quizAllowedAt 完全一致，家长不用再猜「时间计划有没有生效」。
+     */
+    public static String explainNow(Context c, long ts) {
+        JSONObject cfg = get(c);
+        boolean q = Prefs.quietEnabled();
+        int qs = Prefs.quietStartMin();
+        int qe = Prefs.quietEndMin();
+        if (q && QuietHours.inQuiet(ts, qs, qe)) {
+            return "免打扰时段，不弹题";
+        }
+        if (inNamedWindow(cfg.optJSONArray("exemptWindows"), ts)) {
+            return "命中按星期的「大人豁免」，不弹题";
+        }
+        if (inNamedWindow(cfg.optJSONArray("timePoints"), ts)) {
+            return "命中网课时段，不弹题";
+        }
+        if (cfg.optBoolean("dayPlansEnabled", false)) {
+            return CalendarPlan.explain(cfg, ts);
+        }
+        return quizAllowedAt(cfg, ts, q, qs, qe)
+                ? "旧版时间计划：此刻允许弹题"
+                : "旧版时间计划：此刻在可用时段之外，不弹题";
     }
 
     // ------------------------------------------------------------------ 每日轮数 / 加练 / 错题库

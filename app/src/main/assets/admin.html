@@ -139,8 +139,14 @@
   .conn.bad{color:var(--red);border-color:#ecd6d4;background:#fdf5f4}
   .conn.bad::before{background:var(--red)}
   .crumb{font-size:12px;color:var(--sub);white-space:nowrap}
+  /* v1.7.31 滚动穿透修复：body 有 16px 内边距，sticky 顶栏只从 top:16px 开始覆盖，
+     页面向下滚动时下层卡片文字会从视口最上方那条 16px 缝隙里露出来。
+     补一条与页面底色同色的固定遮罩把缝隙封死；移动端没有内边距，直接隐藏。 */
+  body::before{content:"";position:fixed;left:0;right:0;top:0;height:16px;
+    background:var(--bg);z-index:25;pointer-events:none}
+  @media(max-width:767px){body::before{display:none}}
   @media(min-width:768px){
-    .topbar{position:sticky;top:16px;z-index:10;background:var(--shell);
+    .topbar{position:sticky;top:16px;z-index:30;background:var(--shell);
       border-radius:12px 12px 0 0;padding-top:12px;margin-top:-12px}
   }
 
@@ -726,6 +732,7 @@
     <div class="seg" id="seg">
       <button data-tab="task" class="on">任务与解锁</button>
       <button data-tab="time">时间计划</button>
+      <button data-tab="calendar">日历计划</button>
       <button data-tab="scope">答题范围</button>
       <button data-tab="more">奖励与复习</button>
     </div>
@@ -764,6 +771,7 @@
 
     <!-- ---------- 时间计划 ---------- -->
     <div id="tab-time" class="hidden">
+      <div class="note" id="timePlanNotice" style="margin-bottom:14px">读取中…</div>
       <div class="panel">
         <h2>免打扰时段</h2>
         <p class="desc">优先级最高：命中期间绝不弹题，并且闹钟改为「不唤醒设备」——电视夜里待机不会自己亮起来，白天开机后会自动补上欠的那一次。</p>
@@ -817,6 +825,64 @@
         </div>
       </div>
       <div class="note gray">时间类规则都在这一个分段里了（免打扰 / 可用时段 / 周计划 / 网课 / 大人豁免），系统设置里不再重复一份。全部用「时 + 分」两个下拉选时间，避免部分手机浏览器里原生时间控件点不开、或被 15 秒状态刷新覆盖。</div>
+    </div>
+
+    <!-- ---------- 日历计划（v1.7.31） ---------- -->
+    <div id="tab-calendar" class="hidden">
+      <div class="panel">
+        <h2>此刻会不会弹题</h2>
+        <p class="desc">实时诊断：直接显示今天属于哪种日子、命中了哪条规则、此刻是否允许弹题。配完时间计划看这里就能确认到底有没有生效。</p>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>判定结果</b><small id="calReason">读取中…</small></div>
+            <div class="ctl"><span class="badge ok" id="calAllowed">读取中…</span></div></div>
+          <div class="f"><div class="lbl"><b>今天 / 下次允许弹题</b><small id="calNext">—</small></div>
+            <div class="ctl"><span class="unit" id="calToday">—</span></div></div>
+          <div class="f"><div class="lbl"><b>总开关</b><small>自动弹题或整体暂停关闭时，任何时段都不会弹题</small></div>
+            <div class="ctl"><span class="unit" id="calMaster">—</span></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>按上学日 / 假期自动切换</h2>
+        <p class="desc">默认模板：上学日 07:00–17:30 大人豁免（孩子上学、大人看电视不打扰），17:30–23:00 弹题；周末与法定假期 06:00–23:00 弹题。调休上班的周末按上学日算，四段时间都能改。</p>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>启用日历计划</b><small>开启后「时间计划」里的全天可用、起止时间、周计划表不再参与判定；关掉即回到旧规则</small></div>
+            <div class="ctl"><div class="switch" data-bool="dayPlansEnabled"><i></i></div></div></div>
+          <div id="calPlans" data-when="calendarOn"></div>
+          <div class="note gray" style="margin-top:12px">大人豁免优先于弹题时段，留空表示不设豁免；时段可跨午夜。改动 0.7 秒后自动保存，并立刻重排下一次弹题闹钟。</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>网络日历同步</h2>
+        <p class="desc">内置国务院办公厅公布的 2027 年放假调休安排，电视断网也能用。联网时自动同步中国法定节假日 JSON（holiday-cn 格式），覆盖今年与明年；同步失败会保留上次结果与内置表，不会把日历弄空。</p>
+        <div class="body">
+          <div class="f" style="display:block"><div class="lbl"><b>数据源地址模板</b><small>{year} 会被替换成当前年与下一年；留空保存后恢复默认地址</small></div>
+            <input type="text" id="calUrl" placeholder="https://.../{year}.json" style="margin-top:8px"></div>
+          <div class="f"><div class="lbl"><b>同步状态</b><small id="calSyncStatus">读取中…</small></div>
+            <div class="ctl"><button id="btnCalSync" class="mini" type="button" style="max-width:none">立即同步</button></div></div>
+          <div class="f"><div class="lbl"><b>日历条目</b><small id="calCount">—</small></div>
+            <div class="ctl"><button id="btnCalClear" class="mini" type="button" style="max-width:none">恢复内置表</button></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>手动标记日期</h2>
+        <p class="desc">临时调课、寒暑假、家里有事，直接把某一天指定成「上学日 / 周末 / 法定假期」，优先级高于同步数据，也高于按星期推断。</p>
+        <div class="body">
+          <div class="f" style="display:block">
+            <div class="win" style="margin-top:6px">
+              <div class="top">
+                <input type="date" id="calDate" style="flex:0 0 auto;width:auto;min-width:150px">
+                <select id="calType" style="width:auto">
+                  <option value="school">按上学日</option>
+                  <option value="weekend">按周末</option>
+                  <option value="holiday">按法定假期</option>
+                </select>
+                <button id="btnCalAdd" class="mini" type="button" style="max-width:none">添加</button>
+              </div>
+            </div>
+            <div id="calOverrides" style="margin-top:10px"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ---------- 答题范围 ---------- -->
@@ -1077,7 +1143,8 @@
   var LEGACY = {
     'sec-status': 'status', 'sec-rules': 'rules-task', 'sec-quick': 'quick',
     'sec-device': 'system', 'sec-security': 'system', 'sec-bank': 'bank',
-    'task': 'rules-task', 'time': 'rules-time', 'scope': 'rules-scope', 'more': 'rules-more'
+    'task': 'rules-task', 'time': 'rules-time', 'calendar': 'rules-calendar',
+    'scope': 'rules-scope', 'more': 'rules-more'
   };
   function normalizeHash(h) {
     h = String(h || '').replace(/^#/, '');
@@ -2174,14 +2241,21 @@
       round: (cfg.playMode === 'round'),
       roundsLimit: !!cfg.roundsLimitEnabled,
       notAllDay: !cfg.allDay,
+      calendarOn: !!cfg.dayPlansEnabled,
       extra: !!cfg.extraEnabled,
       review: !!cfg.reviewEnabled
     };
     Array.prototype.forEach.call(document.querySelectorAll('[data-when]'), function (el) {
       el.classList.toggle('hidden', !show[el.dataset.when]);
     });
+    var notice = $('timePlanNotice');
+    if (notice) {
+      notice.innerHTML = show.calendarOn
+        ? '<b>日历计划已开启</b>：下方「全天可用 / 每天起止 / 按周时段表」暂不参与判定，请到「日历计划」分段查看与修改。免打扰、网课时段、大人豁免仍然有效。'
+        : '<b>日历计划已关闭</b>：下方时间计划正常生效。想按上学日 / 周末 / 法定假期自动切换，请到「日历计划」分段开启。';
+    }
   }
-  var TABS = ['task', 'time', 'scope', 'more'];
+  var TABS = ['task', 'time', 'calendar', 'scope', 'more'];
   function activateTab(name) {
     if (TABS.indexOf(name) < 0) { name = 'task'; }
     Array.prototype.forEach.call($('seg').children, function (x) {
@@ -2394,7 +2468,9 @@
     saveTimer = setTimeout(saveRules, 700);
   }
   function saveRules() {
-    if (!cfg || saving) { return; }
+    if (!cfg) { return; }
+    // v1.7.31：上一次 POST 还没回来时不能把新改动直接丢掉，排队重试
+    if (saving) { clearTimeout(saveTimer); saveTimer = setTimeout(saveRules, 250); return; }
     var sig = JSON.stringify(cfg);
     if (sig === failedSig) { return; }
     saving = true;
@@ -2429,7 +2505,147 @@
     syncBool(); syncSelects(); syncSteppers(); conditional();
     renderWindowRange(); renderTpl(); renderWeek();
     renderWindows('timePoints'); renderWindows('exemptWindows'); renderScope();
+    renderCalendarPlans();
   }
+
+  // ============================================================ 日历计划（v1.7.31）
+  var calInfo = null;
+  var CAL_TYPES = [['school', '上学日（周一至周五且非假期）'], ['weekend', '周末'], ['holiday', '法定节假日']];
+  var CAL_NAMES = { school: '上学日', weekend: '周末', holiday: '法定假期' };
+
+  /** 允许留空的时间下拉：选 -- 表示「不设这个时段」 */
+  function nullableTimePicker(id, value, onPick) {
+    var wrap = document.createElement('span');
+    wrap.style.cssText = 'display:inline-flex;align-items:center;gap:4px';
+    var hs = document.createElement('select'), ms = document.createElement('select');
+    hs.setAttribute('aria-label', id + ' 小时'); ms.setAttribute('aria-label', id + ' 分钟');
+    var bh = document.createElement('option'); bh.value = ''; bh.textContent = '--'; hs.appendChild(bh);
+    var bm = document.createElement('option'); bm.value = ''; bm.textContent = '--'; ms.appendChild(bm);
+    hours().forEach(function (h) { var o = document.createElement('option'); o.value = o.textContent = h; hs.appendChild(o); });
+    mins().forEach(function (mi) { var o = document.createElement('option'); o.value = o.textContent = mi; ms.appendChild(o); });
+    var p = /^(\d\d):(\d\d)$/.exec(value || '') || ['', '', ''];
+    hs.value = p[1]; ms.value = p[2];
+    function fire() { onPick((hs.value && ms.value) ? hs.value + ':' + ms.value : ''); }
+    hs.onchange = fire; ms.onchange = fire;
+    wrap.appendChild(hs); wrap.appendChild(document.createTextNode(':')); wrap.appendChild(ms);
+    return wrap;
+  }
+
+  function renderCalendarPlans() {
+    var box = $('calPlans');
+    if (!box || !cfg) { return; }
+    if (!cfg.dayPlans) { cfg.dayPlans = {}; }
+    box.innerHTML = '';
+    CAL_TYPES.forEach(function (t) {
+      var key = t[0];
+      if (!cfg.dayPlans[key]) { cfg.dayPlans[key] = {}; }
+      var p = cfg.dayPlans[key];
+      var card = document.createElement('div'); card.className = 'win';
+      var head = document.createElement('div'); head.className = 'lbl';
+      head.innerHTML = '<b>' + t[1] + '</b>';
+      card.appendChild(head);
+      var r1 = document.createElement('div'); r1.className = 'rng';
+      r1.appendChild(document.createTextNode('弹题时段 '));
+      r1.appendChild(timePicker('calq' + key + 's', p.quizStart, function (v) { p.quizStart = v; changed(); }));
+      r1.appendChild(document.createTextNode(' 到 '));
+      r1.appendChild(timePicker('calq' + key + 'e', p.quizEnd, function (v) { p.quizEnd = v; changed(); }));
+      card.appendChild(r1);
+      var r2 = document.createElement('div'); r2.className = 'rng'; r2.style.marginTop = '6px';
+      r2.appendChild(document.createTextNode('大人豁免 '));
+      r2.appendChild(nullableTimePicker('cale' + key + 's', p.exemptStart, function (v) { p.exemptStart = v; changed(); }));
+      r2.appendChild(document.createTextNode(' 到 '));
+      r2.appendChild(nullableTimePicker('cale' + key + 'e', p.exemptEnd, function (v) { p.exemptEnd = v; changed(); }));
+      card.appendChild(r2);
+      box.appendChild(card);
+    });
+  }
+
+  function loadCalendar() {
+    return api('/api/calendar').then(function (d) {
+      calInfo = d;
+      renderCalendarInfo();
+    }).catch(function () {});
+  }
+
+  function renderCalendarInfo() {
+    if (!calInfo) { return; }
+    $('calReason').textContent = calInfo.reason || '—';
+    var b = $('calAllowed');
+    b.className = 'badge ' + (calInfo.allowedNow ? 'on' : 'off');
+    b.textContent = calInfo.allowedNow ? '此刻会弹题' : '此刻不弹题';
+    $('calToday').textContent = (calInfo.todayDate || '') + ' · ' + (calInfo.todayTypeName || '');
+    $('calNext').textContent = calInfo.nextQuizAt
+      ? '下次允许弹题 ' + hhmm(calInfo.nextQuizAt) : '—';
+    $('calMaster').textContent = !state ? '读取中…'
+      : ((state.enabled && state.autoQuiz) ? '已开启' : '已暂停 / 自动弹题已关闭');
+    $('calSyncStatus').textContent = (calInfo.syncStatus || '—') +
+      (calInfo.syncAt ? '（' + new Date(calInfo.syncAt).toLocaleString('zh-CN') + '）' : '');
+    var synced = Math.max(0, (calInfo.days || []).length - (calInfo.builtinCount || 0));
+    $('calCount').textContent = '内置 ' + (calInfo.builtinCount || 0) + ' 条 + 网络同步 ' + synced + ' 条';
+    if (document.activeElement !== $('calUrl')) { $('calUrl').value = calInfo.url || ''; }
+    renderOverrides();
+  }
+
+  function renderOverrides() {
+    var box = $('calOverrides');
+    if (!box || !calInfo) { return; }
+    var ov = calInfo.overrides || {}, keys = Object.keys(ov).sort();
+    box.innerHTML = '';
+    if (!keys.length) {
+      box.innerHTML = '<div class="unit">还没有手动标记的日期。</div>';
+      return;
+    }
+    keys.forEach(function (k) {
+      var row = document.createElement('div'); row.className = 'win'; row.style.marginTop = '6px';
+      var top = document.createElement('div'); top.className = 'top';
+      var t = document.createElement('span');
+      t.textContent = k + ' → ' + (CAL_NAMES[ov[k]] || ov[k]);
+      var del = document.createElement('button');
+      del.className = 'del'; del.type = 'button'; del.textContent = '删除';
+      del.onclick = function () { saveOverride(k, ''); };
+      top.appendChild(t); top.appendChild(del); row.appendChild(top); box.appendChild(row);
+    });
+  }
+
+  function saveOverride(date, type) {
+    api('/api/calendar/override', {
+      method: 'POST', body: JSON.stringify({ date: date, type: type })
+    }).then(function () {
+      toast(type ? '已标记 ' + date : '已取消标记 ' + date);
+      loadCalendar();
+    }).catch(function (e) { toast('保存失败：' + e.message, 3200); });
+  }
+
+  $('calUrl').onchange = function () {
+    if (!cfg) { return; }
+    cfg.calendarUrl = $('calUrl').value.trim();
+    changed();
+  };
+  $('btnCalAdd').onclick = function () {
+    var d = $('calDate').value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { toast('请先选择日期'); return; }
+    saveOverride(d, $('calType').value);
+  };
+  $('btnCalSync').onclick = function () {
+    var b = $('btnCalSync');
+    b.disabled = true; b.textContent = '同步中…';
+    api('/api/calendar/sync', {
+      method: 'POST', body: JSON.stringify({ url: $('calUrl').value.trim() })
+    }).then(function (r) {
+      toast(r.syncStatus || '同步完成');
+    }).catch(function (e) {
+      toast('同步失败：' + e.message, 3200);
+    }).then(function () {
+      b.disabled = false; b.textContent = '立即同步';
+      loadCalendar();
+    });
+  };
+  $('btnCalClear').onclick = function () {
+    if (!confirm('清除网络同步缓存、只保留内置的 2027 年放假调休表？手动标记的日期不受影响。')) { return; }
+    api('/api/calendar/clear', { method: 'POST', body: '{}' }).then(function () {
+      toast('已恢复内置日历'); loadCalendar();
+    }).catch(function (e) { toast('操作失败：' + e.message, 3200); });
+  };
 
   // ============================================================ 学习统计（v1.7.22）
   var statData = null;
@@ -2647,6 +2863,7 @@
     cfg = r.config;
     renderRules();
     loadRulesStats();
+    loadCalendar();
     $('statline').textContent = '今日已弹 ' + (r.roundsToday || 0) + ' 轮 · 错题库 ' + (r.reviewDue || 0) + ' 题';
     showView(normalizeHash(location.hash));
   }).catch(function (e) {
@@ -2656,7 +2873,7 @@
   loadState();
   setInterval(function () {
     loadState();
-    if (curView === 'rules') { loadRulesStats(); }
+    if (curView === 'rules') { loadRulesStats(); loadCalendar(); }
     if (curView === 'stats') { openStats(); }
   }, 15000);
 })();

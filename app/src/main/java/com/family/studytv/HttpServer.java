@@ -344,6 +344,114 @@ public class HttpServer {
             return;
         }
 
+        // ---- 日历计划（v1.7.31）：日类型诊断 / 网络同步 / 手动标记日期
+        if (path.equals("/api/calendar") && method.equals("GET")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            JSONObject o = new JSONObject();
+            JSONObject cfg = Rules.get(ctx);
+            long calNow = System.currentTimeMillis();
+            String type = CalendarPlan.dayType(cfg, calNow);
+            o.put("ok", true);
+            o.put("url", cfg.optString("calendarUrl", CalendarPlan.DEFAULT_URL));
+            o.put("syncAt", Prefs.calendarSyncAt());
+            o.put("syncStatus", Prefs.calendarSyncStatus());
+            o.put("days", cfg.optJSONArray("calendarDays"));
+            o.put("builtinCount", CalendarPlan.builtinDays().length());
+            o.put("overrides", cfg.optJSONObject("calendarOverrides"));
+            o.put("todayDate", CalendarPlan.dateKey(calNow));
+            o.put("todayType", type);
+            o.put("todayTypeName", CalendarPlan.typeName(type));
+            o.put("dayPlansEnabled", cfg.optBoolean("dayPlansEnabled", false));
+            o.put("allowedNow", Rules.quizAllowedAt(cfg, calNow, Prefs.quietEnabled(),
+                    Prefs.quietStartMin(), Prefs.quietEndMin()));
+            o.put("reason", Rules.explainNow(ctx, calNow));
+            o.put("nextQuizAt", Rules.alignDue(ctx, calNow));
+            respondJson(socket, 200, o.toString());
+            return;
+        }
+
+        if (path.equals("/api/calendar/clear") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            Prefs.setCalendarDays("");
+            Prefs.setCalendarSyncAt(0L);
+            Prefs.setCalendarSyncStatus("已恢复内置日历（2027 年官方安排）");
+            GuardService.start(ctx, new Intent(ctx, GuardService.class)
+                    .setAction(GuardService.ACTION_RULE_CHANGED));
+            JSONObject ok = new JSONObject();
+            ok.put("ok", true);
+            respondJson(socket, 200, ok.toString());
+            return;
+        }
+
+        if (path.equals("/api/calendar/sync") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                JSONObject in = new JSONObject(body == null || body.trim().length() == 0 ? "{}" : body);
+                String url = in.optString("url",
+                        Rules.get(ctx).optString("calendarUrl", CalendarPlan.DEFAULT_URL));
+                String status = CalendarPlan.sync(ctx, url);
+                // 日历数据可能改变今天的允许时段，立刻重排闹钟
+                GuardService.start(ctx, new Intent(ctx, GuardService.class)
+                        .setAction(GuardService.ACTION_RULE_CHANGED));
+                JSONObject ok = new JSONObject();
+                ok.put("ok", true);
+                ok.put("syncStatus", status);
+                ok.put("syncAt", Prefs.calendarSyncAt());
+                respondJson(socket, 200, ok.toString());
+            } catch (Throwable e) {
+                JSONObject err = new JSONObject();
+                err.put("ok", false);
+                err.put("error", String.valueOf(e.getMessage()));
+                respondJson(socket, 400, err.toString());
+            }
+            return;
+        }
+
+        if (path.equals("/api/calendar/override") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                JSONObject in = new JSONObject(body == null || body.trim().length() == 0 ? "{}" : body);
+                String date = in.optString("date", "").trim();
+                String type = in.optString("type", "").trim();
+                JSONObject cfg = Rules.get(ctx);
+                JSONObject ov = cfg.optJSONObject("calendarOverrides");
+                if (ov == null) {
+                    ov = new JSONObject();
+                }
+                if (type.length() == 0 || "auto".equals(type) || "null".equals(type)) {
+                    ov.remove(date);
+                } else {
+                    ov.put(date, type);
+                }
+                cfg.put("calendarOverrides", ov);
+                JSONObject saved = Rules.save(ctx, cfg);
+                GuardService.start(ctx, new Intent(ctx, GuardService.class)
+                        .setAction(GuardService.ACTION_RULE_CHANGED));
+                JSONObject ok = new JSONObject();
+                ok.put("ok", true);
+                ok.put("overrides", saved.optJSONObject("calendarOverrides"));
+                respondJson(socket, 200, ok.toString());
+            } catch (Throwable e) {
+                JSONObject err = new JSONObject();
+                err.put("ok", false);
+                err.put("error", String.valueOf(e.getMessage()));
+                respondJson(socket, 400, err.toString());
+            }
+            return;
+        }
+
         // ---- 学习统计：按题型累计答题 / 错题，后台出柱状图与雷达图
         if (path.equals("/api/stats")) {
             if (!authed) {
@@ -1084,11 +1192,19 @@ public class HttpServer {
 
             // ---- 管理规则摘要（规则页有独立接口，这里只给首页状态卡用）
             JSONObject rules = Rules.get(ctx);
+            long stateNow = System.currentTimeMillis();
+            String dayType = CalendarPlan.dayType(rules, stateNow);
             o.put("ruleVersion", Rules.version(ctx));
             o.put("playMode", rules.optString("playMode", "round"));
             o.put("scheduleMode", rules.optString("scheduleMode", "control"));
-            o.put("ruleAllowedNow", Rules.quizAllowedAt(rules, System.currentTimeMillis(),
+            o.put("ruleAllowedNow", Rules.quizAllowedAt(rules, stateNow,
                     Prefs.quietEnabled(), Prefs.quietStartMin(), Prefs.quietEndMin()));
+            o.put("ruleReason", Rules.explainNow(ctx, stateNow));
+            o.put("dayType", dayType);
+            o.put("dayTypeName", CalendarPlan.typeName(dayType));
+            o.put("dayPlansEnabled", rules.optBoolean("dayPlansEnabled", false));
+            o.put("calendarSyncAt", Prefs.calendarSyncAt());
+            o.put("calendarSyncStatus", Prefs.calendarSyncStatus());
             o.put("roundsToday", Rules.roundsToday(ctx));
             int reviewGap = Rules.reviewGap(rules);
             o.put("reviewDue", Rules.wrongIds(ctx).size());
