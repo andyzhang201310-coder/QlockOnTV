@@ -291,6 +291,56 @@ adb shell am start -a android.intent.action.DELETE -d package:com.family.studytv
   避免答题页把系统卸载界面盖到后面（v1.7.29 修复）。
 
 
+### 隐藏应用（v1.7.30 起，这台电视上推荐优先用这条）
+
+前面两条路都有代价：设备管理员在这台 Sony 上是空壳，界面拦截会破坏桌面
+「选中应用点确认直接打开」。换一个思路更干净：**让孩子压根找不到这个应用，也就找不到卸载入口**。
+
+做法：把桌面启动入口从 `MainActivity` 挪到 `activity-alias .LauncherAlias`。隐藏时应用对自己调用
+`setComponentEnabledSetting(alias, DISABLED, DONT_KILL_APP)` —— 普通应用改自己的组件**不需要任何系统权限**，
+不碰设备管理员、不碰无障碍。`MainActivity` 本身始终 enabled，后台 `GuardService`、开机广播、
+`QuizActivity` 都不受影响，答题锁照常按时间弹出。
+
+开启方式（二选一）：
+
+- 手机管理页 → 防卸载 → 打开「隐藏桌面图标」开关（接口 `POST /api/admin/icon {"hidden":true}`）
+- 电视端 → 防卸载设置 → 「隐藏桌面图标」按钮
+
+恢复（隐藏后本机没有图标，这两条是家长入口）：
+
+```bash
+# 方式 A：手机管理页把「隐藏桌面图标」开关关掉
+# 方式 B：电脑执行，显式启动 MainActivity（它没有 launcher filter，但 exported=true）
+adb shell am start -n com.family.studytv/.MainActivity
+```
+
+`App.onCreate()` 与 `BootReceiver` 都会调 `LauncherIcon.enforce()`：应用更新或开机后如果系统把
+组件状态重置，会按家长设定自动重新套用，不会「更新一次就冒出来」。
+
+Sony BRAVIA 4K GB ATV3 / Android 9 实测（v1.7.30）：
+
+| 检查项 | 结果 |
+|---|---|
+| 桌面「全部应用」 | 21 个图标里没有题锁（`LEANBACK_LAUNCHER` 命中数 12 → 0） |
+| 系统「设置 → 所有应用」 | 滚到底共 18 个已安装应用，没有题锁，也就点不到卸载按钮 |
+| 答题锁 | 隐藏状态下仍自动弹出答题页（实测 QuizActivity 在前台） |
+| 桌面确认键 | 弹窗数 0，选中应用点确认直接打开，没有回到上下文菜单 |
+| 恢复 | 管理页关开关后命中数回到 12；`am start -n .MainActivity` 可直接进入 |
+| 进程重建 | `am force-stop` 后重新启动，隐藏状态保持 |
+
+为什么设置里也看不到：这台电视的「所有应用」页只列**有 launcher 入口的应用**，不是枚举所有已安装包；
+禁用别名后它和桌面一起被过滤掉。
+
+已知边界（不掩饰）：
+
+- 第三方应用商店（当贝市场 / 应用助手等）里的「应用管理 / 卸载」有可能仍按包列表枚举到题锁，
+  这次没有逐个验证。孩子要主动想到去商店里翻，路径比桌面远得多。
+- 「显示系统应用」开关打开后的完整列表未逐项验证；题锁是第三方应用，默认列表本就包含第三方，
+  这个开关只额外加入系统应用，不会把它加回来。
+- 拦不住 `adb shell pm uninstall`，也拦不住恢复出厂设置 —— 都不是小孩的路径。
+- 隐藏后家长自己也要走上面两条恢复路径，别把管理密码和 adb 都忘了。
+
+
 ### 仍然想要硬锁的可行做法
 
 1. 换设备：选支持 `device_admin` 特性的盒子 / 电视，装完执行 `dpm set-device-owner`。

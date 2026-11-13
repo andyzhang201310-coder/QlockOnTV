@@ -15,6 +15,8 @@ public class BootReceiver extends BroadcastReceiver {
         if (intent == null || intent.getAction() == null) {
             return;
         }
+        // 开机后确认桌面图标的显示/隐藏状态与家长设定一致
+        LauncherIcon.enforce(context);
         Intent i = new Intent(context, GuardService.class);
         i.putExtra(GuardService.EXTRA_BOOT, true);
         GuardService.start(context, i);

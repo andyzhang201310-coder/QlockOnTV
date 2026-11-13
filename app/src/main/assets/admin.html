@@ -954,6 +954,11 @@
           <span>同时禁止「恢复出厂设置」</span>
           <div class="switch" id="swFactory"><i></i></div>
         </div>
+        <div class="row">
+          <span>隐藏桌面图标</span>
+          <div class="switch" id="swIcon"><i></i></div>
+        </div>
+        <div class="tip" id="iconTip">开启后桌面和「全部应用」里都看不到题锁，孩子找不到应用也就找不到卸载入口；答题锁仍由后台服务照常弹出。本页随时可以改回来。</div>
         <div class="btns">
           <button class="primary" id="btnActivateAdmin" style="max-width:300px">远程激活设备管理员</button>
           <button id="btnOpenA11y" style="max-width:300px">开启界面拦截</button>
@@ -1235,6 +1240,10 @@
     }
     $('swGuard').className = 'switch' + (g ? ' on' : '');
     $('swFactory').className = 'switch' + (state.blockFactoryReset ? ' on' : '');
+    $('swIcon').className = 'switch' + (state.launcherHidden ? ' on' : '');
+    $('iconTip').textContent = state.launcherHidden
+      ? '图标已隐藏：桌面和「全部应用」里看不到题锁，答题锁仍按时间照常弹出。要改设置请在本页关掉开关；若管理页打不开，可在电脑执行 ' + (state.adbOpenCmd || '') + ' 进入应用。'
+      : '开启后桌面和「全部应用」里都看不到题锁，孩子找不到应用也就找不到卸载入口；答题锁仍由后台服务照常弹出。本页随时可以改回来。';
     $('ownerCmd').textContent = state.deviceOwnerCmd || '';
     $('activeAdminCmd').textContent = state.activeAdminCmd || '';
     $('a11yCmd').textContent = state.a11yCmd || '';
@@ -1433,6 +1442,18 @@
     state.blockFactoryReset = !state.blockFactoryReset;
     $('swFactory').className = 'switch' + (state.blockFactoryReset ? ' on' : '');
     queueSettings({ blockFactoryReset: state.blockFactoryReset }, '已自动保存');
+  };
+  $('swIcon').onclick = function () {
+    if (!state) { return; }
+    var want = !state.launcherHidden;
+    if (want && !confirm('隐藏后桌面和「全部应用」里都看不到题锁。\n\n答题锁仍会按时间照常弹出；需要改设置时回到本管理页关掉开关即可。\n万一管理页打不开，在电脑执行：\n' + (state.adbOpenCmd || '') + '\n\n确定隐藏吗？')) { return; }
+    api('/api/admin/icon', { method: 'POST', body: JSON.stringify({ hidden: want }) })
+      .then(function (r) {
+        if (!r.ok) { toast('操作失败：' + (r.error || '系统拒绝'), 3500); return; }
+        toast(want ? '桌面图标已隐藏' : '桌面图标已恢复', 2200);
+        loadState();
+      })
+      .catch(function (e) { toast('操作失败：' + e.message, 3500); });
   };
   $('inPinNew').onchange = function () {
     var v = $('inPinNew').value.trim();

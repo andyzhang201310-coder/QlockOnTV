@@ -860,6 +860,34 @@ public class HttpServer {
             return;
         }
 
+        // v1.7.30：隐藏桌面图标。只禁用 launcher alias，MainActivity 与后台服务都保持可用，
+        // 也不需要无障碍，因此不会破坏电视桌面「选中应用点确认直接打开」的行为。
+        if (path.equals("/api/admin/icon") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            boolean hidden = !LauncherIcon.isHidden(ctx);
+            try {
+                JSONObject in = new JSONObject(
+                        body == null || body.trim().length() == 0 ? "{}" : body);
+                if (in.has("hidden")) {
+                    hidden = in.optBoolean("hidden");
+                }
+            } catch (Throwable ignored) {
+            }
+            boolean ok = LauncherIcon.setHidden(ctx, hidden);
+            JSONObject o = new JSONObject();
+            o.put("ok", ok);
+            o.put("launcherHidden", LauncherIcon.isHidden(ctx));
+            o.put("adbOpenCmd", LauncherIcon.adbOpenCommand());
+            if (!ok) {
+                o.put("error", "系统拒绝修改启动入口状态");
+            }
+            respondJson(socket, ok ? 200 : 409, o.toString());
+            return;
+        }
+
         // v1.7.29：界面拦截（无障碍）。远程只能拉起电视上的无障碍设置页，
         // 真正的勾选必须在电视上完成——普通应用没有 WRITE_SECURE_SETTINGS，
         // 无法自己改 accessibility_enabled。返回 adb 命令作为兜底。
@@ -1119,6 +1147,9 @@ public class HttpServer {
             o.put("a11yBlockAt", Prefs.a11yBlockAt());
             o.put("uninstallAllowMs", Math.max(0L, Prefs.uninstallAllowUntil() - System.currentTimeMillis()));
             o.put("a11yCmd", DeviceGuard.adbA11yCommand(ctx));
+            // v1.7.30 隐藏桌面图标：孩子找不到应用，也就找不到卸载入口
+            o.put("launcherHidden", LauncherIcon.isHidden(ctx));
+            o.put("adbOpenCmd", LauncherIcon.adbOpenCommand());
         } catch (Throwable ignored) {
         }
         return o;

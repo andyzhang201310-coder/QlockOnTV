@@ -360,6 +360,15 @@ public final class Prefs {
 
     // ------------------------------------------------------------ 防卸载
 
+    /** 家长是否要求隐藏桌面图标（隐藏后仍由后台服务按时间弹答题页） */
+    public static boolean launcherHidden() {
+        return sp().getBoolean("launcherHidden", false);
+    }
+
+    public static void setLauncherHidden(boolean v) {
+        sp().edit().putBoolean("launcherHidden", v).apply();
+    }
+
     /** 是否开启卸载保护，默认开启 */
     public static boolean uninstallGuard() {
         return sp().getBoolean("uninstallGuard", true);

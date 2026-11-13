@@ -28,6 +28,7 @@ public class SecurityActivity extends Activity {
     private TextView tvGuard;
     private Button btnGuard;
     private Button btnA11y;
+    private Button btnIcon;
     /** 是否已经切到系统激活页（用来判断那个页面到底有没有真的起来） */
     private boolean leftForAdminPage;
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
@@ -57,6 +58,13 @@ public class SecurityActivity extends Activity {
             @Override
             public void onClick(View v) {
                 openA11y();
+            }
+        });
+        btnIcon = (Button) findViewById(R.id.btnIcon);
+        btnIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleIcon();
             }
         });
         findViewById(R.id.btnOwner).setOnClickListener(new View.OnClickListener() {
@@ -118,6 +126,7 @@ public class SecurityActivity extends Activity {
             sb.append("（已拦下 ").append(blockedTimes).append(" 次卸载）");
         }
         sb.append("\n");
+        sb.append("桌面图标：").append(LauncherIcon.isHidden(this) ? "已隐藏" : "显示中").append("\n");
         long allowLeft = Prefs.uninstallAllowUntil() - System.currentTimeMillis();
         if (allowLeft > 0) {
             sb.append("放行中：还剩 ").append(UninstallCode.describeLock(allowLeft))
@@ -142,6 +151,37 @@ public class SecurityActivity extends Activity {
         tvGuard.setText(sb.toString());
         btnGuard.setText(on ? "关闭防卸载" : "开启防卸载");
         btnA11y.setText(a11y ? "界面拦截已开启" : "开启界面拦截");
+        btnIcon.setText(LauncherIcon.isHidden(this) ? "显示桌面图标" : "隐藏桌面图标");
+    }
+
+    /** 隐藏图标后本机就没有入口了，先把两条恢复路径讲清楚再执行 */
+    private void toggleIcon() {
+        if (!LauncherIcon.isHidden(this)) {
+            new AlertDialog.Builder(this)
+                    .setTitle("隐藏桌面图标")
+                    .setMessage("隐藏后桌面和「全部应用」里都看不到题锁，孩子找不到应用，"
+                            + "也就找不到卸载入口。\n\n答题锁仍会按时间照常弹出。需要改设置时：\n"
+                            + "· 手机管理页 → 防卸载 → 关掉「隐藏桌面图标」\n"
+                            + "· 或电脑执行 " + LauncherIcon.adbOpenCommand() + "\n\n"
+                            + "确定隐藏吗？")
+                    .setPositiveButton("隐藏", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface d, int w) {
+                            applyIcon(true);
+                        }
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+        } else {
+            applyIcon(false);
+        }
+    }
+
+    private void applyIcon(boolean hidden) {
+        boolean ok = LauncherIcon.setHidden(this, hidden);
+        Toast.makeText(this, ok ? (hidden ? "桌面图标已隐藏" : "桌面图标已恢复")
+                : "系统拒绝修改启动入口状态", Toast.LENGTH_LONG).show();
+        refreshGuard();
     }
 
     /**

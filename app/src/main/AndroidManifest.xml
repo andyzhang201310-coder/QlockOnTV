@@ -32,20 +32,33 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
 
-        <!-- 桌面图标入口：点开先进答题页，通关后才显示只读信息页 -->
+        <!--
+            桌面图标由 activity-alias 承载，而不是 MainActivity 本身。
+            只禁用别名就能「隐藏应用」：MainActivity 依旧 enabled，后台 GuardService、
+            开机广播、答题页都不受影响；家长仍可用
+            `adb shell am start -n com.family.studytv/.MainActivity` 显式进入应用。
+        -->
         <activity
             android:name=".MainActivity"
             android:banner="@drawable/banner"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode"
             android:exported="true"
             android:launchMode="singleTask"
-            android:screenOrientation="landscape">
+            android:screenOrientation="landscape" />
+
+        <activity-alias
+            android:name=".LauncherAlias"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
 
         <!-- 强制答题弹窗 -->
         <activity

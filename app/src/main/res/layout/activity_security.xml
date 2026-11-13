@@ -129,6 +129,15 @@
                 android:text="卸载应用（需卸载码）" />
 
             <Button
+                android:id="@+id/btnIcon"
+                style="@style/TvButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12dp"
+                android:layout_weight="1"
+                android:text="隐藏桌面图标" />
+
+            <Button
                 android:id="@+id/btnBack"
                 style="@style/TvButton"
                 android:layout_width="0dp"
