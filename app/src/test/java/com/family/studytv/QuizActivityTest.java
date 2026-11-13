@@ -79,18 +79,32 @@ public class QuizActivityTest {
         return out;
     }
 
-    private String correctTextOf(String questionText, java.util.List<String> shown) {        for (QuestionBank.Question q : QuestionBank.get().all()) {
-            if (!q.q.equals(questionText)) {
+    /**
+     * 屏幕上显示的是 RichText 渲染后的文本：数学题的分数在题库里是 `$\frac{7}{8}$`，
+     * 到屏幕上变成一个占位符字符（真的分数由 ReplacementSpan 画出来）。
+     * 所以比对前必须把题库原文也渲染一遍，否则分数题永远匹配不上。
+     */
+    private static String rendered(CharSequence raw) {
+        return RichText.render(raw, 20f).toString();
+    }
+
+    private String correctTextOf(String questionText, java.util.List<String> shown) {
+        for (QuestionBank.Question q : QuestionBank.get().all()) {
+            if (!rendered(q.q).equals(questionText)) {
                 continue;
             }
             // 复合诗词题的题干是复用的（「下列「诗句 — 作者 — 朝代」搭配正确的是？」），
             // 必须连选项一起比对，否则会撞到同题干的第一道题、拿错答案。
             if (shown != null) {
-                if (q.options.size() != shown.size() || !q.options.containsAll(shown)) {
+                java.util.List<String> opts = new java.util.ArrayList<String>();
+                for (String o : q.options) {
+                    opts.add(rendered(o));
+                }
+                if (opts.size() != shown.size() || !opts.containsAll(shown)) {
                     continue;
                 }
             }
-            return q.options.get(q.answer);
+            return rendered(q.options.get(q.answer));
         }
         return null;
     }

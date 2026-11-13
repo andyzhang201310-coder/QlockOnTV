@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28)
@@ -547,5 +548,96 @@ public class QuestionBankTest {
         } finally {
             bank.save(original);
         }
+    }
+
+    // ------------------------------------------------------------ 数学题 LaTeX（v1.10.0）
+
+    /** 裸斜杠分数：3/4、25/100；前后不能贴数字或小数点，和转换脚本同一套判定 */
+    private static final Pattern BARE_FRAC =
+            Pattern.compile("(?<![\\d./])\\d{1,4}\\s*/\\s*\\d{1,4}(?![\\d./])");
+
+    private static String[] fieldsOf(QuestionBank.Question q) {
+        String[] f = new String[q.options.size() + 1];
+        f[0] = q.q;
+        for (int i = 0; i < q.options.size(); i++) {
+            f[i + 1] = q.options.get(i);
+        }
+        return f;
+    }
+
+    private static int countOf(String s, char c) {
+        int n = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == c) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * 题库里的公式必须成对、不能残留斜杠分数。
+     *
+     * <p>题库是 JSON 数据不是代码，转换脚本出错（少一个 $、把 3.6/1.5 切成 3.6 frac{1}{5}）
+     * 不会有编译错误，只会在电视上显示成半截公式，所以在这里拦住。
+     */
+    @Test
+    public void mathLatexIsBalancedAndComplete() {
+        QuestionBank bank = QuestionBank.get();
+        int fracFields = 0;
+        int supFields = 0;
+        int residual = 0;
+        for (QuestionBank.Question q : bank.all()) {
+            for (String f : fieldsOf(q)) {
+                assertEquals("$ 必须成对，否则电视上会显示半截公式：" + q.id,
+                        0, countOf(f, '$') % 2);
+                if (f.contains("\\frac{")) {
+                    fracFields++;
+                }
+                if (f.contains("^{")) {
+                    supFields++;
+                }
+                if (BARE_FRAC.matcher(f).find()) {
+                    residual++;
+                }
+            }
+        }
+        assertTrue("数学题里的分数应已转成 \\frac（实际 " + fracFields + " 处）", fracFields >= 600);
+        assertTrue("上标 ² ³ 应转成 ^{2} / ^{3}（实际 " + supFields + " 处）", supFields >= 10);
+        assertEquals("不该残留 3/4 这类裸斜杠分数", 0, residual);
+    }
+
+    /**
+     * 内置题库 version 必须比上一次发布高：QuestionBank.ensureSeeded() 只在
+     * versionOf(asset) &gt; versionOf(设备上的文件) 时才覆盖，光改题面不升版本，
+     * 已经装过应用的电视永远看不到新题面。
+     */
+    @Test
+    public void latexBankVersionBumped() {
+        QuestionBank bank = QuestionBank.get();
+        assertEquals("题库内容（数学分数 LaTeX 化）变更必须同步 bump version",
+                8, QuestionBank.versionOf(bank.exportJson()));
+    }
+
+    /** 真拿题库里一道分数题喂给 RichText：渲染结果里不能再有 $ 或 \frac 原文 */
+    @Test
+    public void bankFractionQuestionsRenderCleanly() {
+        QuestionBank bank = QuestionBank.get();
+        int checked = 0;
+        for (QuestionBank.Question q : bank.all()) {
+            if (!"数学".equals(q.subject) || !q.q.contains("\\frac{")) {
+                continue;
+            }
+            CharSequence out = RichText.render(q.q, 20f);
+            String plain = out.toString();
+            assertTrue("渲染后不该留 $：" + q.id, plain.indexOf('$') < 0);
+            assertTrue("渲染后不该留 \\frac：" + q.id, plain.indexOf("\\frac") < 0);
+            assertTrue("渲染后应换成分数字符或斜杠形态：" + q.id,
+                    plain.contains("/") || plain.contains("\uFFFC"));
+            if (++checked >= 50) {
+                break;
+            }
+        }
+        assertTrue("至少应检查到 50 道分数题（实际 " + checked + "）", checked >= 50);
     }
 }

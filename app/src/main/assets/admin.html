@@ -679,6 +679,7 @@
         <label class="fl">题干</label>
         <textarea id="qText" class="qtext" spellcheck="false"
           placeholder="例：「鹅，鹅，鹅」的下一句是？"></textarea>
+        <div class="tip" style="margin-top:6px">分数写成 <b>$\frac{3}{4}$</b>、上标写成 <b>$r^{2}$</b>，电视上会排成真正的分数和真上标；写成 3/4 也能正常显示，只是会显示成斜杠。</div>
         <label class="fl">难度星级（电视上跟着「科目 · 年级」一起显示）</label>
         <div class="starpick" id="qStar" data-value="3" title="点星星选 1–5 星">
           <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
@@ -1063,112 +1064,143 @@
   <!-- ============================ 7. 系统设置 ============================ -->
   <section class="view" id="view-system">
     <div class="bar">
-      <div class="txt">密码与端口改完即自动保存</div>
+      <div class="txt" id="sysLine">密码、端口与保护开关改完即自动保存到电视</div>
       <span class="badge ok" id="sysBadge">已自动保存</span>
     </div>
-    <div class="stack">
-      <div class="card">
+    <div class="seg" id="segSys">
+      <button data-stab="account" class="on">账号与端口</button>
+      <button data-stab="ai">AI 错题讲解</button>
+      <button data-stab="guard">防卸载保护</button>
+      <button data-stab="docs">保护说明</button>
+    </div>
+
+    <!-- ---------- 账号与端口 ---------- -->
+    <div id="stab-account">
+      <div class="panel">
         <h2>管理密码与端口</h2>
-        <div class="tip" style="margin-top:0">
-          拦截开关、开机弹题、免打扰时段已分别归到「快捷操作」与「规则管理 → 时间计划」，这里只留账号与网络。
+        <p class="desc">拦截开关、开机弹题、免打扰时段已分别归到「快捷操作」与「规则管理 → 时间计划」，这里只留账号与网络。</p>
+        <div class="body">
+          <div class="f" style="display:block">
+            <div class="lbl"><b>管理密码</b><small>至少 4 位；留空表示不修改。离开输入框即自动保存</small></div>
+            <input type="password" id="inPinNew" placeholder="输入新密码" style="margin-top:8px">
+          </div>
+          <div class="f" style="display:block">
+            <div class="lbl"><b>后台端口</b><small>范围 1–65500；改完电视上的后台会用新端口重启，手机需要用新地址重新扫码打开</small></div>
+            <input type="number" id="inPort" min="1024" max="65500" value="8899" style="margin-top:8px">
+          </div>
         </div>
-        <label class="fl">管理密码（至少 4 位，留空表示不修改）</label>
-        <input type="password" id="inPinNew" placeholder="输入新密码，离开输入框即自动保存">
-        <label class="fl">后台端口（改完需重新扫码，1–65500）</label>
-        <input type="number" id="inPort" min="1024" max="65500" value="8899">
-        <div class="tip">改端口后电视上的后台会用新端口重启，手机需要用新地址重新打开；其余设置不受影响。</div>
       </div>
+      <div class="note">改端口后当前页面会失联，用新地址重新扫码即可，其余设置不受影响；密码与端口都是改完即存，没有保存按钮。</div>
+    </div>
 
-      <!-- ---------- AI 错题讲解（v1.9.0）---------- -->
-      <div class="card wide" id="aiCard">
+    <!-- ---------- AI 错题讲解（v1.9.0）---------- -->
+    <div id="stab-ai" class="hidden">
+      <div class="panel">
         <h2>AI 错题讲解</h2>
-        <div class="tip" style="margin-top:0">
-          答错后电视右下角出现「AI 讲解 · 5」并倒计时 5 秒：按遥控器 OK 就看讲解，按了会停下来等看完，不按自动进下一题。
+        <p class="desc">
+          答错后电视右下角出现「AI 讲解 · 5」并倒计时 5 秒：按遥控器 OK 就看讲解，看完点「继续下一题」；不按则自动进下一组。
           <b>开启后，题目、四个选项和孩子的错误选项会发往你填写的大模型服务</b>，因此默认关闭，Key 只存在电视本机。
-        </div>
-        <div class="row">
-          <span>启用 AI 讲解<br><small style="color:var(--muted)">关闭后答错流程与原来完全一致，不会出现任何按钮</small></span>
-          <div class="switch" data-bool="aiEnabled"><i></i></div>
-        </div>
-        <div id="aiDetails" data-when="ai">
-          <div class="row"><span>就绪状态</span><b id="aiReadyBadge">—</b></div>
-          <label class="fl">接口地址（Base URL，一般到 /v1 为止）</label>
-          <input type="text" id="aiBaseUrl" placeholder="https://api.deepseek.com/v1" autocomplete="off">
-          <label class="fl">模型名</label>
-          <input type="text" id="aiModel" placeholder="deepseek-chat" autocomplete="off">
-          <label class="fl">API Key</label>
-          <input type="password" id="aiApiKey" placeholder="sk-..." autocomplete="off">
-          <div class="row" style="margin-top:14px">
-            <span>请求超时</span>
-            <div class="stepper" data-key="aiTimeoutSeconds" data-min="5" data-max="60"></div>
+        </p>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>启用 AI 讲解</b><small>关闭后答错流程与原来完全一致，不会出现任何按钮</small></div>
+            <div class="ctl"><div class="switch" data-bool="aiEnabled"><i></i></div></div></div>
+          <div data-when="ai">
+            <div class="f"><div class="lbl"><b>就绪状态</b><small>开关、地址、模型名、Key 四项齐了才会在电视上出现按钮</small></div>
+              <div class="ctl"><b id="aiReadyBadge" style="font-size:13.5px">—</b></div></div>
+            <div class="f" style="display:block">
+              <div class="lbl"><b>接口地址</b><small>OpenAI 兼容的 Base URL，一般到 /v1 为止</small></div>
+              <input type="text" id="aiBaseUrl" placeholder="https://api.deepseek.com/v1" autocomplete="off" style="margin-top:8px">
+            </div>
+            <div class="f" style="display:block">
+              <div class="lbl"><b>模型名</b><small>例如 deepseek-chat、qwen-plus、gpt-4o-mini</small></div>
+              <input type="text" id="aiModel" placeholder="deepseek-chat" autocomplete="off" style="margin-top:8px">
+            </div>
+            <div class="f" style="display:block">
+              <div class="lbl"><b>API Key</b><small>保存后只显示 sk-****后四位；留空并保存即清空</small></div>
+              <input type="password" id="aiApiKey" placeholder="sk-..." autocomplete="off" style="margin-top:8px">
+            </div>
+            <div class="f"><div class="lbl"><b>请求超时</b><small>模型太慢会自动放弃，答题流程不会卡住</small></div>
+              <div class="ctl"><div class="stepper" data-key="aiTimeoutSeconds" data-min="5" data-max="60"></div><span class="unit">秒</span></div></div>
+            <div class="f"><div class="lbl"><b>连通与缓存</b><small id="aiTestHint">填完先点「测试连通」，通了再去电视上答错一题看效果。同一道题第二次直接读本机缓存，不再请求模型。</small></div>
+              <div class="ctl"><button id="btnAiTest" class="mini" type="button" style="max-width:none">测试连通</button>
+                <button id="btnAiClear" class="mini" type="button" style="max-width:none">清空缓存</button></div></div>
           </div>
-          <div class="btns">
-            <button id="btnAiTest" type="button" style="max-width:200px">测试连通</button>
-            <button id="btnAiClear" type="button" style="max-width:200px">清空解析缓存</button>
-          </div>
-          <div class="tip" id="aiTestHint">填完先点「测试连通」，通了再去电视上答错一题看效果。同一道题第二次直接读本机缓存，不再请求模型。</div>
         </div>
       </div>
+      <div class="note">电视上的公式（分数、上下标）已改用 LaTeX 排版，模型的讲解里带 $...$ 或 \frac{}{} 也会被渲染成真正的分数，不会显示成斜杠。</div>
+    </div>
 
-      <div class="card">
+    <!-- ---------- 防卸载保护 ---------- -->
+    <div id="stab-guard" class="hidden">
+      <div class="panel">
         <h2>防卸载保护</h2>
-        <div class="row"><span>保护状态</span><b id="stGuard">—</b></div>
-        <div class="row"><span>设备管理员</span><b id="stAdmin">—</b></div>
-        <div class="row"><span>设备所有者</span><b id="stOwner">—</b></div>
-        <div class="row"><span>系统卸载锁</span><b id="stBlock">—</b></div>
-        <div class="row"><span>界面拦截（无障碍）</span><b id="stA11y">—</b></div>
-        <div class="row"><span>已拦下卸载</span><b id="stA11yCount">—</b></div>
-        <div class="row"><span>卸载码</span><b id="stCode">—</b></div>
-        <div class="row">
-          <span>开启防卸载保护</span>
-          <div class="switch on" id="swGuard"><i></i></div>
+        <p class="desc">孩子从系统设置卸载时，会先被要求「停用设备管理员」，普通小孩走不完；设备所有者锁上之后卸载按钮直接置灰。</p>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>保护状态</b></div><div class="ctl"><b id="stGuard">—</b></div></div>
+          <div class="f"><div class="lbl"><b>设备管理员</b></div><div class="ctl"><b id="stAdmin">—</b></div></div>
+          <div class="f"><div class="lbl"><b>设备所有者</b></div><div class="ctl"><b id="stOwner">—</b></div></div>
+          <div class="f"><div class="lbl"><b>系统卸载锁</b></div><div class="ctl"><b id="stBlock">—</b></div></div>
+          <div class="f"><div class="lbl"><b>界面拦截（无障碍）</b></div><div class="ctl"><b id="stA11y">—</b></div></div>
+          <div class="f"><div class="lbl"><b>已拦下卸载</b></div><div class="ctl"><b id="stA11yCount">—</b></div></div>
+          <div class="f"><div class="lbl"><b>卸载码</b></div><div class="ctl"><b id="stCode">—</b></div></div>
+          <div class="f"><div class="lbl"><b>开启防卸载保护</b><small>电视端点「开启防卸载」即自动激活，不用去系统设置里找入口</small></div>
+            <div class="ctl"><div class="switch on" id="swGuard"><i></i></div></div></div>
+          <div class="f"><div class="lbl"><b>同时禁止「恢复出厂设置」</b><small>防止用恢复出厂绕过所有保护</small></div>
+            <div class="ctl"><div class="switch" id="swFactory"><i></i></div></div></div>
+          <div class="f"><div class="lbl"><b>隐藏桌面图标</b><small>孩子找不到应用也就找不到卸载入口，答题锁照常弹出</small></div>
+            <div class="ctl"><div class="switch" id="swIcon"><i></i></div></div></div>
+          <div class="f"><div class="lbl"><b>远程激活</b><small id="activateTip">电视上没有「设备管理员」设置页时点这里：应用以自身身份直接激活，不用去系统设置里翻</small></div>
+            <div class="ctl"><button class="mini" id="btnActivateAdmin" type="button" style="max-width:none">远程激活设备管理员</button></div></div>
+          <div class="f"><div class="lbl"><b>界面拦截</b><small id="a11yTip">设备管理员被系统裁掉（Sony BRAVIA 等）时，卸载拦不住，只能靠界面拦截</small></div>
+            <div class="ctl"><button class="mini" id="btnOpenA11y" type="button" style="max-width:none">开启界面拦截</button></div></div>
+          <div class="tip" id="iconTip">开启隐藏后，桌面和「全部应用」里都看不到题锁。本页随时可以改回来。</div>
         </div>
-        <div class="row">
-          <span>同时禁止「恢复出厂设置」</span>
-          <div class="switch" id="swFactory"><i></i></div>
-        </div>
-        <div class="row">
-          <span>隐藏桌面图标</span>
-          <div class="switch" id="swIcon"><i></i></div>
-        </div>
-        <div class="tip" id="iconTip">开启后桌面和「全部应用」里都看不到题锁，孩子找不到应用也就找不到卸载入口；答题锁仍由后台服务照常弹出。本页随时可以改回来。</div>
-        <div class="btns">
-          <button class="primary" id="btnActivateAdmin" style="max-width:300px">远程激活设备管理员</button>
-          <button id="btnOpenA11y" style="max-width:300px">开启界面拦截</button>
-        </div>
-        <div class="tip" id="activateTip">电视上没有「设备管理员」设置页时点这里：应用以自身身份直接激活，不用去系统设置里翻。激活成功后，卸载前必须先停用设备管理员。</div>
-        <div class="tip" id="a11yTip">设备管理员被系统裁掉（Sony BRAVIA 等）时，卸载拦不住，只能靠界面拦截：点「开启界面拦截」会在电视上打开无障碍页，勾选「题锁」即可。之后任何卸载「题锁」的页面都会自动退回，必须先在电视端输入卸载码才放行。</div>
-        <label class="fl">当前卸载码（出厂默认 246810）</label>
-        <input type="password" id="inOldCode" placeholder="验证身份用">
-        <label class="fl">新卸载码（4–12 位数字或字母，留空表示不修改）</label>
-        <input type="text" id="inNewCode" placeholder="例如 839201">
-        <div class="btns">
-          <button class="primary" id="btnSaveCode" style="max-width:280px">修改卸载码</button>
-        </div>
-        <div class="tip">改码要校验原码，所以留成按钮提交；两个开关本身是改完即存。</div>
       </div>
 
-      <div class="card wide">
-        <h2>保护说明与命令</h2>
-        <div class="tip" style="margin-top:0">
-          保护分两级：<br>
-          · <b>设备管理员</b>（电视端点「开启防卸载」即自动激活，不用去设置里找入口——电视一般没有这一项）：孩子从系统设置卸载时，会先被要求「停用设备管理员」，普通小孩走不完。<br>
-          · <b>设备所有者</b>（电脑 adb 执行一次）：系统卸载按钮直接置灰，必须回到电视输入卸载码才能卸载。<br>
-          电视拒绝自动激活时，用下面这条命令（不要求电视上没登录账号）：
+      <div class="panel">
+        <h2>卸载码</h2>
+        <p class="desc">改码要校验原码，所以留成按钮提交；上面几个开关本身是改完即存。</p>
+        <div class="body">
+          <div class="f" style="display:block">
+            <div class="lbl"><b>当前卸载码</b><small>出厂默认 246810，验证身份用</small></div>
+            <input type="password" id="inOldCode" placeholder="输入当前卸载码" style="margin-top:8px">
+          </div>
+          <div class="f" style="display:block">
+            <div class="lbl"><b>新卸载码</b><small>4–12 位数字或字母，留空表示不修改</small></div>
+            <input type="text" id="inNewCode" placeholder="例如 839201" style="margin-top:8px">
+          </div>
+          <div class="btns" style="margin-top:14px">
+            <button class="primary" id="btnSaveCode" style="max-width:280px">修改卸载码</button>
+          </div>
         </div>
-        <div class="tip" id="activeAdminCmd" style="word-break:break-all;color:var(--accent)"></div>
-        <div class="btns">
-          <button id="btnCopyActiveCmd" style="max-width:280px">复制基础保护命令</button>
+      </div>
+    </div>
+
+    <!-- ---------- 保护说明与命令 ---------- -->
+    <div id="stab-docs" class="hidden">
+      <div class="panel">
+        <h2>保护说明</h2>
+        <p class="desc">保护分三级，越往下越硬：</p>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>① 设备管理员</b><small>电视端点「开启防卸载」即自动激活，不用去设置里找入口——电视一般没有这一项。孩子从系统设置卸载时会先被要求停用设备管理员</small></div></div>
+          <div class="f"><div class="lbl"><b>② 界面拦截（无障碍）</b><small>设备管理员被系统裁掉时用。任何卸载「题锁」的页面都会自动退回，必须先在电视端输入卸载码才放行</small></div></div>
+          <div class="f"><div class="lbl"><b>③ 设备所有者</b><small>电脑 adb 执行一次后，系统卸载按钮直接置灰，必须回到电视输入卸载码才能卸载</small></div></div>
         </div>
-        <div class="tip">当前设备的所有者命令（彻底锁定，要求电视上没登录账号）：</div>
-        <div class="tip" id="ownerCmd" style="word-break:break-all;color:var(--accent)"></div>
-        <div class="btns">
-          <button id="btnCopyCmd" style="max-width:280px">复制命令</button>
-        </div>
-        <div class="tip">无障碍界面拦截命令（设备管理员被系统裁掉时用这条，重启后仍然保留）：</div>
-        <div class="tip" id="a11yCmd" style="word-break:break-all;color:var(--accent)"></div>
-        <div class="btns">
-          <button id="btnCopyA11yCmd" style="max-width:280px">复制界面拦截命令</button>
+      </div>
+
+      <div class="panel">
+        <h2>命令（复制到电脑执行）</h2>
+        <p class="desc">电视拒绝自动激活时用第二条；第三条用于设备管理员被系统裁掉的机型，重启后仍然保留。</p>
+        <div class="body">
+          <div class="f"><div class="lbl"><b>基础保护命令</b></div></div>
+          <div class="tip" id="activeAdminCmd" style="word-break:break-all;color:var(--accent);margin-top:6px"></div>
+          <div class="btns" style="margin-top:8px"><button id="btnCopyActiveCmd" style="max-width:280px">复制基础保护命令</button></div>
+          <div class="f" style="padding-top:14px"><div class="lbl"><b>设备所有者命令</b><small>彻底锁定，要求电视上没登录账号</small></div></div>
+          <div class="tip" id="ownerCmd" style="word-break:break-all;color:var(--accent);margin-top:6px"></div>
+          <div class="btns" style="margin-top:8px"><button id="btnCopyCmd" style="max-width:280px">复制命令</button></div>
+          <div class="f" style="padding-top:14px"><div class="lbl"><b>无障碍界面拦截命令</b><small>设备管理员被系统裁掉时用这条，重启后仍然保留</small></div></div>
+          <div class="tip" id="a11yCmd" style="word-break:break-all;color:var(--accent);margin-top:6px"></div>
+          <div class="btns" style="margin-top:8px"><button id="btnCopyA11yCmd" style="max-width:280px">复制界面拦截命令</button></div>
         </div>
       </div>
     </div>
@@ -1258,6 +1290,8 @@
     h = String(h || '').replace(/^#/, '');
     if (LEGACY[h]) { return LEGACY[h]; }
     if (h.indexOf('rules-') === 0) { return h; }
+    if (h === 'system') { return 'system-account'; }
+    if (h.indexOf('system-') === 0) { return h; }
     if (VIEWS[h]) { return h; }
     return 'status';
   }
@@ -1268,7 +1302,7 @@
   function showView(target, keepScroll) {
     var parts = String(target || 'status').split('-');
     var view = VIEWS[parts[0]] ? parts[0] : 'status';
-    var sub = parts[1] || 'task';
+    var sub = parts[1] || (view === 'system' ? 'account' : 'task');
     curView = view;
     navItems.forEach(function (a) {
       var on = a.getAttribute('data-view') === view;
@@ -1282,11 +1316,13 @@
     $('pageTitle').textContent = VIEWS[view];
     $('crumb').textContent = '家长控制台 / ' + VIEWS[view];
     if (view === 'rules') { activateTab(sub); }
+    if (view === 'system') { activateSysTab(sub); }
     if (view === 'bank') { openBank(); }
     if (view === 'growth') { openGrowth(); }
     if (view === 'stats') { openStats(); }
     try {
-      history.replaceState(null, '', location.pathname + '#' + (view === 'rules' ? 'rules-' + sub : view));
+      var hash = view === 'rules' ? 'rules-' + sub : (view === 'system' ? 'system-' + sub : view);
+      history.replaceState(null, '', location.pathname + '#' + hash);
     } catch (e) {}
     if (!keepScroll) { window.scrollTo(0, 0); }
   }
@@ -1771,6 +1807,30 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  // 后台网页不跑 LaTeX 渲染：把 $...$ 里的常见写法降级成人能读的纯文本
+  // （\frac{3}{4} → 3/4、x^{2} → x²），免得家长在题库/错题列表里看到一堆反斜杠。
+  var UTF_SUP = { '2': '²', '3': '³', '4': '⁴', 'n': 'ⁿ' };
+  function prettyMath(s) {
+    s = String(s == null ? '' : s);
+    if (s.indexOf('$') < 0) { return s; }
+    return s
+      .replace(/\$\$([\s\S]+?)\$\$/g, function (_, e) { return mathPlain(e); })
+      .replace(/\$([\s\S]+?)\$/g, function (_, e) { return mathPlain(e); });
+  }
+  function mathPlain(e) {
+    return String(e)
+      .replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '$1/$2')
+      .replace(/\\sqrt\s*\{([^{}]*)\}/g, '√$1')
+      .replace(/\^\{([^{}]*)\}/g, function (_, x) { return UTF_SUP[x] || ('^' + x); })
+      .replace(/\^(\w)/g, function (_, x) { return UTF_SUP[x] || ('^' + x); })
+      .replace(/\\times/g, '×').replace(/\\div/g, '÷').replace(/\\cdot/g, '·')
+      .replace(/\\pi/g, 'π').replace(/\\le(q)?/g, '≤').replace(/\\ge(q)?/g, '≥')
+      .replace(/\\ne(q)?/g, '≠').replace(/\\approx/g, '≈')
+      .replace(/\\[a-zA-Z]+/g, '')
+      .replace(/[{}]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
   function fmtSize(n) {
     n = +n || 0;
     if (n <= 0) { return '0 KB'; }
@@ -1867,7 +1927,7 @@
         '<div class="meta"><span class="line"><span class="qtag">' + esc(qLabel(q)) + '</span>' +
         '<span class="qstar" title="难度 ' + (+q.difficulty || 3) + ' 星">' + starsOf(q) + '</span></span>' +
         '<span class="qtag qid">' + esc(q.id) + '</span></div>' +
-        '<div class="body">' + esc(q.q) + '</div>' +
+        '<div class="body">' + esc(prettyMath(q.q)) + '</div>' +
         '<div class="ops">' +
         '<button data-act="edit" data-i="' + i + '">编辑</button>' +
         '<button class="del" data-act="del" data-i="' + i + '">删除</button>' +
@@ -2397,6 +2457,9 @@
     Array.prototype.forEach.call($('seg').children, function (b) {
       b.onclick = function () { showView('rules-' + b.dataset.tab, true); };
     });
+    Array.prototype.forEach.call($('segSys').children, function (b) {
+      b.onclick = function () { showView('system-' + b.dataset.stab, true); };
+    });
     $('btnClearWrong').onclick = function () {
       if (!confirm('清空错题库后，间隔重复复习会重新开始。确定吗？')) { return; }
       api('/api/rules/reset', { method: 'POST', body: '{}' }).then(function () {
@@ -2487,6 +2550,23 @@
     }
   }
   var TABS = ['task', 'time', 'scope', 'more'];
+  // 系统设置页与规则管理页同一套「状态条 + 分段选项卡 + panel」结构，
+  // 分段的 id 前缀换成 stab-，两页各自独立，互不影响。
+  var SYS_TABS = ['account', 'ai', 'guard', 'docs'];
+  function activateSysTab(name) {
+    if (SYS_TABS.indexOf(name) < 0) { name = 'account'; }
+    var seg = $('segSys');
+    if (seg) {
+      Array.prototype.forEach.call(seg.children, function (x) {
+        x.className = x.dataset.stab === name ? 'on' : '';
+      });
+    }
+    SYS_TABS.forEach(function (t) {
+      var el = $('stab-' + t);
+      if (el) { el.classList.toggle('hidden', t !== name); }
+    });
+    if (name === 'ai') { syncAiInputs(); conditional(); }
+  }
   function activateTab(name) {
     if (TABS.indexOf(name) < 0) { name = 'task'; }
     Array.prototype.forEach.call($('seg').children, function (x) {
@@ -2984,9 +3064,9 @@
               (r.first && r.first !== r.last ? ' · 首次 ' + fmtTime(+r.first) : '') + '</span>' +
             '<button class="gr-del" data-id="' + esc(r.id) + '">移除</button>' +
           '</div>' +
-          '<div class="gr-q">' + esc(r.q || '') + '</div>' +
+          '<div class="gr-q">' + esc(prettyMath(r.q || '')) + '</div>' +
           (r.missing ? '' : '<div class="gr-a">正确答案：' + letter + '、' +
-            esc(r.answerText || '') + '</div>') +
+            esc(prettyMath(r.answerText || '')) + '</div>') +
         '</div>';
     });
     box.innerHTML = html;
