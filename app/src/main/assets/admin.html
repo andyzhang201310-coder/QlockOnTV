@@ -839,6 +839,10 @@
             <div class="ctl"><span class="unit" id="calToday">—</span></div></div>
           <div class="f"><div class="lbl"><b>总开关</b><small>自动弹题或整体暂停关闭时，任何时段都不会弹题</small></div>
             <div class="ctl"><span class="unit" id="calMaster">—</span></div></div>
+          <div class="note" id="calConflict" style="display:none;background:#fdf5f4;border-color:#ecd6d4;color:#8a4a45">
+            检测到「时间计划」里还留着按星期设置的网课时段 / 大人豁免，它们优先级高于日历计划，会盖住新规则。
+            <button id="btnCalClean" class="mini" type="button" style="max-width:none;margin-left:8px">清理旧时段规则</button>
+          </div>
         </div>
       </div>
       <div class="panel">
@@ -2583,6 +2587,9 @@
     var synced = Math.max(0, (calInfo.days || []).length - (calInfo.builtinCount || 0));
     $('calCount').textContent = '内置 ' + (calInfo.builtinCount || 0) + ' 条 + 网络同步 ' + synced + ' 条';
     if (document.activeElement !== $('calUrl')) { $('calUrl').value = calInfo.url || ''; }
+    var legacy = ((cfg && cfg.exemptWindows) ? cfg.exemptWindows.length : 0) +
+                 ((cfg && cfg.timePoints) ? cfg.timePoints.length : 0);
+    $('calConflict').style.display = (legacy > 0 && calInfo.dayPlansEnabled) ? '' : 'none';
     renderOverrides();
   }
 
@@ -2645,6 +2652,17 @@
     api('/api/calendar/clear', { method: 'POST', body: '{}' }).then(function () {
       toast('已恢复内置日历'); loadCalendar();
     }).catch(function (e) { toast('操作失败：' + e.message, 3200); });
+  };
+  /** 旧「网课时段 / 大人豁免」按星期生效且优先级更高，会盖住日历计划，给家长一键清理入口 */
+  $('btnCalClean').onclick = function () {
+    if (!cfg) { return; }
+    if (!confirm('清空「网课时段」与「大人豁免」里按星期设置的窗口，并把「全天可用」打开。日历计划里的时段不受影响。确定吗？')) { return; }
+    cfg.exemptWindows = [];
+    cfg.timePoints = [];
+    cfg.allDay = true;
+    renderWindows('timePoints'); renderWindows('exemptWindows');
+    syncBool(); conditional(); changed();
+    toast('已清理旧时段规则');
   };
 
   // ============================================================ 学习统计（v1.7.22）
