@@ -107,6 +107,12 @@ public final class Rules {
             o.put("dayPlans", CalendarPlan.defaultPlans());
             o.put("calendarUrl", CalendarPlan.DEFAULT_URL);
             o.put("calendarOverrides", new JSONObject());
+            // v1.9.0 AI 错题讲解：默认关闭——题目会发到云端，必须家长主动填 Key 并打开
+            o.put("aiEnabled", false);
+            o.put("aiBaseUrl", "https://api.deepseek.com/v1");
+            o.put("aiApiKey", "");
+            o.put("aiModel", "deepseek-chat");
+            o.put("aiTimeoutSeconds", 20);
         } catch (Throwable ignored) {
         }
         return o;
@@ -181,7 +187,17 @@ public final class Rules {
      * 范围（科目/年级）同时写回 Prefs，保证旧「参数设置」页与规则页看到的是同一份数据。
      */
     public static synchronized JSONObject save(Context c, JSONObject in) {
+        JSONObject prev = get(c);
         JSONObject o = sanitize(in == null ? new JSONObject() : in);
+        // API Key 是打码回写的（后台只拿到 sk-****abcd）：说明家长没动这个输入框，
+        // 沿用设备上原来的 Key，不能把打码串当成真 Key 存进去。
+        try {
+            String k = o.optString("aiApiKey", "");
+            if (AiExplain.isMasked(k)) {
+                o.put("aiApiKey", prev.optString("aiApiKey", ""));
+            }
+        } catch (Throwable ignored) {
+        }
         SharedPreferences.Editor e = sp(c).edit();
         e.putString(KEY_CONFIG, o.toString());
         e.putInt(KEY_VERSION, version(c) + 1);
@@ -246,6 +262,12 @@ public final class Rules {
             o.put("calendarOverrides",
                     CalendarPlan.sanitizeOverrides(in.optJSONObject("calendarOverrides")));
             strUrl(o, in);
+            // AI 讲解配置：URL / 模型 / Key 都只接受合理长度的文本，避免畸形值打进网络请求
+            bool(o, in, "aiEnabled");
+            aiText(o, in, "aiBaseUrl", 300);
+            aiText(o, in, "aiModel", 80);
+            aiText(o, in, "aiApiKey", 300);
+            num(o, in, "aiTimeoutSeconds", 5, 60);
         } catch (Throwable ignored) {
         }
         return o;
@@ -262,6 +284,34 @@ public final class Rules {
                     || v.startsWith("http://") || v.startsWith("https://"))) {
                 o.put("calendarUrl", v);
             }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * AI 配置文本字段：裁空白 + 限长；Base URL 只认 http(s) 并去掉末尾斜杠。
+     *
+     * <p>超长或协议不对时保留原值而不是截断 —— 截断出来的半截 Key 比「没改」更难排查。
+     */
+    private static void aiText(JSONObject o, JSONObject in, String k, int max) {
+        try {
+            if (!in.has(k)) {
+                return;
+            }
+            String v = in.optString(k, "").trim();
+            if (v.length() > max) {
+                return;
+            }
+            if ("aiBaseUrl".equals(k)) {
+                if (v.length() == 0
+                        || (!v.startsWith("http://") && !v.startsWith("https://"))) {
+                    return;   // 留空 / 协议不对都不覆盖原值
+                }
+                while (v.endsWith("/")) {
+                    v = v.substring(0, v.length() - 1);
+                }
+            }
+            o.put(k, v);
         } catch (Throwable ignored) {
         }
     }

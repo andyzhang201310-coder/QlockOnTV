@@ -1,26 +1,33 @@
 package com.family.studytv;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.text.Layout;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.LeadingMarginSpan;
 import android.text.style.ReplacementSpan;
+import android.util.DisplayMetrics;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -64,6 +71,8 @@ public class QuizActivity extends Activity {
     private static final long REVEAL_MS = 4500;
     /** 通关后停留多久自动关闭 */
     private static final long PASS_MS = 900;
+    /** AI 讲解入口至少停留 5 秒：孩子看清楚、按得到，过了就自动换下一题 */
+    static final long AI_PROMPT_MS = 5000L;
 
     /** 隐藏入口：连续按「上键」几次打开家长管理 */
     private static final int GESTURE_UP_COUNT = 5;
@@ -140,6 +149,20 @@ public class QuizActivity extends Activity {
     private TextView tvFeedback;
     private LinearLayout optionBox;
     private ScrollView quizScroll;
+
+    // ---- AI 错题讲解（v1.9.0）
+    private LinearLayout aiRow;
+    private Button btnAi;
+    /** 答错那一题与孩子选的下标，点 AI 按钮时用 */
+    private Item wrongItem;
+    private int wrongChoice = -1;
+    /** 倒计时窗口与到期时刻（uptimeMillis，不受系统改时间影响） */
+    private long aiWindowMs = 0L;
+    private long aiDeadline = 0L;
+    private Dialog aiPanel;
+    private boolean aiPanelOpen = false;
+    /** Activity 已销毁：此时 Dialog 的 onDismiss 不能再推进题目 */
+    private boolean destroyed = false;
 
     /** 顶栏右上角的系统时钟：每秒对一次表，秒数变化时不会左右抖 */
     private final Runnable clockTick = new Runnable() {
@@ -225,6 +248,16 @@ public class QuizActivity extends Activity {
         tvFeedback = (TextView) findViewById(R.id.tvFeedback);
         optionBox = (LinearLayout) findViewById(R.id.optionBox);
         quizScroll = (ScrollView) findViewById(R.id.quizScroll);
+        aiRow = (LinearLayout) findViewById(R.id.aiRow);
+        btnAi = (Button) findViewById(R.id.btnAi);
+        if (btnAi != null) {
+            btnAi.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openAiPanel();
+                }
+            });
+        }
 
         // 字号基准取布局里的原始值，规则里的 fontScale 在这个基础上缩放
         baseQuestionPx = tvQuestion.getTextSize();
@@ -326,6 +359,14 @@ public class QuizActivity extends Activity {
         scrollToTop();
     }
 
+    /** 题干 / 反馈 / 选项统一入口：没有公式标记时原样返回，不影响题库纯文本观感 */
+    private void setRich(TextView tv, CharSequence raw) {
+        if (tv == null) {
+            return;
+        }
+        tv.setText(RichText.render(raw, tv.getTextSize()));
+    }
+
     private void applyQuestionFont() {
         if (baseQuestionPx > 0f) {
             tvQuestion.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX,
@@ -411,6 +452,12 @@ public class QuizActivity extends Activity {
         tvSubject.setBackground(Theme.card(tvSubject, theme.tagBg, theme.accent, 6f,
                 Math.max(1, px(tvSubject, 2))));
         tvFeedback.setBackground(Theme.card(tvFeedback, theme.feedbackBg, 0, 6f, 0));
+        // AI 讲解入口跟随配色：默认只有底色，聚焦才亮出强调色描边
+        if (btnAi != null) {
+            btnAi.setTextColor(theme.accent);
+            btnAi.setBackground(Theme.optionBackground(btnAi, theme));
+            Theme.flatten(btnAi);
+        }
         if (!items.isEmpty() && index >= 0 && index < items.size()) {
             renderSubject(items.get(index).q);   // 星级颜色跟着换
         }
@@ -477,6 +524,11 @@ public class QuizActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        // AI 面板是独立窗口，不会随 Activity 一起隐藏：先正常关掉（onDismiss 里推进题目），
+        // 免得孩子按 HOME 逃出去后，回来还对着一条已经作废的题目对话框
+        if (aiPanel != null && aiPanel.isShowing()) {
+            aiPanel.dismiss();
+        }
         if (!passed && !managing && !isFinishing()) {
             handler.removeCallbacks(relaunch);
             handler.postDelayed(relaunch, 1200);
@@ -485,6 +537,12 @@ public class QuizActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        destroyed = true;
+        handler.removeCallbacks(advanceAfterWrong);
+        handler.removeCallbacks(aiTick);
+        if (aiPanel != null && aiPanel.isShowing()) {
+            aiPanel.dismiss();   // destroyed 已置位，onDismiss 不会再动题目
+        }
         running = false;
         if (rulesReceiverRegistered) {
             try {
@@ -615,12 +673,17 @@ public class QuizActivity extends Activity {
             failOpen();
             return;
         }
+        // 换题时把上一题残留的 AI 入口与倒计时一并清掉，避免按钮挂着旧的 wrongItem
+        handler.removeCallbacks(advanceAfterWrong);
+        hideAiEntry();
+        wrongItem = null;
+        wrongChoice = -1;
         index = i;
         final Item it = items.get(i);
         tvProgress.setText(progressText(i));
         // 标签显示「科目 · 年级」+ 难度星级，让孩子和家长一眼看出是哪个年级、多难的题
         renderSubject(it.q);
-        tvQuestion.setText(it.q.q);
+        setRich(tvQuestion, it.q.q);
         applyQuestionFont();
 
         optionBox.removeAllViews();
@@ -662,8 +725,13 @@ public class QuizActivity extends Activity {
 
     static CharSequence optionText(Button b, int k, String text, String suffix, Theme.Palette p) {
         String label = letter(k) + "    ";
-        SpannableString s = new SpannableString(label + text + (suffix == null ? "" : suffix));
         float textSize = b.getTextSize();
+        // 选项里可能带 $…$ 公式：先各自渲染再拼，字母徽标与悬挂缩进仍作用于整段
+        SpannableStringBuilder s = new SpannableStringBuilder(label);
+        s.append(RichText.render(text, textSize));
+        if (suffix != null && suffix.length() > 0) {
+            s.append(suffix);
+        }
         int indent = (int) (badgeWidth(textSize) + b.getPaint().measureText("    "));
         s.setSpan(new LeadingMarginSpan.Standard(0, indent), 0, s.length(),
                 Spanned.SPAN_INCLUSIVE_INCLUSIVE);
@@ -834,18 +902,245 @@ public class QuizActivity extends Activity {
         revealAnswer(it, choice);
         feedback(theme.bad, "答错了！正确答案是 " + letter(it.answer)
                 + "、" + it.options.get(it.answer) + "，看清答案再继续");
-        handler.postDelayed(new Runnable() {
+        scheduleAdvance(it, choice);
+    }
+
+    /**
+     * 答错后怎么走：AI 可用时先给 5 秒「AI 讲解」入口，点了就停下等孩子看完；
+     * 没点（或 AI 没配）到点自动进下一题。窗口取 max(revealMs, 5 秒) ——
+     * 家长把「答错后查看解析」调大时，孩子仍该看够答案，而不是 5 秒就被推走。
+     */
+    private void scheduleAdvance(final Item it, final int choice) {
+        wrongItem = it;
+        wrongChoice = choice;
+        handler.removeCallbacks(advanceAfterWrong);
+        handler.removeCallbacks(aiTick);
+        aiWindowMs = Math.max(600L, Math.max(revealMs,
+                AiExplain.ready(cfg) ? AI_PROMPT_MS : 0L));
+        if (AiExplain.ready(cfg)) {
+            aiDeadline = SystemClock.uptimeMillis() + aiWindowMs;
+            showAiEntry();
+        } else {
+            hideAiEntry();
+        }
+        handler.postDelayed(advanceAfterWrong, aiWindowMs);
+    }
+
+    /** 答错后到点收尾：收起 AI 入口，解锁 busy，按玩法推进 */
+    private final Runnable advanceAfterWrong = new Runnable() {
+        @Override
+        public void run() {
+            hideAiEntry();
+            busy = false;
+            if ("round".equals(playMode) && passRatio >= 1.0d) {
+                // 严格模式沿用题锁原有行为：答错就换一组全新的题重来
+                rebuild("全对才能通关，换一组新题");
+            } else {
+                advance();
+            }
+        }
+    };
+
+    /** 5 秒倒计时：每 200ms 刷一次秒数，到 0 停手（收尾交给 advanceAfterWrong） */
+    private final Runnable aiTick = new Runnable() {
+        @Override
+        public void run() {
+            if (btnAi == null || btnAi.getVisibility() != View.VISIBLE) {
+                return;
+            }
+            long left = aiDeadline - SystemClock.uptimeMillis();
+            if (left <= 0L) {
+                btnAi.setText(aiLabel(0));
+                return;
+            }
+            btnAi.setText(aiLabel((left + 999L) / 1000L));
+            handler.postDelayed(this, 200L);
+        }
+    };
+
+    static String aiLabel(long sec) {
+        return "AI 讲解 · " + Math.max(0L, sec);
+    }
+
+    private void showAiEntry() {
+        if (btnAi == null) {
+            return;
+        }
+        btnAi.setText(aiLabel((aiWindowMs + 999L) / 1000L));
+        if (aiRow != null) {
+            aiRow.setVisibility(View.VISIBLE);
+        }
+        btnAi.setVisibility(View.VISIBLE);
+        // 答错后四个选项都已揭晓且禁用，焦点留在选项上只会让方向键乱跳：
+        // 直接把焦点交给 AI 按钮，按一下 OK 就进讲解，不按就等倒计时走完。
+        btnAi.requestFocus();
+        handler.removeCallbacks(aiTick);
+        handler.postDelayed(aiTick, 250L);
+    }
+
+    private void hideAiEntry() {
+        handler.removeCallbacks(aiTick);
+        if (btnAi != null) {
+            btnAi.setVisibility(View.GONE);
+        }
+        if (aiRow != null) {
+            aiRow.setVisibility(View.GONE);
+        }
+    }
+
+    // ------------------------------------------------------------------ AI 面板
+
+    private void openAiPanel() {
+        if (aiPanelOpen || wrongItem == null || !AiExplain.ready(cfg)) {
+            hideAiEntry();
+            return;
+        }
+        // 孩子要看讲解，这一题的自动推进就此停下，关面板时才继续
+        handler.removeCallbacks(advanceAfterWrong);
+        handler.removeCallbacks(aiTick);
+        hideAiEntry();
+        showAiDialog(wrongItem, wrongChoice);
+    }
+
+    private void showAiDialog(final Item it, final int choice) {
+        final Dialog d = new Dialog(this);
+        d.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        View root = getLayoutInflater().inflate(R.layout.dialog_ai, null);
+        d.setContentView(root);
+        aiPanel = d;
+        aiPanelOpen = true;
+
+        Window w = d.getWindow();
+        if (w != null) {
+            w.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            DisplayMetrics m = getResources().getDisplayMetrics();
+            w.setLayout((int) (m.widthPixels * 0.82f), WindowManager.LayoutParams.WRAP_CONTENT);
+            WindowManager.LayoutParams lp = w.getAttributes();
+            lp.dimAmount = 0.62f;
+            w.setAttributes(lp);
+            w.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        }
+
+        final TextView body = (TextView) root.findViewById(R.id.tvAiBody);
+        final TextView meta = (TextView) root.findViewById(R.id.tvAiMeta);
+        final Button retry = (Button) root.findViewById(R.id.btnAiRetry);
+        final Button close = (Button) root.findViewById(R.id.btnAiClose);
+
+        // 面板跟着护眼配色走，深色 / 浅色都读得清
+        root.setBackground(Theme.card(root, theme.surface, theme.stroke, 6f,
+                Math.max(1, px(root, 2))));
+        TextView title = (TextView) root.findViewById(R.id.tvAiTitle);
+        title.setTextColor(theme.accent);
+        meta.setTextColor(theme.text2);
+        body.setTextColor(theme.text);
+
+        meta.setText(RichText.render(metaText(it, choice), meta.getTextSize()));
+        close.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
+            public void onClick(View v) {
+                d.dismiss();
+            }
+        });
+        retry.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loadAiText(d, it, choice, body, retry);
+            }
+        });
+
+        d.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dlg) {
+                aiPanelOpen = false;
+                aiPanel = null;
+                // Activity 已销毁 / 正在退出时不要再动题目列表
+                if (destroyed || isFinishing()) {
+                    return;
+                }
                 busy = false;
                 if ("round".equals(playMode) && passRatio >= 1.0d) {
-                    // 严格模式沿用题锁原有行为：答错就换一组全新的题重来
                     rebuild("全对才能通关，换一组新题");
                 } else {
                     advance();
                 }
             }
-        }, revealMs);
+        });
+        d.setCancelable(true);
+        d.show();
+        close.requestFocus();
+        loadAiText(d, it, choice, body, retry);
+    }
+
+    /** 面板顶部一行：正确答案与孩子选的，讲之前先把事实摆清楚 */
+    String metaText(Item it, int choice) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("正确答案：").append(letter(it.answer)).append(". ")
+                .append(it.options.get(it.answer));
+        if (choice >= 0 && choice < it.options.size() && choice != it.answer) {
+            sb.append("　·　你选了：").append(letter(choice)).append(". ")
+                    .append(it.options.get(choice));
+        }
+        return sb.toString();
+    }
+
+    private void loadAiText(final Dialog d, final Item it, final int choice,
+                            final TextView body, final Button retry) {
+        body.setTextColor(theme.text);
+        body.setText("正在想怎么讲给你听…");
+        retry.setVisibility(View.GONE);
+        final ScrollView scroll = (ScrollView) d.findViewById(R.id.aiScroll);
+        String prompt = AiExplain.buildPrompt(it.q.subject, it.q.grade, it.q.q,
+                it.options, it.answer, choice);
+        AiExplain.explain(this, cfg, it.q.id, prompt, new AiExplain.Listener() {
+            @Override
+            public void onResult(String text, String error) {
+                if (destroyed || !d.isShowing()) {
+                    return;
+                }
+                if (text != null && text.length() > 0) {
+                    body.setTextColor(theme.text);
+                    body.setText(RichText.render(text, body.getTextSize()));
+                    retry.setVisibility(View.GONE);
+                    fitAiScroll(scroll, body);
+                    return;
+                }
+                body.setTextColor(theme.warn);
+                body.setText(error == null || error.length() == 0
+                        ? "这次没拿到讲解，可以点「重试」" : error);
+                retry.setVisibility(View.VISIBLE);
+                fitAiScroll(scroll, body);
+            }
+        });
+    }
+
+    /**
+     * 正文区高度贴着内容走，但封顶屏幕的 42%：90 字的讲解不会在大面板里留半屏空白，
+     * 模型话痨时也不会把「继续下一题」按钮顶到屏幕外面。
+     */
+    private void fitAiScroll(final ScrollView scroll, final TextView body) {
+        if (scroll == null || body == null) {
+            return;
+        }
+        body.post(new Runnable() {
+            @Override
+            public void run() {
+                if (destroyed || body.getHeight() <= 0) {
+                    return;
+                }
+                DisplayMetrics m = getResources().getDisplayMetrics();
+                int cap = (int) (m.heightPixels * 0.42f);
+                int want = Math.min(cap, Math.max(dpToPx(104), body.getHeight()));
+                android.view.ViewGroup.LayoutParams lp = scroll.getLayoutParams();
+                if (lp.height != want) {
+                    lp.height = want;
+                    scroll.setLayoutParams(lp);
+                }
+            }
+        });
+    }
+
+    private int dpToPx(int dp) {
+        return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
     }
 
     /** 答完一题后推进：本组没完就下一题，到组尾按玩法判定是否通关 */
@@ -903,7 +1198,9 @@ public class QuizActivity extends Activity {
                 : (color == theme.bad ? "bad"
                 : (color == theme.warn ? "warn" : "neutral"));
         tvFeedback.setTextColor(color);
-        tvFeedback.setText(text);
+        // 反馈里会带正确答案，数学题可能是 $…$ 公式
+        tvFeedback.setText(text == null ? ""
+                : RichText.render(text, tvFeedback.getTextSize()));
         // 未答题时反馈卡片不占位，四个短答案选项能同屏显示完整
         tvFeedback.setVisibility(text == null || text.length() == 0 ? View.GONE : View.VISIBLE);
         // 反馈条出现会挤压可视区，保证当前选项（尤其是最后一个）不被裁掉

@@ -147,6 +147,37 @@
         android:paddingRight="56dp"
         android:paddingBottom="8dp">
 
+        <!-- AI 讲解入口：只在答错后出现，5 秒后随自动换题一起收起 -->
+        <LinearLayout
+            android:id="@+id/aiRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="right|center_vertical"
+            android:orientation="horizontal"
+            android:paddingBottom="6dp"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/btnAi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_quiz_option"
+                android:elevation="0dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                android:paddingLeft="20dp"
+                android:paddingTop="8dp"
+                android:paddingRight="20dp"
+                android:paddingBottom="8dp"
+                android:stateListAnimator="@null"
+                android:text="AI 讲解 · 5"
+                android:textColor="@color/textPrimary"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/tvFeedback"
             android:layout_width="match_parent"

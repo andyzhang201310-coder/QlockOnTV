@@ -292,7 +292,7 @@ public class HttpServer {
                 JSONObject ruleCfg = Rules.get(ctx);
                 o.put("ok", true);
                 o.put("version", Rules.version(ctx));
-                o.put("config", ruleCfg);
+                o.put("config", maskedConfig(ruleCfg));
                 o.put("roundsToday", Rules.roundsToday(ctx));
                 o.put("roundsPerDay", Rules.roundsPerDay(ruleCfg));
                 o.put("limitLocked", Rules.limitLocked(ctx));
@@ -303,6 +303,9 @@ public class HttpServer {
                 o.put("reviewReady", Rules.dueWrongIds(ctx, gap).size());
                 o.put("reviewGapRounds", gap);
                 o.put("roundSeq", Rules.roundSeq(ctx));
+                // AI 讲解状态：后台据此显示「已就绪 / 未配置」与解析缓存条数
+                o.put("aiReady", AiExplain.ready(ruleCfg));
+                o.put("aiCached", AiExplain.cacheSize(ctx));
                 respondJson(socket, 200, o.toString());
                 return;
             }
@@ -328,7 +331,7 @@ public class HttpServer {
                     JSONObject ok = new JSONObject();
                     ok.put("ok", true);
                     ok.put("version", Rules.version(ctx));
-                    ok.put("config", cfg);
+                    ok.put("config", maskedConfig(cfg));
                     respondJson(socket, 200, ok.toString());
                 } catch (Throwable e) {
                     JSONObject err = new JSONObject();
@@ -994,6 +997,63 @@ public class HttpServer {
             return;
         }
 
+        if (path.equals("/api/ai/test") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            // 同步测连通：只发一句「只回答两个字：收到」，正常 1-2 秒就回，
+            // 前端在这期间显示「测试中」，比异步排队等结果更直观。
+            try {
+                JSONObject in = new JSONObject(
+                        body == null || body.trim().length() == 0 ? "{}" : body);
+                if (in.has("config")) {
+                    in = in.getJSONObject("config");
+                }
+                JSONObject base = Rules.get(ctx);
+                JSONObject testCfg = new JSONObject(base.toString());
+                String[] keys = {"aiEnabled", "aiBaseUrl", "aiModel", "aiApiKey", "aiTimeoutSeconds"};
+                for (String k : keys) {
+                    if (in.has(k)) {
+                        testCfg.put(k, in.get(k));
+                    }
+                }
+                // 页面上的 Key 是打码串 → 用设备里保存的真 Key 测
+                if (AiExplain.isMasked(testCfg.optString("aiApiKey", ""))) {
+                    testCfg.put("aiApiKey", base.optString("aiApiKey", ""));
+                }
+                testCfg.put("aiTimeoutSeconds",
+                        Math.min(15, Math.max(5, testCfg.optInt("aiTimeoutSeconds", 20))));
+                long t0 = System.currentTimeMillis();
+                AiExplain.Res r = AiExplain.ping(testCfg);
+                JSONObject o = new JSONObject();
+                o.put("ok", r.ok());
+                o.put("ms", System.currentTimeMillis() - t0);
+                if (r.ok()) {
+                    o.put("reply", AiExplain.clip(r.text));
+                } else {
+                    o.put("error", r.error == null ? "未知错误" : r.error);
+                }
+                respondJson(socket, 200, o.toString());
+            } catch (Throwable e) {
+                respondJson(socket, 200, "{\"ok\":false,\"error\":\"测试失败：" + e.getClass().getSimpleName() + "\"}");
+            }
+            return;
+        }
+
+        if (path.equals("/api/ai/clear") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            AiExplain.clearCache(ctx);
+            JSONObject o = new JSONObject();
+            o.put("ok", true);
+            o.put("cached", AiExplain.cacheSize(ctx));
+            respondJson(socket, 200, o.toString());
+            return;
+        }
+
         if (path.equals("/api/test") && method.equals("POST")) {
             if (!authed) {
                 unauthorized(socket);
@@ -1269,6 +1329,22 @@ public class HttpServer {
 
     // ------------------------------------------------------------------ 数据
 
+    /**
+     * 发到浏览器之前把 API Key 换成打码串：后台页永远拿不到明文，
+     * 家长不碰这个输入框就一直沿用设备上保存的真 Key（POST 回来时再还原）。
+     */
+    static JSONObject maskedConfig(JSONObject cfg) {
+        try {
+            JSONObject shown = new JSONObject(cfg.toString());
+            String key = cfg.optString("aiApiKey", "");
+            shown.put("aiApiKey", AiExplain.mask(key));
+            shown.put("aiKeySet", key.trim().length() > 0);
+            return shown;
+        } catch (Throwable e) {
+            return cfg;
+        }
+    }
+
     private JSONObject stateJson() {
         JSONObject o = new JSONObject();
         try {
@@ -1306,6 +1382,8 @@ public class HttpServer {
             String dayType = CalendarPlan.dayType(rules, stateNow);
             o.put("ruleVersion", Rules.version(ctx));
             o.put("playMode", rules.optString("playMode", "round"));
+            // AI 讲解：首页状态卡用它显示「已就绪 / 未配置」，不做缓存文件读取（轮询频繁）
+            o.put("aiReady", AiExplain.ready(rules));
             o.put("scheduleMode", rules.optString("scheduleMode", "control"));
             o.put("ruleAllowedNow", Rules.quizAllowedAt(rules, stateNow,
                     Prefs.quietEnabled(), Prefs.quietStartMin(), Prefs.quietEndMin()));

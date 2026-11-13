@@ -22,3 +22,8 @@ tools/extra_questions.json
 tools/data/tiku_raw/*.html
 tools/data/tiku_raw/*.js
 tools/data/tiku_raw/__pycache__/
+
+# 调试过程截图（临时验证用，源码与已归档的 docs/screenshots 不受影响）
+.tmpcheck/
+tools/data/*.png
+tools/data/*.jpg

@@ -1079,6 +1079,37 @@
         <div class="tip">改端口后电视上的后台会用新端口重启，手机需要用新地址重新打开；其余设置不受影响。</div>
       </div>
 
+      <!-- ---------- AI 错题讲解（v1.9.0）---------- -->
+      <div class="card wide" id="aiCard">
+        <h2>AI 错题讲解</h2>
+        <div class="tip" style="margin-top:0">
+          答错后电视右下角出现「AI 讲解 · 5」并倒计时 5 秒：按遥控器 OK 就看讲解，按了会停下来等看完，不按自动进下一题。
+          <b>开启后，题目、四个选项和孩子的错误选项会发往你填写的大模型服务</b>，因此默认关闭，Key 只存在电视本机。
+        </div>
+        <div class="row">
+          <span>启用 AI 讲解<br><small style="color:var(--muted)">关闭后答错流程与原来完全一致，不会出现任何按钮</small></span>
+          <div class="switch" data-bool="aiEnabled"><i></i></div>
+        </div>
+        <div id="aiDetails" data-when="ai">
+          <div class="row"><span>就绪状态</span><b id="aiReadyBadge">—</b></div>
+          <label class="fl">接口地址（Base URL，一般到 /v1 为止）</label>
+          <input type="text" id="aiBaseUrl" placeholder="https://api.deepseek.com/v1" autocomplete="off">
+          <label class="fl">模型名</label>
+          <input type="text" id="aiModel" placeholder="deepseek-chat" autocomplete="off">
+          <label class="fl">API Key</label>
+          <input type="password" id="aiApiKey" placeholder="sk-..." autocomplete="off">
+          <div class="row" style="margin-top:14px">
+            <span>请求超时</span>
+            <div class="stepper" data-key="aiTimeoutSeconds" data-min="5" data-max="60"></div>
+          </div>
+          <div class="btns">
+            <button id="btnAiTest" type="button" style="max-width:200px">测试连通</button>
+            <button id="btnAiClear" type="button" style="max-width:200px">清空解析缓存</button>
+          </div>
+          <div class="tip" id="aiTestHint">填完先点「测试连通」，通了再去电视上答错一题看效果。同一道题第二次直接读本机缓存，不再请求模型。</div>
+        </div>
+      </div>
+
       <div class="card">
         <h2>防卸载保护</h2>
         <div class="row"><span>保护状态</span><b id="stGuard">—</b></div>
@@ -2317,6 +2348,52 @@
         conditional(); changed();
       };
     });
+    // AI 配置是文本框，不走 data-key 自动收集，逐项绑（与日历数据源同一套写法）
+    ['aiBaseUrl', 'aiModel', 'aiApiKey'].forEach(function (id) {
+      $(id).onchange = function () {
+        if (!cfg) { return; }
+        cfg[id] = $(id).value.trim();
+        syncAiInputs(); changed();
+      };
+    });
+    $('btnAiTest').onclick = function () {
+      if (!cfg) { return; }
+      var b = $('btnAiTest');
+      b.disabled = true;
+      b.textContent = '测试中…';
+      api('/api/ai/test', {
+        method: 'POST',
+        body: JSON.stringify({
+          config: {
+            aiBaseUrl: $('aiBaseUrl').value.trim(),
+            aiModel: $('aiModel').value.trim(),
+            aiApiKey: $('aiApiKey').value.trim(),
+            aiTimeoutSeconds: +cfg.aiTimeoutSeconds || 20
+          }
+        })
+      }).then(function (r) {
+        b.disabled = false;
+        b.textContent = '测试连通';
+        if (r && r.ok) {
+          $('aiTestHint').textContent = '连通正常 · ' + r.ms + 'ms · 模型回了「' + (r.reply || '') + '」';
+          toast('连通正常（' + r.ms + 'ms）', 3000);
+        } else {
+          $('aiTestHint').textContent = (r && r.error) || '连不通';
+          toast('连不通：' + ((r && r.error) || '未知错误'), 6000);
+        }
+      }).catch(function (e) {
+        b.disabled = false;
+        b.textContent = '测试连通';
+        toast(e.message, 4000);
+      });
+    };
+    $('btnAiClear').onclick = function () {
+      if (!confirm('清空后，之前生成过的解析要重新请求模型（会再花一次 token）。确定吗？')) { return; }
+      api('/api/ai/clear', { method: 'POST', body: '{}' }).then(function (r) {
+        toast('解析缓存已清空，剩 ' + ((r && r.cached) || 0) + ' 条');
+        $('aiTestHint').textContent = '解析缓存已清空，下次答错会重新请求模型';
+      }).catch(function (e) { toast(e.message, 3000); });
+    };
     Array.prototype.forEach.call($('seg').children, function (b) {
       b.onclick = function () { showView('rules-' + b.dataset.tab, true); };
     });
@@ -2344,6 +2421,21 @@
     $('passRatio').value = best;
     if (+$('passRatio').value !== r) { cfg.passRatio = +$('passRatio').value; }
   }
+  function syncAiInputs() {
+    if (!cfg) { return; }
+    ['aiBaseUrl', 'aiModel', 'aiApiKey'].forEach(function (id) {
+      var el = $(id);
+      // 正在输入的框不要回写，否则会打断家长敲字
+      if (el && document.activeElement !== el) { el.value = cfg[id] || ''; }
+    });
+    var badge = $('aiReadyBadge');
+    if (badge) {
+      var keySet = cfg.aiKeySet || (cfg.aiApiKey && cfg.aiApiKey.indexOf('****') < 0);
+      var ready = cfg.aiEnabled && cfg.aiBaseUrl && cfg.aiModel && keySet;
+      badge.textContent = ready ? '已就绪' : (keySet ? '缺地址或模型名' : '缺 API Key');
+      badge.style.color = ready ? 'var(--ok)' : 'var(--warn)';
+    }
+  }
   var lastCalendarOn = null;
   var calendarRefreshPending = false;
   function conditional() {
@@ -2356,7 +2448,8 @@
       calendarOn: on,
       calendarOff: !on,
       extra: !!cfg.extraEnabled,
-      review: !!cfg.reviewEnabled
+      review: !!cfg.reviewEnabled,
+      ai: !!cfg.aiEnabled
     };
     Array.prototype.forEach.call(document.querySelectorAll('[data-when]'), function (el) {
       el.classList.toggle('hidden', !show[el.dataset.when]);
@@ -2599,9 +2692,13 @@
 
   // ---------- 自动保存（0.7 秒防抖；输入中不打断）
   var saveTimer = null, saving = false, failedSig = '';
+  /** 规则类配置现在两个页面都在改（规则管理 / 系统设置 → AI），徽标落到当前可见那一页 */
+  function cfgBadgeId() {
+    return (curView === 'system' && $('sysBadge')) ? 'sysBadge' : 'ruleBadge';
+  }
   function changed() {
     conditional();
-    setBadge('ruleBadge', 'wait', '等待自动保存');
+    setBadge(cfgBadgeId(), 'wait', '等待自动保存');
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveRules, 700);
   }
@@ -2612,19 +2709,20 @@
     var sig = JSON.stringify(cfg);
     if (sig === failedSig) { return; }
     saving = true;
-    setBadge('ruleBadge', 'wait', '正在保存…');
+    var bid = cfgBadgeId();
+    setBadge(bid, 'wait', '正在保存…');
     api('/api/rules', { method: 'POST', body: JSON.stringify({ config: cfg }) }).then(function (r) {
       saving = false; failedSig = '';
-      setBadge('ruleBadge', 'ok', '已自动保存');
+      setBadge(bid, 'ok', '已自动保存');
       if (r && r.config) {
         cfg = r.config;    // 服务端会夹取非法值，回灌一次
-        syncSteppers(); syncBool(); syncSelects(); conditional();
+        syncSteppers(); syncBool(); syncSelects(); syncAiInputs(); conditional();
       }
       loadRulesStats();
       if (calendarRefreshPending) { calendarRefreshPending = false; loadCalendar(); }
     }).catch(function (e) {
       saving = false; failedSig = sig;
-      setBadge('ruleBadge', 'err', '保存失败');
+      setBadge(bid, 'err', '保存失败');
       toast('保存失败：' + e.message, 3200);
     });
   }
@@ -2641,7 +2739,7 @@
     }).catch(function () {});
   }
   function renderRules() {
-    syncBool(); syncSelects(); syncSteppers(); conditional();
+    syncBool(); syncSelects(); syncSteppers(); syncAiInputs(); conditional();
     renderWindowRange(); renderTpl(); renderWeek();
     renderWindows('timePoints'); renderWindows('exemptWindows'); renderScope();
     renderCalendarPlans();
@@ -3162,6 +3260,9 @@
     loadRulesStats();
     loadCalendar();
     $('statline').textContent = '今日已弹 ' + (r.roundsToday || 0) + ' 轮 · 错题库 ' + (r.reviewDue || 0) + ' 题';
+    if ($('aiTestHint') && r.aiCached) {
+      $('aiTestHint').textContent = '本机已缓存 ' + r.aiCached + ' 道题的解析，同一题再答错直接秒出';
+    }
     showView(normalizeHash(location.hash));
   }).catch(function (e) {
     toast('读取规则失败：' + e.message, 4000);

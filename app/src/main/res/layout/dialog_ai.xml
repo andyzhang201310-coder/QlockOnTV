@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AI 错题讲解面板（v1.9.0）：题目与对错信息在上，讲解正文固定高度可滚，底部「继续下一题」。
+  宽度由代码按屏幕 82% 设定；正文字号走学习页同一套 20sp 观感，一篇 90 字的讲解三行内看得完。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/aiPanelRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog"
+    android:orientation="vertical"
+    android:paddingLeft="34dp"
+    android:paddingTop="28dp"
+    android:paddingRight="34dp"
+    android:paddingBottom="22dp">
+
+    <TextView
+        android:id="@+id/tvAiTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="AI 讲解"
+        android:textColor="@color/accent"
+        android:textSize="21sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvAiMeta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text=""
+        android:textColor="@color/textSecondary"
+        android:textSize="16sp" />
+
+    <ScrollView
+        android:id="@+id/aiScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <TextView
+            android:id="@+id/tvAiBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="7dp"
+            android:minHeight="104dp"
+            android:text="正在想怎么讲给你听…"
+            android:textColor="@color/textPrimary"
+            android:textSize="20sp" />
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:gravity="right|center_vertical"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnAiRetry"
+            style="@style/TvButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="110dp"
+            android:text="重试"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnAiClose"
+            style="@style/TvButtonPrimary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="14dp"
+            android:minWidth="170dp"
+            android:text="继续下一题" />
+    </LinearLayout>
+</LinearLayout>
