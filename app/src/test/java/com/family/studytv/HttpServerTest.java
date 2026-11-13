@@ -566,4 +566,54 @@ public class HttpServerTest {
         Prefs.setQuietRange(22 * 60, 7 * 60);
         Prefs.setDueAtAligned(System.currentTimeMillis() + 30 * 60000L);
     }
+
+    // ---------------------------------------------------------------- 成长记录
+
+    @Test
+    public void growthRequiresLogin() throws Exception {
+        String[] r = request("GET", "/api/growth", null, null);
+        assertEquals("未登录不能读错题集", "401", r[0]);
+        String[] w = request("POST", "/api/growth/remove", "{\"id\":\"x\"}", null);
+        assertEquals("未登录不能改动错题集", "401", w[0]);
+    }
+
+    @Test
+    public void growthReturnsQuestionDetailAndSupportsRemoval() throws Exception {
+        Context app = RuntimeEnvironment.getApplication().getApplicationContext();
+        String cookie = login();
+        Rules.clearWrongPool(app);
+        QuestionBank.Question q = QuestionBank.get().all().get(0);
+        Rules.noteWrong(app, q.id);
+        Rules.noteWrong(app, q.id);
+
+        String[] r = request("GET", "/api/growth", null, null, cookie);
+        assertEquals("200", r[0]);
+        JSONObject o = new JSONObject(r[1]);
+        assertEquals(1, o.optInt("active"));
+        assertEquals(2, o.optInt("wrongTotal"));
+        JSONObject it = o.optJSONArray("items").optJSONObject(0);
+        assertEquals(q.id, it.optString("id"));
+        assertEquals("错两次要累加", 2, it.optInt("n"));
+        assertEquals("要带出题干", q.q, it.optString("q"));
+        assertEquals("要带出正确答案", q.options.get(q.answer), it.optString("answerText"));
+        assertFalse("题库里还有这道题，不该标成 missing", it.optBoolean("missing"));
+
+        String[] rm = request("POST", "/api/growth/remove",
+                "{\"id\":\"" + q.id + "\"}", null, cookie);
+        assertEquals("200", rm[0]);
+        assertEquals("移除后错题集应为空", 0, Rules.wrongIds(app).size());
+    }
+
+    @Test
+    public void growthMarksQuestionMissingWhenBankChanged() throws Exception {
+        Context app = RuntimeEnvironment.getApplication().getApplicationContext();
+        String cookie = login();
+        Rules.clearWrongPool(app);
+        Rules.noteWrong(app, "this-id-is-gone");
+        String[] r = request("GET", "/api/growth", null, null, cookie);
+        assertEquals("200", r[0]);
+        JSONObject it = new JSONObject(r[1]).optJSONArray("items").optJSONObject(0);
+        assertTrue("题库里没有的题要标出来，让家长可以移除", it.optBoolean("missing"));
+        Rules.clearWrongPool(app);
+    }
 }

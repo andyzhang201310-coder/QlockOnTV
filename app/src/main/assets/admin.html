@@ -400,6 +400,23 @@
   .strow .rt em{font-style:normal;width:36px;text-align:right;color:var(--txt2);
     font-variant-numeric:tabular-nums}
 
+  /* ---------------- 成长记录：错题集明细（每条 = 题干 + 错了几次 + 最近时间） ---------------- */
+  .grow{display:grid;gap:10px;margin-top:10px}
+  .gr{border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;background:var(--card)}
+  .gr-top{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:11.5px;color:var(--sub)}
+  .gr-tag{color:var(--txt2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gr-n{color:var(--red);border:1px solid var(--line);border-radius:20px;padding:1px 8px;
+    font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .gr-t{margin-left:auto;white-space:nowrap}
+  .gr-del{border:0;background:none;color:var(--sub);cursor:pointer;font-size:11.5px;
+    padding:2px 2px;font-family:inherit}
+  .gr-del:hover{color:var(--red)}
+  .gr-q{margin-top:6px;font-size:13px;line-height:1.55;color:var(--txt);word-break:break-word}
+  .gr-a{margin-top:4px;font-size:12px;color:var(--green);word-break:break-word}
+  @media(max-width:767px){
+    .gr-t{margin-left:0;width:100%}
+  }
+
   /* ---------------- 收起侧栏（桌面端） ---------------- */
   @media(min-width:768px){
     body.mini .sidebar{width:70px;flex-basis:70px;padding:16px 9px 12px}
@@ -485,6 +502,7 @@
     <a class="sb-item" href="#quick" data-view="quick"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 5 14h6l-1 7 8-11h-6l1-7z"/></svg></span><span class="tx">快捷操作</span></a>
     <a class="sb-item" href="#bank" data-view="bank"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></span><span class="tx">题库管理</span></a>
     <a class="sb-item" href="#rules" data-view="rules"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h8M18 7h2M4 17h4M14 17h6"/><circle cx="15" cy="7" r="2.2"/><circle cx="11" cy="17" r="2.2"/></svg></span><span class="tx">规则管理</span></a>
+    <a class="sb-item" href="#growth" data-view="growth"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/></svg></span><span class="tx">成长记录</span></a>
     <a class="sb-item" href="#stats" data-view="stats"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="tx">学习统计</span></a>
     <div class="sb-grp">系统</div>
     <a class="sb-item" href="#system" data-view="system"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1"/></svg></span><span class="tx">系统设置</span></a>
@@ -949,7 +967,48 @@
     </div>
   </section>
 
-  <!-- ============================ 5. 学习统计 ============================ -->
+  <!-- ============================ 5. 成长记录 ============================ -->
+  <section class="view" id="view-growth">
+    <div class="bar">
+      <div class="txt" id="growthLine">正在读取成长记录…</div>
+      <span class="badge wait" id="growthBadge">读取中…</span>
+    </div>
+    <div class="stack">
+
+      <div class="card">
+        <h2>错题集</h2>
+        <div class="kpis">
+          <div class="kpi"><div class="k">当前错题</div><div class="v" id="gActive">—<small>道</small></div></div>
+          <div class="kpi"><div class="k">累计答错</div><div class="v" id="gTotal">—<small>次</small></div></div>
+          <div class="kpi"><div class="k">已掌握</div><div class="v" id="gMastered">—<small>道</small></div></div>
+          <div class="kpi"><div class="k">今天答错</div><div class="v" id="gToday">—<small>题</small></div></div>
+        </div>
+        <div class="tip">
+          答错一道题就进错题集；同一道题再错一次，「错了 N 次」累加。下次答对就从这里移出，并计入「已掌握」。
+          还在冷却期的错题不会马上再出现，避免连着做同一道题。
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>错题明细</h2>
+        <div class="seg seg-mini" id="growthSort">
+          <button data-sort="count" class="on">按错误次数</button>
+          <button data-sort="recent">按最近答错</button>
+        </div>
+        <div class="stat" id="growthSub"></div>
+        <div class="grow" id="growthList"></div>
+        <div class="btns">
+          <button class="warn" id="btnGrowthClear">清空错题集</button>
+        </div>
+        <div class="tip">
+          清空只清当前错题集，「累计答错 / 已掌握」的数字保留。这里和「奖励与复习 → 错题库」是同一份数据，
+          清空后间隔重复会重新开始。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 6. 学习统计 ============================ -->
   <section class="view" id="view-stats">
     <div class="bar">
       <div class="txt" id="statsLine">正在读取统计…</div>
@@ -1001,7 +1060,7 @@
     </div>
   </section>
 
-  <!-- ============================ 6. 系统设置 ============================ -->
+  <!-- ============================ 7. 系统设置 ============================ -->
   <section class="view" id="view-system">
     <div class="bar">
       <div class="txt">密码与端口改完即自动保存</div>
@@ -1152,7 +1211,7 @@
   }
 
   // ============================================================ 视图切换
-  var VIEWS = { status: '运行状态', quick: '快捷操作', bank: '题库管理', rules: '规则管理', stats: '学习统计', system: '系统设置' };
+  var VIEWS = { status: '运行状态', quick: '快捷操作', bank: '题库管理', rules: '规则管理', growth: '成长记录', stats: '学习统计', system: '系统设置' };
   var navItems = Array.prototype.slice.call(document.querySelectorAll('.sb-item'));
   var curView = 'status';
 
@@ -1193,6 +1252,7 @@
     $('crumb').textContent = '家长控制台 / ' + VIEWS[view];
     if (view === 'rules') { activateTab(sub); }
     if (view === 'bank') { openBank(); }
+    if (view === 'growth') { openGrowth(); }
     if (view === 'stats') { openStats(); }
     try {
       history.replaceState(null, '', location.pathname + '#' + (view === 'rules' ? 'rules-' + sub : view));
@@ -2733,6 +2793,151 @@
     calendarRefreshPending = true;
   };
 
+  // ============================================================ 成长记录（错题集）
+  // 数据来自 /api/growth：当前错题集 + 每道题错了几次 / 首次与最近答错时间 + 累计与已掌握。
+  // 答对即移出、再错即累加，这部分判定在电视端 Rules 里做，后台只负责展示。
+  var growthData = null;
+  var growthSort = 'count';    // count = 按错误次数，recent = 按最近答错
+  var growthSubject = '';      // 空 = 全部科目
+
+  function openGrowth() {
+    setBadge('growthBadge', 'wait', '读取中…');
+    return api('/api/growth').then(function (d) {
+      growthData = d || { items: [] };
+      renderGrowth();
+      setBadge('growthBadge', 'ok', '实时');
+    }).catch(function (e) {
+      setBadge('growthBadge', 'err', '读取失败');
+      toast('读取成长记录失败：' + e.message, 3200);
+    });
+  }
+
+  function growthRows() {
+    var rows = ((growthData && growthData.items) || []).slice();
+    if (growthSubject) {
+      rows = rows.filter(function (r) { return r.subject === growthSubject; });
+    }
+    rows.sort(function (a, b) {
+      if (growthSort === 'recent') { return (+b.last || 0) - (+a.last || 0); }
+      var d = (+b.n || 0) - (+a.n || 0);
+      return d !== 0 ? d : (+b.last || 0) - (+a.last || 0);
+    });
+    return rows;
+  }
+
+  function renderGrowth() {
+    var d = growthData || {};
+    var items = d.items || [];
+    $('gActive').innerHTML = (+d.active || items.length) + '<small>道</small>';
+    $('gTotal').innerHTML = (+d.wrongTotal || 0) + '<small>次</small>';
+    $('gMastered').innerHTML = (+d.mastered || 0) + '<small>道</small>';
+    $('gToday').innerHTML = (+d.wrongToday || 0) + '<small>题</small>';
+    $('growthLine').textContent = items.length
+      ? '错题集还有 ' + items.length + ' 道 · 累计答错 ' + (+d.wrongTotal || 0) +
+        ' 次 · 已掌握 ' + (+d.mastered || 0) + ' 道'
+      : '错题集是空的';
+    renderGrowthSubs(items);
+    renderGrowthList();
+  }
+
+  function renderGrowthSubs(items) {
+    var box = $('growthSub');
+    var map = {}, keys = [];
+    items.forEach(function (r) {
+      var k = r.subject || '其他';
+      if (map[k] == null) { map[k] = 0; keys.push(k); }
+      map[k]++;
+    });
+    if (!keys.length) { box.innerHTML = ''; return; }
+    var html = '<span class="cchip' + (growthSubject ? '' : ' on') +
+      '" data-sub="">全部<b>' + items.length + ' 道</b></span>';
+    keys.forEach(function (k) {
+      html += '<span class="cchip' + (growthSubject === k ? ' on' : '') + '" data-sub="' +
+        esc(k) + '">' + esc(k) + '<b>' + map[k] + ' 道</b></span>';
+    });
+    box.innerHTML = html;
+  }
+
+  function renderGrowthList() {
+    var box = $('growthList');
+    var all = (growthData && growthData.items) || [];
+    var rows = growthRows();
+    if (!rows.length) {
+      box.innerHTML = '<div class="qempty">' + (all.length
+        ? '这个科目下没有错题'
+        : '错题集是空的 —— 要么还没答错题，要么错的题都已经答对了') + '</div>';
+      return;
+    }
+    var html = '';
+    rows.forEach(function (r) {
+      var letter = (r.answer >= 0 && r.answer < 6) ? 'ABCDEF'.charAt(r.answer) : '';
+      html += '<div class="gr">' +
+          '<div class="gr-top">' +
+            '<span class="gr-tag">' + esc(r.label || '') +
+              (r.stars ? '　' + esc(r.stars) : '') + '</span>' +
+            '<span class="gr-n">错 ' + (+r.n || 1) + ' 次</span>' +
+            '<span class="gr-t">最近 ' + (r.last ? fmtTime(+r.last) : '—') +
+              (r.first && r.first !== r.last ? ' · 首次 ' + fmtTime(+r.first) : '') + '</span>' +
+            '<button class="gr-del" data-id="' + esc(r.id) + '">移除</button>' +
+          '</div>' +
+          '<div class="gr-q">' + esc(r.q || '') + '</div>' +
+          (r.missing ? '' : '<div class="gr-a">正确答案：' + letter + '、' +
+            esc(r.answerText || '') + '</div>') +
+        '</div>';
+    });
+    box.innerHTML = html;
+  }
+
+  $('growthSort').onclick = function (e) {
+    var b = e.target;
+    while (b && b.tagName !== 'BUTTON') { b = b.parentNode; }
+    if (!b) { return; }
+    growthSort = b.getAttribute('data-sort') || 'count';
+    Array.prototype.forEach.call(this.querySelectorAll('button'), function (x) {
+      x.classList.toggle('on', x === b);
+    });
+    renderGrowthList();
+  };
+
+  $('growthSub').onclick = function (e) {
+    var box = this;
+    var el = e.target;
+    while (el && el !== box && !(el.className && String(el.className).indexOf('cchip') >= 0)) {
+      el = el.parentNode;
+    }
+    if (!el || el === box) { return; }
+    growthSubject = el.getAttribute('data-sub') || '';
+    renderGrowthSubs((growthData && growthData.items) || []);
+    renderGrowthList();
+  };
+
+  $('growthList').onclick = function (e) {
+    var box = this;
+    var el = e.target;
+    while (el && el !== box && !(el.className && String(el.className).indexOf('gr-del') >= 0)) {
+      el = el.parentNode;
+    }
+    if (!el || el === box) { return; }
+    var id = el.getAttribute('data-id');
+    if (!id) { return; }
+    if (!window.confirm('把这道题移出错题集？只是不再复习它，累计答错与已掌握的数字不变。')) { return; }
+    api('/api/growth/remove', { method: 'POST', body: JSON.stringify({ id: id }) })
+      .then(function () {
+        toast('已移出错题集');
+        openGrowth();
+        loadRulesStats();
+      }).catch(function (err) { toast('移除失败：' + err.message, 3000); });
+  };
+
+  $('btnGrowthClear').onclick = function () {
+    if (!window.confirm('确定清空错题集？孩子之后不会再复习这些题；累计答错与已掌握的数字保留。')) { return; }
+    api('/api/rules/reset', { method: 'POST', body: '{}' }).then(function () {
+      toast('错题集已清空');
+      openGrowth();
+      loadRulesStats();
+    }).catch(function (e) { toast('清空失败：' + e.message, 3000); });
+  };
+
   // ============================================================ 学习统计（v1.7.22）
   var statData = null;
   var statMetric = 'wrong';   // wrong = 按错题数，rate = 按错误率
@@ -2960,6 +3165,7 @@
   setInterval(function () {
     loadState();
     if (curView === 'rules') { loadRulesStats(); loadCalendar(); }
+    if (curView === 'growth') { openGrowth(); }
     if (curView === 'stats') { openStats(); }
   }, 15000);
 })();

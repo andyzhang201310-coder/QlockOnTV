@@ -135,11 +135,34 @@ public class QuizActivity extends Activity {
 
     private TextView tvProgress;
     private TextView tvSubject;
-    private TextView tvMode;
+    private TextView tvClock;
     private TextView tvQuestion;
     private TextView tvFeedback;
     private LinearLayout optionBox;
     private ScrollView quizScroll;
+
+    /** 顶栏右上角的系统时钟：每秒对一次表，秒数变化时不会左右抖 */
+    private final Runnable clockTick = new Runnable() {
+        @Override
+        public void run() {
+            if (tvClock != null) {
+                tvClock.setText(clockText());
+                handler.postDelayed(this, 1000L - (System.currentTimeMillis() % 1000L));
+            }
+        }
+    };
+
+    private static String clockText() {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
+        return pad2(c.get(java.util.Calendar.HOUR_OF_DAY)) + ":"
+                + pad2(c.get(java.util.Calendar.MINUTE)) + ":"
+                + pad2(c.get(java.util.Calendar.SECOND));
+    }
+
+    private static String pad2(int v) {
+        return v < 10 ? "0" + v : String.valueOf(v);
+    }
 
     /** 小孩按 HOME 逃到桌面时把自己拉回来 */
     private final Runnable relaunch = new Runnable() {
@@ -193,7 +216,11 @@ public class QuizActivity extends Activity {
 
         tvProgress = (TextView) findViewById(R.id.tvProgress);
         tvSubject = (TextView) findViewById(R.id.tvSubject);
-        tvMode = (TextView) findViewById(R.id.tvMode);
+        tvClock = (TextView) findViewById(R.id.tvClock);
+        if (tvClock != null) {
+            tvClock.setText(clockText());
+            handler.post(clockTick);
+        }
         tvQuestion = (TextView) findViewById(R.id.tvQuestion);
         tvFeedback = (TextView) findViewById(R.id.tvFeedback);
         optionBox = (LinearLayout) findViewById(R.id.optionBox);
@@ -374,8 +401,10 @@ public class QuizActivity extends Activity {
         }
         root.setBackground(Theme.background(root, theme));
         Theme.tintTextTree(root, theme);
-        tvMode.setBackground(Theme.card(tvMode, theme.pillBg, theme.stroke, 999f,
-                Math.max(1, px(tvMode, 1))));
+        if (tvClock != null) {
+            tvClock.setBackground(Theme.card(tvClock, theme.pillBg, theme.stroke, 999f,
+                    Math.max(1, px(tvClock, 1))));
+        }
         tvSubject.setBackground(Theme.card(tvSubject, theme.tagBg, theme.accent, 999f,
                 Math.max(1, px(tvSubject, 2))));
         tvFeedback.setBackground(Theme.card(tvFeedback, theme.feedbackBg, theme.stroke, 16f,
@@ -437,6 +466,10 @@ public class QuizActivity extends Activity {
         hideSystemUi();
         // 兜底：广播漏掉时（如后台保存时页面不在前台），回到前台也按最新规则重画
         refreshFontScale();
+        // 时钟在暂停期间可能停走过，回前台立刻对一次表
+        if (tvClock != null) {
+            tvClock.setText(clockText());
+        }
     }
 
     @Override

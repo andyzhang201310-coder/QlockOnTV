@@ -46,6 +46,12 @@ public final class Rules {
     private static final String KEY_WRONG_MAP = "rules_wrong_map";
     /** 全局轮次序号，每抽一组题 +1（跨重启保留） */
     private static final String KEY_ROUND_SEQ = "rules_round_seq";
+    /** 成长记录：错题 id → {"n":累计答错次数,"f":首次答错时间,"l":最近答错时间} */
+    private static final String KEY_GROW_MAP = "rules_grow_map";
+    /** 成长记录：累计答错次数（不清零，作为成长总量） */
+    private static final String KEY_GROW_TOTAL = "rules_grow_total";
+    /** 成长记录：答对后从错题集移出的题数（「已掌握」） */
+    private static final String KEY_GROW_MASTERED = "rules_grow_mastered";
 
     private static final int SLOTS_PER_DAY = 48;
     private static final int SLOT_MINUTES = 30;
@@ -722,6 +728,8 @@ public final class Rules {
         p.edit().putString(KEY_WRONG_DATE, d)
                 .putInt(KEY_WRONG_TOTAL, n + 1)
                 .apply();
+        // 成长记录：累计这道题错了几次、首次与最近答错时间
+        noteGrow(c, id);
     }
 
     public static void clearWrong(Context c, String id) {
@@ -732,17 +740,148 @@ public final class Rules {
         if (map.has(id)) {
             map.remove(id);
             writeWrongMap(c, map);
+            // 答对了：移出错题集，计入「已掌握」
+            dropGrow(c, id);
+            sp(c).edit().putInt(KEY_GROW_MASTERED, growMastered(c) + 1).apply();
         }
+    }
+
+    /** 家长在「成长记录」里手动移除一道错题：只移出错题集，不算孩子已掌握 */
+    public static void dropWrong(Context c, String id) {
+        if (id == null || id.length() == 0) {
+            return;
+        }
+        org.json.JSONObject map = wrongMap(c);
+        if (map.has(id)) {
+            map.remove(id);
+            writeWrongMap(c, map);
+        }
+        dropGrow(c, id);
     }
 
     /** 家长手动清空错题库（间隔重复重新开始） */
     public static void clearWrongPool(Context c) {
         sp(c).edit().putString(KEY_WRONG_IDS, "")
                 .putString(KEY_WRONG_MAP, "")
+                .putString(KEY_GROW_MAP, "")
                 .putInt(KEY_WRONG_TOTAL, 0)
                 .putString(KEY_WRONG_DATE, "")
                 .apply();
     }
+
+    // ------------------------------------------------------------------ 成长记录
+    // 错题集本身仍然用 KEY_WRONG_MAP 存（它管「隔 N 轮再出现」），这里单独记
+    // 「这道题错了几次 / 首次、最近什么时候错」。分开存的好处是不动冷却的读取口径，
+    // 老设备升级上来也不需要迁移：没有计数的历史错题一律按「错过 1 次」显示。
+
+    private static org.json.JSONObject growMap(Context c) {
+        try {
+            String raw = sp(c).getString(KEY_GROW_MAP, "");
+            if (raw != null && raw.trim().length() > 0) {
+                return new org.json.JSONObject(raw);
+            }
+        } catch (Throwable ignored) {
+        }
+        return new org.json.JSONObject();
+    }
+
+    private static void writeGrowMap(Context c, org.json.JSONObject map) {
+        sp(c).edit().putString(KEY_GROW_MAP, map.toString()).apply();
+    }
+
+    private static int growMastered(Context c) {
+        return Math.max(0, sp(c).getInt(KEY_GROW_MASTERED, 0));
+    }
+
+    private static int growWrongTotal(Context c) {
+        return Math.max(0, sp(c).getInt(KEY_GROW_TOTAL, 0));
+    }
+
+    /** 记一次答错：次数 +1，最近时间刷新，首次时间只在第一次写入 */
+    private static void noteGrow(Context c, String id) {
+        long now = System.currentTimeMillis();
+        org.json.JSONObject map = growMap(c);
+        try {
+            org.json.JSONObject e = map.optJSONObject(id);
+            if (e == null) {
+                e = new org.json.JSONObject();
+                e.put("f", now);
+            }
+            e.put("n", e.optInt("n", 0) + 1);
+            e.put("l", now);
+            map.put(id, e);
+        } catch (Throwable ignored) {
+            return;
+        }
+        writeGrowMap(c, map);
+        sp(c).edit().putInt(KEY_GROW_TOTAL, growWrongTotal(c) + 1).apply();
+    }
+
+    private static void dropGrow(Context c, String id) {
+        org.json.JSONObject map = growMap(c);
+        if (map.has(id)) {
+            map.remove(id);
+            writeGrowMap(c, map);
+        }
+    }
+
+    /**
+     * 成长记录快照：当前错题集（按最近答错时间倒序）+ 累计答错次数 + 已掌握题数。
+     * 题目详情（题干 / 选项 / 正确答案）由调用方用题库补，这里只管计数与时间。
+     */
+    public static org.json.JSONObject growth(Context c) {
+        org.json.JSONObject pool = wrongMap(c);
+        org.json.JSONObject grow = growMap(c);
+        final org.json.JSONObject items = new org.json.JSONObject();
+        for (java.util.Iterator<String> it = pool.keys(); it.hasNext(); ) {
+            String id = it.next();
+            org.json.JSONObject e = grow.optJSONObject(id);
+            org.json.JSONObject o = new org.json.JSONObject();
+            try {
+                o.put("id", id);
+                o.put("n", e == null ? 1 : Math.max(1, e.optInt("n", 1)));
+                o.put("first", e == null ? 0L : e.optLong("f", 0L));
+                o.put("last", e == null ? 0L : e.optLong("l", 0L));
+                o.put("round", pool.optInt(id, 0));
+                items.put(id, o);
+            } catch (Throwable ignored) {
+            }
+        }
+        java.util.List<org.json.JSONObject> list =
+                new ArrayList<org.json.JSONObject>();
+        for (java.util.Iterator<String> it = items.keys(); it.hasNext(); ) {
+            list.add(items.optJSONObject(it.next()));
+        }
+        java.util.Collections.sort(list, new java.util.Comparator<org.json.JSONObject>() {
+            @Override
+            public int compare(org.json.JSONObject a, org.json.JSONObject b) {
+                long la = a == null ? 0L : a.optLong("last", 0L);
+                long lb = b == null ? 0L : b.optLong("last", 0L);
+                if (la == lb) {
+                    int na = a == null ? 0 : a.optInt("n", 0);
+                    int nb = b == null ? 0 : b.optInt("n", 0);
+                    return nb - na;
+                }
+                return lb > la ? 1 : (lb < la ? -1 : 0);
+            }
+        });
+        org.json.JSONArray arr = new org.json.JSONArray();
+        for (org.json.JSONObject o : list) {
+            arr.put(o);
+        }
+        org.json.JSONObject out = new org.json.JSONObject();
+        try {
+            out.put("items", arr);
+            out.put("active", arr.length());
+            out.put("wrongTotal", growWrongTotal(c));
+            out.put("mastered", growMastered(c));
+            out.put("reviewGapRounds", reviewGap(get(c)));
+            out.put("roundSeq", roundSeq(c));
+        } catch (Throwable ignored) {
+        }
+        return out;
+    }
+
 
     /** 全部错题 id（含还在冷却期的），用于后台显示错题总量 */
     public static Set<String> wrongIds(Context c) {

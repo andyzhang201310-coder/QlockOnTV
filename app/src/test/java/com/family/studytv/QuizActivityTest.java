@@ -395,6 +395,22 @@ public class QuizActivityTest {
         return null;
     }
 
+    @Test
+    public void topBarShowsSystemClockInsteadOfPromptCopy() {
+        // 原来的「答对全部题目才能继续看电视」提示已换成系统时钟
+        int oldId = activity.getResources().getIdentifier("tvMode", "id", activity.getPackageName());
+        if (oldId != 0) {
+            assertNull("旧的提示文案控件应当已经删掉", activity.findViewById(oldId));
+        }
+        TextView clock = (TextView) activity.findViewById(R.id.tvClock);
+        assertNotNull("右上角应有系统时钟", clock);
+        String txt = clock.getText().toString();
+        assertTrue("时钟格式应为 HH:mm:ss，实际是「" + txt + "」", txt.matches("\\d{2}:\\d{2}:\\d{2}"));
+        assertFalse("不应再显示原来的提示文案", "答对全部题目才能继续看电视".equals(txt));
+        TextView question = (TextView) activity.findViewById(R.id.tvQuestion);
+        assertTrue("时钟字号要明显小于题干", clock.getTextSize() < question.getTextSize());
+    }
+
     private void type(Dialog d, String s) {
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);

@@ -46,6 +46,19 @@
         <item name="android:includeFontPadding">false</item>
     </style>
 
+    <!-- 右上角系统时钟：比正文小一号，等宽数字避免秒数跳动时左右抖 -->
+    <style name="ClockText">
+        <item name="android:background">@drawable/bg_pill</item>
+        <item name="android:textColor">@color/textSecondary</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
     <!-- 分区小标题：灰色字母感，参考项目的 crumb / section 层级 -->
     <style name="SectionLabel">
         <item name="android:textColor">@color/textMuted</item>

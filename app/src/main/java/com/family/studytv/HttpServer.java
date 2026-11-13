@@ -474,6 +474,88 @@ public class HttpServer {
             return;
         }
 
+        // ---- 成长记录：当前错题集（错了多少次 / 首次与最近时间）+ 累计答错 + 已掌握
+        if (path.equals("/api/growth") && method.equals("GET")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            JSONObject o = Rules.growth(ctx);
+            JSONArray raw = o.optJSONArray("items");
+            List<JSONObject> list = new ArrayList<JSONObject>();
+            java.util.Set<String> wanted = new java.util.HashSet<String>();
+            for (int i = 0; raw != null && i < raw.length(); i++) {
+                JSONObject it = raw.optJSONObject(i);
+                if (it != null) {
+                    list.add(it);
+                    wanted.add(it.optString("id", ""));
+                }
+            }
+            // 一次遍历题库把需要的题都捞出来，避免按 id 逐个线性扫（24704 题 × 300 条会很慢）
+            Map<String, QuestionBank.Question> found = new HashMap<String, QuestionBank.Question>();
+            if (!wanted.isEmpty()) {
+                for (QuestionBank.Question q : QuestionBank.get().all()) {
+                    if (wanted.contains(q.id)) {
+                        found.put(q.id, q);
+                    }
+                }
+            }
+            JSONArray items = new JSONArray();
+            for (JSONObject it : list) {
+                QuestionBank.Question q = found.get(it.optString("id", ""));
+                try {
+                    if (q != null) {
+                        it.put("subject", q.subject);
+                        it.put("grade", q.grade);
+                        it.put("q", q.q);
+                        it.put("label", q.label());
+                        it.put("stars", q.stars());
+                        it.put("difficulty", q.difficulty);
+                        it.put("answer", q.answer);
+                        it.put("answerText", q.answer >= 0 && q.answer < q.options.size()
+                                ? q.options.get(q.answer) : "");
+                        it.put("options", new JSONArray(q.options));
+                        it.put("missing", false);
+                    } else {
+                        it.put("label", "题库里已没有这道题");
+                        it.put("q", "（这道题已被删除或替换，可以在成长记录里移除）");
+                        it.put("missing", true);
+                    }
+                } catch (Throwable ignored) {
+                }
+                items.put(it);
+            }
+            try {
+                o.put("items", items);
+                o.put("active", items.length());
+                o.put("wrongToday", Rules.wrongToday(ctx));
+                o.put("ok", true);
+            } catch (Throwable ignored) {
+            }
+            respondJson(socket, 200, o.toString());
+            return;
+        }
+
+        if (path.equals("/api/growth/remove") && method.equals("POST")) {
+            if (!authed) {
+                unauthorized(socket);
+                return;
+            }
+            try {
+                JSONObject in = new JSONObject(body == null || body.trim().length() == 0 ? "{}" : body);
+                Rules.dropWrong(ctx, in.optString("id", ""));
+                JSONObject ok = new JSONObject();
+                ok.put("ok", true);
+                respondJson(socket, 200, ok.toString());
+            } catch (Throwable e) {
+                JSONObject err = new JSONObject();
+                err.put("ok", false);
+                err.put("error", String.valueOf(e.getMessage()));
+                respondJson(socket, 400, err.toString());
+            }
+            return;
+        }
+
         if (path.equals("/api/questions")) {
             if (method.equals("GET")) {
                 // 题库里有正确答案，未登录不给看

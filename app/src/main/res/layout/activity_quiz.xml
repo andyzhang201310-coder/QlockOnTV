@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  答题页（v1.7.12 视觉）：顶栏品牌 + 状态胶囊，中部大题干 + 卡片式选项，底部固定反馈卡片。
+  答题页（v1.7.12 视觉）：顶栏品牌 + 右上系统时钟，中部大题干 + 卡片式选项，底部固定反馈卡片。
   题目与选项可滚动以容纳长成语解释；反馈/提示固定在屏幕底部，答错时始终看得见。
   短答案时四个选项必须同屏可见，因此纵向间距按 TV 一屏高度收紧；反馈为空时由 Java 隐藏。
 -->
@@ -48,11 +48,11 @@
             android:layout_weight="1" />
 
         <TextView
-            android:id="@+id/tvMode"
-            style="@style/PillText"
+            android:id="@+id/tvClock"
+            style="@style/ClockText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="答对全部题目才能继续看电视" />
+            android:text="00:00:00" />
     </LinearLayout>
 
     <ScrollView
