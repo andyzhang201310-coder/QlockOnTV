@@ -273,6 +273,15 @@ adb shell am start -a android.intent.action.DELETE -d package:com.family.studytv
 
 已知边界（不掩饰）：
 
+- **开启它会改变电视桌面的按键体验（实测，最容易踩的坑）**：只要系统里绑定了无障碍服务，
+  Google TV Launcher 的「全部应用」页就会把应用图标的**单击确认键**改成长按式上下文菜单
+  （打开 / 移动 / 添加到收藏夹 / 信息 / 卸载），点一下确认进不了应用，要再选一次「打开」。
+  这与服务能力无关：把 `canRetrieveWindowContent=false`、去掉 `flagRetrieveInteractiveWindows`
+  并重启到 `capabilities=0` 后仍复现，且拦截判定同时失效。真正解绑（`services:{}`）后，
+  同一按键立即恢复为 `MAIN+LEANBACK_LAUNCHER` 直接启动应用。
+  结论：这台 Sony BRAVIA 上「界面拦截」与「桌面单击直接打开」**二选一**，用现有机制无法两全。
+  2026-11-13 按家长选择保留桌面体验，界面拦截处于关闭状态（`a11yGuard=false`），
+  应用内卸载码仍有效。若日后重新开启，需接受桌面多一次按键。
 - **更新应用后要重新开**：`install -r` 会让系统解绑无障碍服务（实测 `services:{}` 归零），
   需要再执行一次命令并重启。
 - **孩子若会进无障碍设置关掉它，就失效**（这台电视没有设置页，反而关不掉）。
