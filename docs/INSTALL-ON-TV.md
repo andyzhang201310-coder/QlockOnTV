@@ -486,3 +486,24 @@ Sony BRAVIA 4K GB ATV3 / Android 9 实测（v1.7.30）：
 - 三态圆角、边界完全一致，遥控器上下移动时框只换色不跳位（`ThemeTest` 逐套配色断言）。
 - `bg_quiz_option.xml` 是 inflate 瞬间的兜底外观，同样无边框 + 10dp 圆角；
   管理页 / 密码键盘等按钮仍用原来的 `bg_option.xml`，不受影响。
+
+### 圆角与阴影收口（v1.8.3）
+
+三处细节统一：
+
+| 位置 | 改前 | 改后 |
+|---|---|---|
+| 答案选项 | 浅色三套风格圆角外有一圈灰影 | 关掉 Button 自带的 2dp `elevation` 与按压抬升动画，边框外干净 |
+| 底部反馈条（「答对了，继续下一题」） | 2dp 描边 + 16dp 圆角 | **无描边** + 10dp 圆角 |
+| 学科标签（语文 · 4年级 ★★★） | 999dp 全胶囊 | 10dp 小圆角（保留强调色描边） |
+
+阴影的成因值得记一笔：`android:style/Widget.DeviceDefault.Button` 自 API 21 起带
+`android:elevation=2dp` + `stateListAnimator`，深色底（米绿 / 夜间墨黑）上几乎看不见，
+换成羊皮纸 / 豆沙绿 / 雾蓝灰后，圆角外侧就浮出一圈灰边，看着像卡片没对齐。
+
+- 样式层：`QuizOption` 加 `android:elevation=0dp`、`android:stateListAnimator=@null`；
+- 代码层：`Theme.flatten(view)` 在每次渲染选项时再兜一次（重画 / 换配色都不会漏）；
+- XML 兜底：`bg_feedback.xml` 去描边、圆角 16dp → 10dp；`bg_tag.xml` 圆角 999dp → 10dp。
+
+单测覆盖（`QuizActivityTest`）：选项 `elevation == 0` 且 `stateListAnimator == null`、
+学科标签圆角 10dp 且有描边、反馈条圆角 10dp 且无描边。

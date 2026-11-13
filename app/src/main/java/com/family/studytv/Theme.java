@@ -5,6 +5,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.StateListDrawable;
+import android.os.Build;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -210,6 +211,20 @@ public final class Theme {
             d.setStroke(linePx, line);
         }
         return d;
+    }
+
+    /**
+     * 关掉控件自带的高度阴影（v1.8.3）。
+     *
+     * <p>Android 5+ 的 {@code Theme.DeviceDefault} Button 默认带 2dp elevation 与 stateListAnimator，
+     * 深色底上几乎看不见，换成羊皮纸 / 豆沙绿 / 雾蓝灰这类浅色底后，圆角外就浮出一圈灰边，
+     * 看着像「卡片没对齐」。选项底色本来就是纯色块，不需要投影。
+     */
+    public static void flatten(View v) {
+        if (Build.VERSION.SDK_INT >= 21) {
+            v.setElevation(0f);
+            v.setStateListAnimator(null);
+        }
     }
 
     /** 页面底色：纯色 + 两团极淡的径向光晕，等价于原来的 bg_glow.xml */

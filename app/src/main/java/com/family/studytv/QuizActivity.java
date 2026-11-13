@@ -360,6 +360,7 @@ public class QuizActivity extends Activity {
      */
     private void setOptionText(Button b, int k, String text, String suffix, String role) {
         applyOptionFont(b);
+        Theme.flatten(b);   // 去掉 Button 自带的 2dp 投影，浅色风格下圆角才不会浮灰边
         String r = role == null ? "" : role;
         b.setTag(new String[]{text, suffix == null ? "" : suffix, r});
         b.setTextColor(optionTextColor(r));
@@ -406,10 +407,10 @@ public class QuizActivity extends Activity {
         if (tvClock != null) {
             tvClock.setBackground(null);
         }
-        tvSubject.setBackground(Theme.card(tvSubject, theme.tagBg, theme.accent, 999f,
+        // v1.8.3：学科胶囊与底部反馈条统一收成 10dp 小圆角；反馈条去掉描边，只留底色
+        tvSubject.setBackground(Theme.card(tvSubject, theme.tagBg, theme.accent, 10f,
                 Math.max(1, px(tvSubject, 2))));
-        tvFeedback.setBackground(Theme.card(tvFeedback, theme.feedbackBg, theme.stroke, 16f,
-                Math.max(1, px(tvFeedback, 2))));
+        tvFeedback.setBackground(Theme.card(tvFeedback, theme.feedbackBg, 0, 10f, 0));
         if (!items.isEmpty() && index >= 0 && index < items.size()) {
             renderSubject(items.get(index).q);   // 星级颜色跟着换
         }

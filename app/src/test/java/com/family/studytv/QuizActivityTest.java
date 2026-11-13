@@ -9,6 +9,7 @@ import static org.robolectric.Shadows.shadowOf;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Looper;
 import android.view.KeyEvent;
 import android.view.View;
@@ -419,6 +420,52 @@ public class QuizActivityTest {
         assertNull("时钟不应有背景或描边", clock.getBackground());
         assertEquals("时钟不应有左内边距", 0, clock.getPaddingLeft());
         assertEquals("时钟不应有上内边距", 0, clock.getPaddingTop());
+    }
+
+    @Test
+    public void optionsHaveNoDropShadowSoCornersStayClean() {
+        // v1.8.3：Material Button 自带 2dp elevation，深色底看不出来，
+        // 换羊皮纸 / 豆沙绿 / 雾蓝灰后圆角外会浮出一圈灰边
+        LinearLayout box = activity.findViewById(R.id.optionBox);
+        assertTrue("应已渲染出选项", box.getChildCount() > 0);
+        for (int i = 0; i < box.getChildCount(); i++) {
+            View v = box.getChildAt(i);
+            assertEquals("选项不应有投影高度", 0f, v.getElevation(), 0.01f);
+            assertNull("选项不应带按压抬升动画", v.getStateListAnimator());
+        }
+    }
+
+    @Test
+    public void subjectTagAndFeedbackUseSmallRadius() {
+        // v1.8.3：学科标签与底部反馈条圆角统一收成 10dp，反馈条去掉描边
+        View tag = activity.findViewById(R.id.tvSubject);
+        GradientDrawable tagBg = (GradientDrawable) tag.getBackground();
+        assertEquals("学科标签圆角应为 10dp", dp(tag, 10), tagBg.getCornerRadius(), 0.5f);
+        assertTrue("学科标签保留强调描边", strokeWidth(tagBg) > 0);
+
+        View feedback = activity.findViewById(R.id.tvFeedback);
+        GradientDrawable fbBg = (GradientDrawable) feedback.getBackground();
+        assertEquals("反馈条圆角应为 10dp", dp(feedback, 10), fbBg.getCornerRadius(), 0.5f);
+        assertTrue("反馈条不应有描边", strokeWidth(fbBg) <= 0);
+    }
+
+    /** GradientDrawable 没有公开的描边读取接口，只能读 mGradientState 里的字段 */
+    private static int strokeWidth(GradientDrawable g) {
+        try {
+            java.lang.reflect.Field sf = GradientDrawable.class.getDeclaredField("mGradientState");
+            sf.setAccessible(true);
+            Object state = sf.get(g);
+            java.lang.reflect.Field f = state.getClass().getDeclaredField("mStrokeWidth");
+            f.setAccessible(true);
+            return f.getInt(state);
+        } catch (Exception e) {
+            throw new AssertionError("读不到描边宽度", e);
+        }
+    }
+
+    private static float dp(View v, float value) {
+        return android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_DIP,
+                value, v.getResources().getDisplayMetrics());
     }
 
     private void type(Dialog d, String s) {

@@ -107,6 +107,10 @@
         <!-- v1.8.2：答案项默认无边框、圆角 10dp，只有选中项才描边；
              不继承 TvButton 的 bg_option，管理页按钮保持原样 -->
         <item name="android:background">@drawable/bg_quiz_option</item>
+        <!-- v1.8.3：关掉 Material Button 默认的 2dp 投射阴影，否则浅色三套风格
+             圆角外会浮出一圈灰边（深色底看不出来，换羊皮纸就很明显） -->
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
         <item name="android:textSize">25sp</item>
         <item name="android:minHeight">56dp</item>
         <item name="android:gravity">center_vertical|start</item>
