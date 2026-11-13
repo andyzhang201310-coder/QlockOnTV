@@ -52,6 +52,8 @@ public final class Rules {
     private static final String KEY_GROW_TOTAL = "rules_grow_total";
     /** 成长记录：答对后从错题集移出的题数（「已掌握」） */
     private static final String KEY_GROW_MASTERED = "rules_grow_mastered";
+    /** 轮数用完锁屏：家长当天放行的日期（YYYY-M-D），跨天自动失效 */
+    private static final String KEY_LIMIT_PASS_DATE = "rules_limit_pass_date";
 
     private static final int SLOTS_PER_DAY = 48;
     private static final int SLOT_MINUTES = 30;
@@ -628,6 +630,59 @@ public final class Rules {
             return true;
         }
         return roundsToday(c) < Math.max(1, cfg.optInt("roundsPerDay", 8));
+    }
+
+    /** 每日上限轮数（已做范围钳制，1–100） */
+    public static int roundsPerDay(JSONObject cfg) {
+        return Math.max(1, Math.min(100, cfg == null ? 8 : cfg.optInt("roundsPerDay", 8)));
+    }
+
+    // ------------------------------------------------------------------ 轮数用完锁屏（v1.8.1）
+    //
+    // 「每日轮数上限」原来只是「今天不再弹题」，电视照看。打开总开关后语义升级为
+    // 用满即锁屏：电视一唤醒就显示「今天的次数已用完」整屏，到次日 0 点自动恢复。
+    // 家长当天要放行，可以在手机后台点「立即解锁」，或在锁屏页连按 5 次上键输管理密码。
+
+    /** 今天是否已经用满（不看家长放行，纯计数） */
+    public static boolean limitReached(Context c, JSONObject cfg) {
+        return !roundsLeft(c, cfg);
+    }
+
+    /** 家长今天是否已经手动解除过锁屏 */
+    public static boolean limitPassedToday(Context c) {
+        return today(System.currentTimeMillis()).equals(sp(c).getString(KEY_LIMIT_PASS_DATE, ""));
+    }
+
+    /** 此刻是否该显示锁屏页：开了上限 + 今天已用满 + 家长今天没放行 */
+    public static boolean limitLocked(Context c) {
+        // 总开关 / 自动弹题关掉时什么都不做：家长暂停拦截期间不该被锁屏页挡住
+        if (!Prefs.isEnabled() || !Prefs.autoQuiz()) {
+            return false;
+        }
+        JSONObject cfg = get(c);
+        return cfg.optBoolean("roundsLimitEnabled", false)
+                && limitReached(c, cfg)
+                && !limitPassedToday(c);
+    }
+
+    /** 家长手动放行：今天余下时间不再锁屏，也不再弹题；跨天自动恢复 */
+    public static void grantLimitPass(Context c) {
+        sp(c).edit().putString(KEY_LIMIT_PASS_DATE, today(System.currentTimeMillis())).apply();
+    }
+
+    /** 改规则（比如调高每日轮数）时清掉放行标记，让新上限立刻生效 */
+    public static void clearLimitPass(Context c) {
+        sp(c).edit().remove(KEY_LIMIT_PASS_DATE).apply();
+    }
+
+    /** 锁屏页底部小字：「每日 8 轮 · 今天已弹 8 轮」 */
+    public static String limitFootnote(Context c, JSONObject cfg) {
+        return "每日 " + roundsPerDay(cfg) + " 轮 · 今天已弹 " + roundsToday(c) + " 轮";
+    }
+
+    /** 锁屏页副标题：跨天清零，所以固定是明天 0 点 */
+    public static String limitResetText() {
+        return "明天 00:00 恢复";
     }
 
     // ------------------------------------------------------------------ 轮次 / 间隔重复

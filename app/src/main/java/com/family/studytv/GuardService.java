@@ -43,6 +43,7 @@ public class GuardService extends Service {
     private static final long TICK_MS = 15000L;
     private static final int REQ_ALARM = 100;
     private static final int REQ_SHOW = 101;
+    private static final int REQ_LIMIT = 103;
 
     private static GuardService alive;
 
@@ -50,6 +51,9 @@ public class GuardService extends Service {
     private HttpServer server;
     private volatile boolean quizShowing = false;
     private long lastShowAt = 0L;
+    /** 每日轮数用完的锁屏页是否刚拉起过，避免 15 秒轮询反复重排界面 */
+    private volatile boolean limitShowing = false;
+    private long lastLimitAt = 0L;
     /** 家长最近一次「立即解锁」的时间，用于避免启动自检把主动放行误判成 BAL 拦截 */
     private long unlockedAt = 0L;
     private boolean wakeReceiverRegistered = false;
@@ -260,6 +264,12 @@ public class GuardService extends Service {
         // 此刻不允许弹题 → 一律顺延，绝不点亮待机中的电视。
         boolean quiet = !timeAllowed(this, now);
 
+        // 0) 今天次数已用完（每日轮数上限）：不管在不在时段内，开电视就是锁屏页
+        if (Rules.limitLocked(this)) {
+            showSoon(1500);
+            return;
+        }
+
         // 1) 上次弹窗没答完（含直接关机逃避）→ 立刻补上；免打扰期间顺延到时段结束
         if (Prefs.isPending()) {
             if (quiet) {
@@ -367,10 +377,19 @@ public class GuardService extends Service {
         }
         long now = System.currentTimeMillis();
         // quizShowing 卡住（界面没成功拉起）时，60 秒后重试
-        if (QuizActivity.running) {
+        if (QuizActivity.running || LimitActivity.running) {
             return;
         }
         if (quizShowing && now - lastShowAt < 60000L) {
+            return;
+        }
+        if (limitShowing && now - lastLimitAt < 60000L) {
+            return;
+        }
+        // 每日轮数用完（v1.8.1）：不再是「今天悄悄不弹」，而是整屏锁住。
+        // 放在时段判断之前 —— 次数用完了就不该再挑时段，开电视一律撞锁屏页。
+        if (Rules.limitLocked(this)) {
+            showLimit();
             return;
         }
         // 规则禁用时段：绝不弹窗（也就不会点亮待机中的电视），到点欠着的留到允许时刻再补
@@ -416,6 +435,11 @@ public class GuardService extends Service {
             }
             return;
         }
+        // 今天次数已经用完：出题换成锁屏页（后台「立即弹一次」也照此处理）
+        if (Rules.limitLocked(this)) {
+            showLimit();
+            return;
+        }
         quizShowing = true;
         lastShowAt = System.currentTimeMillis();
         Prefs.setPending(true);
@@ -425,15 +449,47 @@ public class GuardService extends Service {
                 | Intent.FLAG_ACTIVITY_CLEAR_TOP
                 | Intent.FLAG_ACTIVITY_SINGLE_TOP
                 | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        if (!launchViaPendingIntent(i)) {
+        if (!launchViaPendingIntent(i, REQ_SHOW)) {
             try {
                 startActivity(i);
             } catch (Throwable e) {
                 // 极少数盒子拦截后台启动，用全屏通知兜底
-                postFullScreenFallback();
+                postFullScreenFallback(false);
             }
         }
         verifyLaunched();
+        updateNotification();
+    }
+
+    /**
+     * 拉起「今天的次数已用完」锁屏页（v1.8.1）。
+     * 与答题页共用同一套闸门：待机不拉、走 PendingIntent 的 BAL 放行通道、失败用全屏通知兜底。
+     */
+    private void showLimit() {
+        if (LimitActivity.running) {
+            return;
+        }
+        if (!awake(this)) {
+            long t = System.currentTimeMillis();
+            if (t - Prefs.asleepDeferAt() > 300000L) {
+                Prefs.setAsleepDeferAt(t);
+            }
+            return;
+        }
+        limitShowing = true;
+        lastLimitAt = System.currentTimeMillis();
+        Intent i = new Intent(this, LimitActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                | Intent.FLAG_ACTIVITY_SINGLE_TOP
+                | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        if (!launchViaPendingIntent(i, REQ_LIMIT)) {
+            try {
+                startActivity(i);
+            } catch (Throwable e) {
+                postFullScreenFallback(true);
+            }
+        }
         updateNotification();
     }
 
@@ -443,12 +499,12 @@ public class GuardService extends Service {
      * API 34+ 用 PendingIntent + ActivityOptions 显式 opt-in 是官方给的合法通道；
      * 低版本没有这个限制，继续走 startActivity。
      */
-    private boolean launchViaPendingIntent(Intent i) {
+    private boolean launchViaPendingIntent(Intent i, int requestCode) {
         if (Build.VERSION.SDK_INT < 34) {
             return false;
         }
         try {
-            PendingIntent pi = PendingIntent.getActivity(this, REQ_SHOW, i,
+            PendingIntent pi = PendingIntent.getActivity(this, requestCode, i,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             ActivityOptions opts = ActivityOptions.makeBasic();
             opts.setPendingIntentBackgroundActivityStartMode(
@@ -479,12 +535,12 @@ public class GuardService extends Service {
                 if (!awake(GuardService.this)) {
                     return;
                 }
-                if (QuizActivity.running) {
+                if (QuizActivity.running || LimitActivity.running) {
                     Prefs.setBalBlockedAt(0L);
                     return;
                 }
                 Prefs.setBalBlockedAt(System.currentTimeMillis());
-                postFullScreenFallback();
+                postFullScreenFallback(false);
             }
         }, 2500);
     }
@@ -513,6 +569,9 @@ public class GuardService extends Service {
     public static void applyUnlock(Context c) {
         long now = System.currentTimeMillis();
         Prefs.setPending(false);
+        // v1.8.1：如果电视上正锁着「今天的次数已用完」，这次放行同时记「今天已放行」，
+        // 否则 15 秒后轮询会把锁屏页又拉回来。
+        Rules.grantLimitPass(c);
         long raw = now + Prefs.intervalMinutes() * 60000L;
         Prefs.setDueAtAlignedTo(raw, Rules.alignDue(c, raw));
         scheduleAlarm(c.getApplicationContext());
@@ -520,6 +579,7 @@ public class GuardService extends Service {
         GuardService s = alive;
         if (s != null) {
             s.quizShowing = false;
+            s.limitShowing = false;
             s.lastShowAt = now;
             s.unlockedAt = now;
             try {
@@ -528,6 +588,7 @@ public class GuardService extends Service {
             }
         }
         QuizActivity.forceUnlock();
+        LimitActivity.forceUnlock();
     }
 
     private static void scheduleAlarm(Context c) {
@@ -607,6 +668,9 @@ public class GuardService extends Service {
             text = "已暂停拦截";
         } else if (!Prefs.autoQuiz()) {
             text = "自动弹题已关闭（可手动催一次）";
+        } else if (Rules.limitLocked(this)) {
+            // 次数用完：通知栏也保持一致，家长一眼看出为什么电视停在这一页
+            text = "今天的次数已用完，明天 0 点恢复";
         } else {
             long due = Prefs.dueAt();
             String when = due > 0 ? new SimpleDateFormat("HH:mm", Locale.CHINA).format(new Date(due)) : "--:--";
@@ -649,15 +713,17 @@ public class GuardService extends Service {
     }
 
     @SuppressWarnings("deprecation")
-    private void postFullScreenFallback() {
+    private void postFullScreenFallback(boolean limit) {
         // 全屏通知在部分机型上会把屏幕点亮，待机时干脆不发，靠唤醒后的补弹兜住
         if (!awake(this)) {
             return;
         }
         try {
-            Intent i = new Intent(this, QuizActivity.class);
+            Intent i = limit ? new Intent(this, LimitActivity.class)
+                    : new Intent(this, QuizActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            PendingIntent pi = PendingIntent.getActivity(this, 9, i, PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent pi = PendingIntent.getActivity(this, limit ? 10 : 9, i,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
             Notification.Builder b;
             if (Build.VERSION.SDK_INT >= 26) {
                 b = new Notification.Builder(this, "quiz");
@@ -665,15 +731,15 @@ public class GuardService extends Service {
                 b = new Notification.Builder(this);
             }
             b.setSmallIcon(R.drawable.ic_stat)
-                    .setContentTitle("该答题啦")
-                    .setContentText("答对题目后继续看电视")
+                    .setContentTitle(limit ? "今天的次数已用完" : "该答题啦")
+                    .setContentText(limit ? "明天 0 点恢复" : "答对题目后继续看电视")
                     .setFullScreenIntent(pi, true)
                     .setContentIntent(pi)
                     .setAutoCancel(true)
                     .setPriority(Notification.PRIORITY_HIGH);
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (nm != null) {
-                nm.notify(1002, b.build());
+                nm.notify(limit ? 1003 : 1002, b.build());
             }
         } catch (Throwable ignored) {
         }

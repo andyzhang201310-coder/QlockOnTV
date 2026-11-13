@@ -289,12 +289,15 @@ public class HttpServer {
             }
             if (method.equals("GET")) {
                 JSONObject o = new JSONObject();
+                JSONObject ruleCfg = Rules.get(ctx);
                 o.put("ok", true);
                 o.put("version", Rules.version(ctx));
-                o.put("config", Rules.get(ctx));
+                o.put("config", ruleCfg);
                 o.put("roundsToday", Rules.roundsToday(ctx));
+                o.put("roundsPerDay", Rules.roundsPerDay(ruleCfg));
+                o.put("limitLocked", Rules.limitLocked(ctx));
+                o.put("limitPassedToday", Rules.limitPassedToday(ctx));
                 o.put("wrongToday", Rules.wrongToday(ctx));
-                JSONObject ruleCfg = Rules.get(ctx);
                 int gap = Rules.reviewGap(ruleCfg);
                 o.put("reviewDue", Rules.wrongIds(ctx).size());
                 o.put("reviewReady", Rules.dueWrongIds(ctx, gap).size());
@@ -311,6 +314,11 @@ public class HttpServer {
                     }
                     JSONObject cfg = Rules.save(ctx, in);
                     long now = System.currentTimeMillis();
+                    // v1.8.1：改了「轮数上限 / 每日轮数」就等于重新定了规矩，
+                    // 之前的「今天已放行」作废，否则家长调高上限后电视还是不进锁屏。
+                    if (in.has("roundsPerDay") || in.has("roundsLimitEnabled")) {
+                        Rules.clearLimitPass(ctx);
+                    }
                     // 时段规则变了：保留原有计时起点，只把落在禁用时段的那一轮顺延到新的允许时刻
                     long due = Prefs.dueAt();
                     long base = due > now ? due : now;
@@ -1004,7 +1012,11 @@ public class HttpServer {
             Intent i = new Intent(ctx, GuardService.class);
             i.setAction(GuardService.ACTION_SHOW_NOW);
             GuardService.start(ctx, i);
-            respondJson(socket, 200, "{\"ok\":true}");
+            // 今天次数已用完时，电视上弹出的会是锁屏页而不是题目，回一个标记让后台换个提示
+            JSONObject ok = new JSONObject();
+            ok.put("ok", true);
+            ok.put("limit", Rules.limitLocked(ctx));
+            respondJson(socket, 200, ok.toString());
             return;
         }
 
@@ -1026,11 +1038,13 @@ public class HttpServer {
                 unauthorized(socket);
                 return;
             }
-            // 家长远程放行：退出答题弹窗 + 从现在重排下一轮，避免 15 秒后又被拉回来
+            // 家长远程放行：退出答题弹窗 / 锁屏页 + 从现在重排下一轮，避免 15 秒后又被拉回来
             GuardService.applyUnlock(ctx);
             JSONObject o = new JSONObject();
             o.put("ok", true);
             o.put("dueAt", Prefs.dueAt());
+            // v1.8.1：这次放行同时解除「今天的次数已用完」锁屏，今天不再锁
+            o.put("limitPassed", Rules.limitPassedToday(ctx));
             respondJson(socket, 200, o.toString());
             return;
         }
@@ -1302,6 +1316,9 @@ public class HttpServer {
             o.put("calendarSyncAt", Prefs.calendarSyncAt());
             o.put("calendarSyncStatus", Prefs.calendarSyncStatus());
             o.put("roundsToday", Rules.roundsToday(ctx));
+            o.put("roundsPerDay", Rules.roundsPerDay(rules));
+            o.put("limitLocked", Rules.limitLocked(ctx));
+            o.put("limitPassedToday", Rules.limitPassedToday(ctx));
             int reviewGap = Rules.reviewGap(rules);
             o.put("reviewDue", Rules.wrongIds(ctx).size());
             o.put("reviewReady", Rules.dueWrongIds(ctx, reviewGap).size());

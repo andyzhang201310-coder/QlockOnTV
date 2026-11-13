@@ -130,6 +130,16 @@ public class MainActivity extends Activity {
     }
 
     private void gotoQuiz() {
+        // 今天次数已用完（每日轮数上限）：点图标进来也要撞锁屏页，不能直接进答题
+        if (Rules.limitLocked(this)) {
+            try {
+                startActivity(new Intent(this, LimitActivity.class)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+            } catch (Throwable ignored) {
+            }
+            finish();
+            return;
+        }
         try {
             // 答题页可能已经在任务里（家长看完二维码又点了桌面图标），复用它而不是叠一层新的
             startActivity(new Intent(this, QuizActivity.class)
@@ -164,6 +174,14 @@ public class MainActivity extends Activity {
         sb.append("拦截状态：").append(Prefs.isEnabled() ? "拦截中（到点强制答题）" : "已暂停").append("\n");
         sb.append("弹题频率：每 ").append(Prefs.intervalMinutes()).append(" 分钟一次，每次 ")
                 .append(Prefs.quizCount()).append(" 题\n");
+        org.json.JSONObject ruleCfg = Rules.get(this);
+        if (ruleCfg.optBoolean("roundsLimitEnabled", false)) {
+            int used = Rules.roundsToday(this);
+            int cap = Rules.roundsPerDay(ruleCfg);
+            sb.append("今日弹题：").append(used).append(" / ").append(cap).append(" 轮")
+                    .append(used >= cap ? (Rules.limitPassedToday(this) ? "（已用满 · 家长已放行）" : "（已用满 · 电视已锁屏）") : "")
+                    .append("\n");
+        }
         sb.append("出题年级：").append(gradeLabel()).append("\n");
 
         long due = Prefs.dueAt();

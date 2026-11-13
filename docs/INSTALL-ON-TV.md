@@ -423,3 +423,43 @@ Sony BRAVIA 4K GB ATV3 / Android 9 实测（v1.7.30）：
    孩子按 Home 只回到学习页、进不去系统设置；副作用是原生主页（流媒体入口）一起没了，执行前要确认。
    恢复：`adb shell cmd package set-home-activity <原桌面组件>`（原组件可用 `cmd package resolve-activity -a android.intent.action.MAIN -c android.intent.category.HOME` 查）。
 3. 家长侧兜底：定期在后台看 `/api/state` 的 `appVersion`，或在手机上用局域网扫描脚本 `python tools/tv_scan.py` 确认应用还在。
+
+### 每日轮数用完锁屏（v1.8.1）：用满即整屏锁住
+
+「每日轮数上限」在 v1.8.1 之前只是「今天不再弹题」，电视照看。打开这个开关后语义变为
+**用满即锁屏**：当天弹满设定轮数后，电视一唤醒就进 `LimitActivity`，整屏只显示
+「今天的次数已用完 / 明天 00:00 恢复 / 每日 N 轮 · 今天已弹 N 轮」，次日 0 点自动恢复。
+
+| 触发路径 | 结果 |
+|---|---|
+| 电视唤醒（`ACTION_SCREEN_ON` / `USER_PRESENT`） | 立刻补一次检查 → 已用满则拉起锁屏页 |
+| 到点该弹题 | 不再弹题，改为拉起锁屏页（判定在时段判断之前：次数用完了就不挑时段） |
+| 点桌面图标 / 打开应用 | `MainActivity` → `gotoQuiz()` 前先判上限，已用满直接进锁屏页 |
+| 后台「立即弹一次题」 | `/api/test` 返回 `{ok:true, limit:true}`，电视上弹的是锁屏页而不是题目 |
+| 总开关 / 自动弹题关闭 | 一律不锁屏（家长暂停拦截期间不该被挡住） |
+
+家长放行有两条路，效果完全相同（都是 `GuardService.applyUnlock()`：记「今天已放行」+ 从现在重排下一轮）：
+
+- 手机后台「立即解锁」→ `/api/unlock`，响应里的 `limitPassed` 变成 `true`；
+- 电视上连按 5 次「上键」→ 输管理密码 → 当天放行并打开信息页。
+
+放行标记只对当天有效；改「轮数上限 / 每日轮数」会让它立刻作废（`Rules.clearLimitPass`），
+否则家长调高上限后电视还停在锁屏页。
+
+实现要点：
+
+- `Rules.limitLocked()` 一处判定，`GuardService.checkDue / showQuiz`、`MainActivity.gotoQuiz`、
+  `LimitActivity.onResume` 三处闸门共用，避免「某个入口漏了」。
+- 与答题页同一套待机闸门：`LimitActivity.onCreate()` 发现电视待机直接 `finish()`，不会点亮面板。
+- 锁屏页没有按钮、返回键吞掉、按 Home 逃到桌面 1.2 秒后拉回（家长操作期间不拉）。
+- 后台同步可见：`/api/state` / `/api/rules` 新增 `roundsPerDay`、`limitLocked`、`limitPassedToday`；
+  首页「今日轮数」显示成「10 / 8 轮 · 已用完 · 电视锁屏中」，信息页多一行「今日弹题：x / y 轮」。
+
+实测（MuMu / Android 15，1.8.1）：把 `rules_round_count` 写到上限后启动应用，
+`topResumedActivity=com.family.studytv/.LimitActivity`，版式与「还没到可用时间」一屏一致；
+连按 5 次上键弹出管理密码键盘，输对后落回信息页且**不会再弹一道题**（放行同时重排了下一轮）。
+
+边界：
+
+- 锁屏页挡不住 `pm uninstall` 与恢复出厂设置，也挡不住家长本人在系统设置里操作。
+- 电视待机期间不锁：待机本来就看不到画面，唤醒后由 `ACTION_SCREEN_ON` 补上。

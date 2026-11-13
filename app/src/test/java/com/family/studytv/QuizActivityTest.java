@@ -411,6 +411,16 @@ public class QuizActivityTest {
         assertTrue("时钟字号要明显小于题干", clock.getTextSize() < question.getTextSize());
     }
 
+    @Test
+    public void clockHasNoBorderOrBackground() {
+        // v1.8.1：时钟只显示文字，不要胶囊底、描边和内边距
+        TextView clock = (TextView) activity.findViewById(R.id.tvClock);
+        assertNotNull(clock);
+        assertNull("时钟不应有背景或描边", clock.getBackground());
+        assertEquals("时钟不应有左内边距", 0, clock.getPaddingLeft());
+        assertEquals("时钟不应有上内边距", 0, clock.getPaddingTop());
+    }
+
     private void type(Dialog d, String s) {
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);

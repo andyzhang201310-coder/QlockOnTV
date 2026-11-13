@@ -46,15 +46,11 @@
         <item name="android:includeFontPadding">false</item>
     </style>
 
-    <!-- 右上角系统时钟：比正文小一号，等宽数字避免秒数跳动时左右抖 -->
+    <!-- 右上角系统时钟：v1.8.1 起只留文字，去掉胶囊底与内边距，不参与视觉层级
+         等宽数字（tnum）避免秒数跳动时整行左右抖 -->
     <style name="ClockText">
-        <item name="android:background">@drawable/bg_pill</item>
         <item name="android:textColor">@color/textSecondary</item>
         <item name="android:textSize">15sp</item>
-        <item name="android:paddingLeft">16dp</item>
-        <item name="android:paddingRight">16dp</item>
-        <item name="android:paddingTop">6dp</item>
-        <item name="android:paddingBottom">6dp</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:fontFeatureSettings">tnum</item>
     </style>
@@ -133,6 +129,26 @@
         <item name="android:paddingLeft">14dp</item>
         <item name="android:paddingRight">14dp</item>
         <item name="android:textColor">@color/textSecondary</item>
+    </style>
+    <!-- 每日轮数用完的锁屏页（v1.8.1）：从上到下 图标 / 大标题 / 副标题 / 底部说明，居中一列 -->
+    <style name="LimitTitle">
+        <item name="android:textColor">@color/textPrimary</item>
+        <item name="android:textSize">46sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <style name="LimitSubtitle">
+        <item name="android:textColor">@color/textSecondary</item>
+        <item name="android:textSize">23sp</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="LimitFootnote">
+        <item name="android:textColor">@color/textMuted</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:includeFontPadding">false</item>
     </style>
 
 </resources>

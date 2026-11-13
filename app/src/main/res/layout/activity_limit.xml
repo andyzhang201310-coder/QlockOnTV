@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  每日轮数用完的锁屏页（v1.8.1）：整屏只留一个居中的信息组，没有任何按钮和焦点。
+  版式：时钟徽标 → 大标题 → 副标题 → 底部小字，与「还没到可用时间」这一屏保持一致。
+  文案全部由 LimitActivity 按当前规则填充，布局里只是占位。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/limitRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_glow">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingLeft="72dp"
+        android:paddingRight="72dp"
+        android:paddingBottom="40dp">
+
+        <ImageView
+            android:id="@+id/ivLimitIcon"
+            android:layout_width="76dp"
+            android:layout_height="76dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_clock_badge" />
+
+        <TextView
+            android:id="@+id/tvLimitTitle"
+            style="@style/LimitTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:gravity="center"
+            android:text="今天的次数已用完" />
+
+        <TextView
+            android:id="@+id/tvLimitSubtitle"
+            style="@style/LimitSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:text="明天 00:00 恢复" />
+
+        <TextView
+            android:id="@+id/tvLimitFootnote"
+            style="@style/LimitFootnote"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="52dp"
+            android:gravity="center"
+            android:text="每日 8 轮" />
+    </LinearLayout>
+</FrameLayout>

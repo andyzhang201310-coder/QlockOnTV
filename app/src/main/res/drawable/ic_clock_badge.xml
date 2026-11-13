@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  锁屏页顶部的时钟徽标（v1.8.1）：深色圆底 + 细描边表盘 + 指向 4 点方向的两根指针。
+  用 vector 而不是位图，1080p / 4K 电视上都锐利，也不用为不同密度准备多套图。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="76dp"
+    android:height="76dp"
+    android:viewportWidth="76"
+    android:viewportHeight="76">
+
+    <!-- 外圈：几乎不反光的圆底，只比背景亮一点点 -->
+    <path
+        android:fillColor="#131317"
+        android:pathData="M38,13a25,25 0 1,0 0.01,0z"
+        android:strokeColor="#26262C"
+        android:strokeWidth="0.8" />
+
+    <!-- 表盘 -->
+    <path
+        android:pathData="M38,24a14,14 0 1,0 0.01,0z"
+        android:strokeColor="#C9C9D1"
+        android:strokeWidth="1.8" />
+
+    <!-- 指针：12 点 → 圆心 → 4 点方向 -->
+    <path
+        android:pathData="M38,28.5L38,38L45.5,42.5"
+        android:strokeColor="#C9C9D1"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="1.8" />
+</vector>

@@ -401,9 +401,9 @@ public class QuizActivity extends Activity {
         }
         root.setBackground(Theme.background(root, theme));
         Theme.tintTextTree(root, theme);
+        // v1.8.1：右上角时钟只留文字，不再套胶囊底/描边（换配色也不补背景）
         if (tvClock != null) {
-            tvClock.setBackground(Theme.card(tvClock, theme.pillBg, theme.stroke, 999f,
-                    Math.max(1, px(tvClock, 1))));
+            tvClock.setBackground(null);
         }
         tvSubject.setBackground(Theme.card(tvSubject, theme.tagBg, theme.accent, 999f,
                 Math.max(1, px(tvSubject, 2))));

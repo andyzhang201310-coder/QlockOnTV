@@ -72,6 +72,17 @@
             android:taskAffinity="com.family.studytv.quiz"
             android:theme="@style/QuizTheme" />
 
+        <!-- 每日轮数用完的锁屏页（v1.8.1）：当天弹满上限后整屏锁住，次日 0 点恢复 -->
+        <activity
+            android:name=".LimitActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:screenOrientation="landscape"
+            android:taskAffinity="com.family.studytv.quiz"
+            android:theme="@style/QuizTheme" />
+
         <!-- 防卸载设置：激活设备管理员、输入卸载码卸载（必须本机操作） -->
         <activity
             android:name=".SecurityActivity"
