@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * AI 错题讲解：把「题目 + 正确答案 + 孩子选的错项」发给 OpenAI 兼容接口，换一段讲给孩子听的话。
@@ -58,7 +59,9 @@ public final class AiExplain {
                     + "不要通用助手腔，不写「作为 AI」「我来帮你分析」「希望对你有帮助」。"
                     + "讲题用孩子听得懂的口语，句子短、分步骤、有例子，会把知识点拆开讲明白，"
                     + "不把题目原文复述一遍，要求的每一段都写全，不写空泛的夸奖和安慰，"
-                    + "不使用「本题考查」这类书面语。";
+                    + "不使用「本题考查」这类书面语。"
+                    + "不讲废话：不把数字用中文读一遍、不复述题干和选项原文、"
+                    + "不写「我们来看」「先看题目」这类过场话，每段第一句就给有效内容。";
 
     private AiExplain() {
     }
@@ -97,7 +100,7 @@ public final class AiExplain {
     /**
      * 组 prompt：只给模型「题目 / 四个选项 / 正确答案 / 孩子选了哪个」，
      * 其余判断都交给模型 —— 题库里没有解析原文，硬凑反而会编。
-     * v1.10.5 起按六段结构生成分层讲解，默认标准档；简单识记题可跳过举例段。
+     * v1.10.6 起按四段结构生成分层讲解（结论 / 拆解 / 看其他选项 / 易错点），默认标准档。
      */
     public static String buildPrompt(String subject, int grade, String question,
                                      List<String> options, int answerIdx, int chosenIdx) {
@@ -140,13 +143,14 @@ public final class AiExplain {
             sb.append("孩子选了：").append(letter(chosenIdx)).append(". ")
                     .append(options.get(chosenIdx)).append("\n");
         }
-        sb.append("\n请按下面六段讲，全程保持科任老师的身份和课堂口吻，句子要短，每段单独一段：\n");
+        sb.append("\n请按下面四段讲，全程保持科任老师的身份和课堂口吻，句子要短，每段单独一段：\n");
         sb.append("【结论】直接说正确答案是什么、是什么意思，一句话给结果；")
                 .append("禁止把题目复述一遍，禁止写「这道题问的是…」。\n");
-        sb.append("【拆解】把知识点一个一个拆开讲：")
+        sb.append("【拆解】把知识点一个一个拆开讲，第一句就进正题：")
                 .append("英语题逐个词说意思（如 He is a boy. → He 他、is 是、a 一个、boy 男孩，")
                 .append("合起来「他是个男孩」）并讲清句子怎么拼；")
-                .append("数学题说清每个数字的含义和每一步怎么算；")
+                .append("数学题直接讲数量关系与分步演算（如「减 199 可以先减 200 再补回 1」），")
+                .append("禁止把题干里的数字用中文读一遍，不写「487 是四百八十七，199 是一百九十九」这种空话；")
                 .append("语文题说清字的音形义、笔画笔顺或诗句字词为什么这么用。\n");
         sb.append("【看其他选项】除正确答案外，把其余每个选项按字母逐个点名，")
                 .append("说清它是什么意思、对应哪句英文／哪个算法／哪个作者，为什么不对；");
@@ -156,22 +160,23 @@ public final class AiExplain {
         } else {
             sb.append("点出最容易和正确答案混的那个。\n");
         }
-        sb.append("【举个例子】换掉数字或词，举一个同类型的例子，带着孩子一起说出答案，别抄原题。")
-                .append("但数笔画、认首字母、背作者朝代这类一眼看出答案的简单识记题，")
-                .append("这一段整段省略（连标签都不写），其余五段照写。\n");
         sb.append("【易错点】点出这道题真正的坑，").append(pit)
-                .append("；最后给一句能记住的判断口诀。\n");
-        sb.append("【举一反三】给一条下次也能用的规律，再出一个变式小问题让孩子自己想，")
-                .append("紧接着给出答案；这一段是让孩子自己练，不要重复【举个例子】那道题。\n");
-        sb.append("除【举个例子】在简单题可省略外，其余每一段都必须写出来，不许合并、不许省略；")
+                .append("；最后给一句能记住的判断口诀，这一段写完就收尾。\n");
+        sb.append("四段都必须写出来，不许合并、不许省略，也不许再加【举个例子】【举一反三】")
+                .append("或任何新段落；讲完【易错点】立刻结束，不要另写总结、练习和鼓励。")
                 .append("每段都以【】里的标签开头，不要另写标题，")
                 .append("不要写「小朋友」「别着急」这类空泛安慰。\n");
+        sb.append("所有段落一律不写废话：不把数字读成中文、不把题目或选项原文再抄一遍、")
+                .append("不写「题目给的是」「我们来看」「先看题目」这类开场白。\n");
+        sb.append("每一段都要收在完整句子上，【易错点】必须写完并以句号结束，")
+                .append("不要停在「所以答案是」这种半句；字数吃紧时先保证四段齐全，")
+                .append("别在任意一段中间收尾。\n");
         if (lv == DETAIL_BRIEF) {
-            sb.append("每段一两句话，总字数 130–170 字。");
+            sb.append("每段一两句话，总字数 90–130 字。");
         } else if (lv == DETAIL_DEEP) {
-            sb.append("每段讲透，总字数 400–500 字。");
+            sb.append("每段讲透，总字数 320–420 字。");
         } else {
-            sb.append("总字数 280–360 字。");
+            sb.append("总字数 200–280 字。");
         }
         return sb.toString();
     }
@@ -186,20 +191,100 @@ public final class AiExplain {
         return v < DETAIL_BRIEF || v > DETAIL_DEEP ? DETAIL_STANDARD : v;
     }
 
-    /** 中文一字约 1～1.5 token，按档位留足余量，别让讲解被 max_tokens 腰斩 */
+    /**
+     * 中文一字约 1～1.5 token，但分层讲解下模型常写到字数上限的两三倍，
+     * token 给紧了会在最后一段的半句处被服务端腰斩（finish_reason=length）。
+     * 这里按目标字数的 5～6 倍留余量，实际消耗由模型自己控制。
+     */
     static int maxTokens(int detail) {
         int lv = detailLevelValue(detail);
-        return lv == DETAIL_BRIEF ? 500 : (lv == DETAIL_DEEP ? 1800 : 1300);
+        return lv == DETAIL_BRIEF ? 900 : (lv == DETAIL_DEEP ? 3200 : 2400);
     }
 
-    /** 面板兜底截断长度（正文可滚动，这里只挡模型跑飞） */
+    /** 面板兜底长度：正文本来就能翻页，这里只挡模型彻底跑飞，正常讲解碰不到 */
     static int textLimit(int detail) {
         int lv = detailLevelValue(detail);
-        return lv == DETAIL_BRIEF ? 280 : (lv == DETAIL_DEEP ? 1000 : 620);
+        return lv == DETAIL_BRIEF ? 700 : (lv == DETAIL_DEEP ? 2600 : 1800);
     }
 
     static String letter(int i) {
         return i >= 0 && i < 26 ? String.valueOf((char) ('A' + i)) : "?";
+    }
+
+    // ------------------------------------------------------------------ 正文清洗
+
+    /** 「487 是四百八十七，」这类把数字读一遍的废话片段 */
+    private static final Pattern READ_NUMBER = Pattern.compile(
+            "\\d+(?:\\.\\d+)?\\s*是\\s*[零〇一二三四五六七八九十百千万亿两]{2,}\\s*[，,、；;]?\\s*");
+
+    /** 整句只在罗列数字读法时，连句子一起丢掉，免得留下孤立标点 */
+    private static final Pattern READ_ONLY_SENTENCE = Pattern.compile(
+            "(?:\\d+(?:\\.\\d+)?\\s*是\\s*[零〇一二三四五六七八九十百千万亿两]{2,}\\s*[，,、；;]?\\s*)+[。！？]?");
+
+    /** 已取消的【举个例子】【举一反三】：旧缓存或模型习惯性补写时整段丢掉 */
+    private static final Pattern DROPPED_SECTIONS = Pattern.compile(
+            "(?s)[ \\t]*【(?:举个例子|举一反三)】.*?(?=【|$)");
+
+    /**
+     * 提示词已明令禁止读数字和额外的两段，这里再做一道兜底：
+     * 只删「数字 + 是 + 中文读数」这一种确定的废话，不碰公式、词义和演算步骤。
+     * 旧缓存读出来时也过一遍，家长不用为了改版专门清缓存。
+     */
+    static String tidy(String text) {
+        String s = text == null ? "" : text.trim();
+        if (s.length() == 0) {
+            return "";
+        }
+        s = DROPPED_SECTIONS.matcher(s).replaceAll("");
+        s = READ_ONLY_SENTENCE.matcher(s).replaceAll("");
+        s = READ_NUMBER.matcher(s).replaceAll("");
+        s = s.replaceAll("[，,、；;]\\s*(?=[。！？])", "");
+        s = s.replaceAll("(?m)^[ \\t]*[，,、；;。！？]+", "");
+        s = s.replaceAll("[。！？]{2,}", "。");
+        s = s.replaceAll("[ \\t]{2,}", " ");
+        s = s.replaceAll("\\n{3,}", "\n\n");
+        return s.trim();
+    }
+
+    /** 模型是不是因为 token 用完才停的（这种回答末尾往往是半句） */
+    static boolean lengthCut(String raw) {
+        if (raw == null) {
+            return false;
+        }
+        try {
+            JSONObject o = new JSONObject(raw);
+            JSONArray ch = o.optJSONArray("choices");
+            return ch != null && ch.length() > 0
+                    && "length".equals(ch.getJSONObject(0).optString("finish_reason", ""));
+        } catch (Throwable e) {
+            return false;
+        }
+    }
+
+    /** 万一重试后仍被腰斩，宁可少显示半句，也别把「变式：623 减」这种断句给孩子看 */
+    static String dropHalfSentence(String text) {
+        String t = text == null ? "" : text.trim();
+        if (t.length() == 0) {
+            return t;
+        }
+        char last = t.charAt(t.length() - 1);
+        if (last == '。' || last == '！' || last == '？' || last == '”' || last == '」') {
+            return t;
+        }
+        int cut = -1;
+        for (int pass = 0; pass < 2 && cut < 0; pass++) {
+            for (int i = t.length() - 2; i >= 0; i--) {
+                char c = t.charAt(i);
+                boolean stop = pass == 0
+                        ? (c == '。' || c == '！' || c == '？' || c == '\n')
+                        : (c == '，' || c == '；');
+                if (stop) {
+                    cut = i + 1;
+                    break;
+                }
+            }
+        }
+        return cut > 0 ? t.substring(0, cut).trim() : t;
     }
 
     // ------------------------------------------------------------------ 缓存
@@ -220,7 +305,7 @@ public final class AiExplain {
                 return null;
             }
             String t = e.optString("t", "");
-            return t.length() == 0 ? null : t;
+            return t.length() == 0 ? null : tidy(t);
         }
     }
 
@@ -331,6 +416,8 @@ public final class AiExplain {
     public static final class Res {
         public String text;
         public String error;
+        /** 模型返回 finish_reason=length：正文是半句停下的，需要换更大额度重试 */
+        public boolean truncated;
 
         public boolean ok() {
             return text != null && text.length() > 0;
@@ -378,7 +465,38 @@ public final class AiExplain {
         });
     }
 
+    /**
+     * 先按档位要一次；若模型是因 token 用完停在半句（finish_reason=length），
+     * 把额度翻倍再要一次，尽量把四段讲完整，仍不完整才由 dropHalfSentence 收尾。
+     */
     static Res request(JSONObject cfg, String prompt) {
+        int base = maxTokens(detailLevel(cfg));
+        Res r = requestOnce(cfg, prompt, base);
+        if (r.ok() && r.truncated) {
+            int bigger = Math.min(6000, base * 2);
+            if (bigger > base) {
+                Res again = requestOnce(cfg, prompt, bigger);
+                if (again.ok() && again.text.length() > r.text.length()) {
+                    r = again;
+                }
+            }
+        }
+        if (r.ok()) {
+            String t = clip(r.text, detailLevel(cfg));
+            if (r.truncated) {
+                t = dropHalfSentence(t);
+                if (t.length() < 40) {
+                    r.text = null;
+                    r.error = "模型这次没把讲解写完整，点「重试」再来一次";
+                    return r;
+                }
+            }
+            r.text = t;
+        }
+        return r;
+    }
+
+    private static Res requestOnce(JSONObject cfg, String prompt, int tokens) {
         Res r = new Res();
         HttpURLConnection conn = null;
         try {
@@ -403,7 +521,7 @@ public final class AiExplain {
             msgs.put(msg("user", prompt == null ? "" : prompt));
             body.put("messages", msgs);
             body.put("temperature", 0.3);
-            body.put("max_tokens", maxTokens(detailLevel(cfg)));
+            body.put("max_tokens", tokens);
             body.put("stream", false);
             byte[] data = body.toString().getBytes(Charset.forName("UTF-8"));
 
@@ -435,7 +553,8 @@ public final class AiExplain {
                 r.error = "模型返回了空内容，换个模型试试";
                 return r;
             }
-            r.text = clip(text, detailLevel(cfg));
+            r.text = text;
+            r.truncated = lengthCut(raw);
             return r;
         } catch (SocketTimeoutException e) {
             r.error = "等太久了：模型没在 "
@@ -535,13 +654,32 @@ public final class AiExplain {
         return clip(text, DETAIL_STANDARD);
     }
 
+    /**
+     * 正文能翻页，这里只挡模型彻底跑飞；真要截也截在完整句子末尾，
+     * 不再用「硬切字符 + …」把孩子留在半句话上。
+     */
     static String clip(String text, int detail) {
-        String t = text == null ? "" : text.trim();
+        String t = tidy(text);
         int max = textLimit(detail);
         if (t.length() <= max) {
             return t;
         }
-        return t.substring(0, max) + "…";
+        String cut = t.substring(0, max);
+        int floor = Math.max(0, max - 200);
+        int end = -1;
+        for (int pass = 0; pass < 2 && end < 0; pass++) {
+            for (int i = cut.length() - 1; i >= floor; i--) {
+                char c = cut.charAt(i);
+                boolean stop = pass == 0
+                        ? (c == '。' || c == '！' || c == '？' || c == '\n')
+                        : (c == '，' || c == '；');
+                if (stop) {
+                    end = i + 1;
+                    break;
+                }
+            }
+        }
+        return (end > max / 2 ? cut.substring(0, end) : cut).trim();
     }
 
     static byte[] readAll(InputStream in) throws Exception {

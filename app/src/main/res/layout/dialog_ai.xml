@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AI 错题讲解面板（v1.10.5）：题目与对错信息在上，六段讲解正文占屏高 42%、在面板内翻页，底部「继续下一题」。
+  AI 错题讲解面板（v1.10.6）：题目与对错信息在上，四段讲解正文在面板内翻页，底部「继续下一题」按钮缩小。
   窗口高度由代码固定为屏高 70%（宽 82%），上下各留 15%；正文区用 weight 吃掉剩余空间，
   超长内容靠遥控器上下键在面板内翻页，标题与「继续下一题」始终完整可见。
 -->
@@ -53,16 +53,6 @@
             android:textSize="20sp" />
     </ScrollView>
 
-    <TextView
-        android:id="@+id/tvAiMore"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="↓ 还有内容 · 按遥控器上下键翻看"
-        android:textColor="@color/accent"
-        android:textSize="15sp"
-        android:visibility="gone" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -70,13 +60,31 @@
         android:gravity="right|center_vertical"
         android:orientation="horizontal">
 
+        <!-- v1.10.6：翻页提示与「继续下一题」同一水平线，靠 weight 占左侧剩余空间 -->
+        <TextView
+            android:id="@+id/tvAiMore"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="left|center_vertical"
+            android:text="↓ 还有内容 · 按遥控器上下键翻看"
+            android:textColor="@color/accent"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+        <!-- v1.10.6：按钮缩小一圈，别抢讲解正文的视觉重心；
+             style 里的 19sp/62dp/22dp 由这里的同名属性覆盖 -->
         <Button
             android:id="@+id/btnAiRetry"
             style="@style/TvButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minWidth="110dp"
+            android:minWidth="104dp"
+            android:minHeight="44dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
             android:text="重试"
+            android:textSize="15sp"
             android:visibility="gone" />
 
         <Button
@@ -84,8 +92,12 @@
             style="@style/TvButtonPrimary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="14dp"
-            android:minWidth="170dp"
-            android:text="继续下一题" />
+            android:layout_marginLeft="12dp"
+            android:minWidth="128dp"
+            android:minHeight="44dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:text="继续下一题"
+            android:textSize="15sp" />
     </LinearLayout>
 </LinearLayout>

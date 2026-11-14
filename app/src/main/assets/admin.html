@@ -1121,10 +1121,10 @@
             </div>
             <div class="f"><div class="lbl"><b>请求超时</b><small>模型太慢会自动放弃，答题流程不会卡住</small></div>
               <div class="ctl"><div class="stepper" data-key="aiTimeoutSeconds" data-min="5" data-max="60"></div><span class="unit">秒</span></div></div>
-            <div class="f"><div class="lbl"><b>讲解详细程度</b><small>六段结构：结论（直接给结果，不复述题目）→ 拆解（英语逐词、数学分步、语文字词）→ 逐个分析其余选项 → 举例（数笔画、认首字母等简单识记题自动跳过）→ 易错点（单复数、时态、介词、进位、形近字等）→ 举一反三。面板固定占屏高 70%、上下留白，按遥控器上下键翻看。改档后建议清空缓存，否则同一道错题仍读旧讲解</small></div>
+            <div class="f"><div class="lbl"><b>讲解详细程度</b><small>四段结构：结论（直接给结果，不复述题目）→ 拆解（英语逐词、数学分步、语文字词）→ 逐个分析其余选项 → 易错点（单复数、时态、介词、进位、形近字等）。已取消「举例」和「举一反三」，旧缓存里这两段也会自动清掉。拆解段不复述题干、不把数字读成中文。面板固定占屏高 70%、上下留白，按遥控器上下键翻看，每次只滚动一行、不会露出半行字，翻页提示与按钮同一水平线；讲解按完整句收尾，不会被字数腰斩。改档后建议清空缓存，否则同一道错题仍读旧讲解</small></div>
               <div class="ctl"><select id="aiDetail">
-                <option value="1">简明 · 约 150 字</option><option value="2" selected>标准 · 约 320 字</option>
-                <option value="3">详细 · 约 450 字</option>
+                <option value="1">简明 · 约 110 字</option><option value="2" selected>标准 · 约 240 字</option>
+                <option value="3">详细 · 约 370 字</option>
               </select></div></div>
             <div class="f"><div class="lbl"><b>连通与缓存</b><small id="aiTestHint">填完先点「测试连通」，通了再去电视上答错一题看效果。同一道题第二次直接读本机缓存，不再请求模型。</small></div>
               <div class="ctl"><button id="btnAiTest" class="mini" type="button" style="max-width:none">测试连通</button>

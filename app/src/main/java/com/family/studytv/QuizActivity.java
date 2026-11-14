@@ -1214,6 +1214,7 @@ public class QuizActivity extends Activity {
 
         final TextView body = (TextView) root.findViewById(R.id.tvAiBody);
         final TextView meta = (TextView) root.findViewById(R.id.tvAiMeta);
+        final TextView more = (TextView) root.findViewById(R.id.tvAiMore);
         final Button retry = (Button) root.findViewById(R.id.btnAiRetry);
         final Button close = (Button) root.findViewById(R.id.btnAiClose);
 
@@ -1269,15 +1270,27 @@ public class QuizActivity extends Activity {
                 if (scroll == null || body == null || body.getHeight() <= scroll.getHeight()) {
                     return false;
                 }
-                int step = Math.max(1, scroll.getHeight() - dpToPx(24));
-                int max = body.getHeight() - scroll.getHeight();
-                int y = scroll.getScrollY()
-                        + (keyCode == KeyEvent.KEYCODE_DPAD_DOWN ? step : -step);
-                y = Math.max(0, Math.min(max, y));
+                // 每按一次只换一行：落点天然是下一行/上一行的行首，上边缘不会露半行字
+                int[] tops = lineTops(body);
+                int maxY = Math.max(0, body.getHeight() - scroll.getHeight());
+                boolean down = keyCode == KeyEvent.KEYCODE_DPAD_DOWN;
+                int y = stepOneLine(tops, scroll.getScrollY(), down, maxY,
+                        body.getLineHeight());
                 if (y == scroll.getScrollY()) {
                     return false;   // 已经到顶/到底，把按键还给焦点系统
                 }
                 scroll.scrollTo(0, y);
+                int actual = scroll.getScrollY();
+                // ScrollView 会把落点 clamp 到它自己的最大滚动值，而那个值往往不是行首：
+                // 回读一次，不在行首就退到下面最近的行首，上边缘就不会再露出半行字。
+                if (!isLineTop(tops, actual)) {
+                    actual = nearestLineTopAtOrBelow(tops, actual);
+                    scroll.scrollTo(0, actual);
+                    actual = scroll.getScrollY();
+                }
+                if (more != null) {
+                    more.setVisibility(actual < maxSnapY(tops, maxY) ? View.VISIBLE : View.GONE);
+                }
                 return true;
             }
         });
@@ -1344,6 +1357,12 @@ public class QuizActivity extends Activity {
                 if (destroyed || body.getHeight() <= 0 || scroll.getHeight() <= 0) {
                     return;
                 }
+                // 末尾多留一行：最后一页也能让顶部落在整行上，不露半行文字
+                int lineH = Math.max(1, body.getLineHeight());
+                if (body.getPaddingBottom() < lineH) {
+                    body.setPadding(body.getPaddingLeft(), body.getPaddingTop(),
+                            body.getPaddingRight(), lineH);
+                }
                 if (more != null) {
                     more.setVisibility(body.getHeight() > scroll.getHeight() + 2
                             ? View.VISIBLE : View.GONE);
@@ -1352,8 +1371,91 @@ public class QuizActivity extends Activity {
         });
     }
 
-    private int dpToPx(int dp) {
-        return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
+    /** 取正文每一行的顶部坐标，用来把翻页落点对齐到整行 */
+    private static int[] lineTops(TextView body) {
+        Layout lay = body == null ? null : body.getLayout();
+        if (lay == null || lay.getLineCount() <= 0) {
+            return null;
+        }
+        int[] tops = new int[lay.getLineCount()];
+        for (int i = 0; i < tops.length; i++) {
+            tops[i] = lay.getLineTop(i);
+        }
+        return tops;
+    }
+
+    /** 最后一个「顶部仍是完整一行」的滚动位置 */
+    static int maxSnapY(int[] lineTops, int maxY) {
+        if (lineTops == null || lineTops.length == 0) {
+            return Math.max(0, maxY);
+        }
+        int best = 0;
+        for (int top : lineTops) {
+            if (top > maxY) {
+                break;
+            }
+            if (top > best) {
+                best = top;
+            }
+        }
+        return best;
+    }
+
+    /** 每按一次上/下键只滚动一行：取相邻的下一个/上一个行首 */
+    static int stepOneLine(int[] lineTops, int currentY, boolean down, int maxY, int lineHeight) {
+        if (lineTops == null || lineTops.length == 0) {
+            int step = Math.max(1, lineHeight);
+            return Math.max(0, Math.min(Math.max(0, maxY),
+                    currentY + (down ? step : -step)));
+        }
+        if (down) {
+            int max = maxSnapY(lineTops, maxY);
+            for (int top : lineTops) {
+                if (top > currentY + 1 && top <= max) {
+                    return top;
+                }
+            }
+            return max > currentY ? max : currentY;
+        }
+        int best = 0;
+        for (int top : lineTops) {
+            if (top >= currentY) {
+                break;
+            }
+            best = top;
+        }
+        return best;
+    }
+
+    /** 实际滚动位置是否正好落在某一行的行首 */
+    private static boolean isLineTop(int[] lineTops, int y) {
+        if (lineTops == null) {
+            return true;
+        }
+        for (int top : lineTops) {
+            if (top == y) {
+                return true;
+            }
+            if (top > y) {
+                break;
+            }
+        }
+        return false;
+    }
+
+    /** 被系统 clamp 到行中间时，退到它上面最近的行首 */
+    static int nearestLineTopAtOrBelow(int[] lineTops, int y) {
+        if (lineTops == null || lineTops.length == 0) {
+            return Math.max(0, y);
+        }
+        int best = 0;
+        for (int top : lineTops) {
+            if (top > y) {
+                break;
+            }
+            best = top;
+        }
+        return best;
     }
 
     /** 答完一题后推进：本组没完就下一题，到组尾按玩法判定是否通关 */

@@ -164,18 +164,19 @@ public class AiExplainTest {
         assertTrue("结论段不许复述题目", p.contains("禁止把题目复述一遍"));
         assertTrue("要逐词拆开讲", p.contains("【拆解】"));
         assertTrue("要逐个分析其余选项", p.contains("【看其他选项】"));
-        assertTrue("要举例", p.contains("【举个例子】"));
-        assertTrue("要讲易错点", p.contains("【易错点】"));
-        assertTrue("要举一反三", p.contains("【举一反三】"));
+        assertTrue("要讲易错点并收尾", p.contains("【易错点】"));
+        assertFalse("已取消举例段", p.contains("换掉数字或词，举一个同类型的例子"));
+        assertFalse("已取消举一反三段", p.contains("给一条下次也能用的规律"));
+        assertTrue("明确禁止再加这两段", p.contains("不许再加【举个例子】【举一反三】"));
         assertTrue("数学题要盯进位退位", p.contains("进位退位"));
         assertTrue("错因段要点名孩子选的那个选项", p.contains("「44」"));
-        assertTrue("标准档要有字数区间", p.contains("280–360 字"));
-        assertTrue("除举例外六段一段都不能少", p.contains("每一段都必须写出来"));
+        assertTrue("标准档要有字数区间", p.contains("200–280 字"));
+        assertTrue("四段一段都不能少", p.contains("四段都必须写出来"));
         assertTrue("段序：结论在最前", p.indexOf("【结论】") < p.indexOf("【拆解】"));
         assertTrue("段序：拆解在其他选项之前",
                 p.indexOf("【拆解】") < p.indexOf("【看其他选项】"));
-        assertTrue("段序：易错点在举一反三之前",
-                p.indexOf("【易错点】") < p.indexOf("【举一反三】"));
+        assertTrue("段序：易错点收尾",
+                p.indexOf("【看其他选项】") < p.indexOf("【易错点】"));
     }
 
     @Test
@@ -203,25 +204,26 @@ public class AiExplainTest {
     }
 
     @Test
-    public void 简明档六段结构不打折只是更短() {
+    public void 简明档四段结构不打折只是更短() {
         String p = AiExplain.buildPrompt("英语", 1, "She is eighteen. 的中文意思是？",
                 opts("喝点果汁吧", "她十八岁了"), 1, 0, AiExplain.DETAIL_BRIEF);
-        String[] tags = {"【结论】", "【拆解】", "【看其他选项】", "【举个例子】",
-                "【易错点】", "【举一反三】"};
+        String[] tags = {"【结论】", "【拆解】", "【看其他选项】", "【易错点】"};
         for (String t : tags) {
             assertTrue("简明档也要有 " + t, p.contains(t));
         }
-        assertTrue(p.contains("130–170 字"));
+        assertTrue(p.contains("90–130 字"));
         assertTrue(p.contains("「喝点果汁吧」"));
         assertTrue("英语题要盯时态单复数", p.contains("时态"));
+        assertTrue("讲完易错点立刻收尾", p.contains("讲完【易错点】立刻结束"));
     }
 
     @Test
     public void 详细档字数更长() {
         String p = AiExplain.buildPrompt("数学", 2, "8 ÷ 2 = ?",
                 opts("3", "4"), 1, 0, AiExplain.DETAIL_DEEP);
-        assertTrue(p.contains("400–500 字"));
-        assertTrue(p.contains("【举一反三】"));
+        assertTrue(p.contains("320–420 字"));
+        assertTrue(p.contains("【易错点】"));
+        assertFalse(p.contains("给一条下次也能用的规律"));
     }
 
     @Test
@@ -234,13 +236,13 @@ public class AiExplainTest {
     }
 
     @Test
-    public void 简单识记题允许整段跳过举例() {
+    public void 简单识记题也不再加举例和举一反三() {
         String p = AiExplain.buildPrompt("语文", 1, "「木」字有几画？",
                 opts("3", "4"), 1, 0);
-        assertTrue(p.contains("数笔画"));
-        assertTrue(p.contains("认首字母"));
-        assertTrue(p.contains("整段省略"));
-        assertTrue(p.contains("其余五段照写"));
+        assertTrue("四段照写", p.contains("四段都必须写出来"));
+        assertFalse(p.contains("数笔画、认首字母、背作者朝代这类"));
+        assertFalse(p.contains("这一段整段省略"));
+        assertTrue(p.contains("不许再加【举个例子】【举一反三】"));
     }
 
     @Test
@@ -276,13 +278,29 @@ public class AiExplainTest {
 
     @Test
     public void 按档位放大token与截断上限() throws Exception {
-        assertEquals(500, AiExplain.maxTokens(AiExplain.DETAIL_BRIEF));
-        assertEquals(1300, AiExplain.maxTokens(AiExplain.DETAIL_STANDARD));
-        assertEquals(1800, AiExplain.maxTokens(AiExplain.DETAIL_DEEP));
+        assertEquals(900, AiExplain.maxTokens(AiExplain.DETAIL_BRIEF));
+        assertEquals(2400, AiExplain.maxTokens(AiExplain.DETAIL_STANDARD));
+        assertEquals(3200, AiExplain.maxTokens(AiExplain.DETAIL_DEEP));
+        assertTrue("标准档 token 要远大于目标字数，不能再把四段腰斩",
+                AiExplain.maxTokens(AiExplain.DETAIL_STANDARD) > 6 * 280);
         assertTrue("详细档不能被标准档的长度腰斩",
                 AiExplain.textLimit(AiExplain.DETAIL_DEEP) > AiExplain.textLimit(AiExplain.DETAIL_STANDARD));
         assertEquals(AiExplain.DETAIL_DEEP,
                 AiExplain.detailLevel(new JSONObject().put("aiDetail", 3)));
+    }
+
+    @Test
+    public void 提示词禁止读数字和复述题干() {
+        String p = AiExplain.buildPrompt("数学", 3, "487 - 199 = ?",
+                opts("278", "288"), 1, 0);
+        assertTrue("数学【拆解】要直接讲演算", p.contains("直接讲数量关系与分步演算"));
+        assertTrue(p.contains("禁止把题干里的数字用中文读一遍"));
+        assertTrue(p.contains("487 是四百八十七"));
+        assertTrue("全局禁令：不写废话", p.contains("所有段落一律不写废话"));
+        assertTrue("不许把题目原文再抄一遍", p.contains("不把题目或选项原文再抄一遍"));
+        assertTrue("要求每段收在完整句上", p.contains("【易错点】必须写完并以句号结束"));
+        assertTrue("不许停在半句", p.contains("不要停在"));
+        assertTrue("四段齐全优先", p.contains("先保证四段齐全"));
     }
 
     // ------------------------------------------------------------------ 响应解析
@@ -303,16 +321,94 @@ public class AiExplainTest {
     }
 
     @Test
-    public void 超长讲解按档位截断() {
+    public void 超长讲解按完整句截断且不留省略号() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 1500; i++) {
+        for (int i = 0; i < 3000; i++) {
             sb.append('讲');
+            if (i % 40 == 39) {
+                sb.append('。');
+            }
         }
-        assertEquals(281, AiExplain.clip(sb.toString(), AiExplain.DETAIL_BRIEF).length());
-        assertEquals(621, AiExplain.clip(sb.toString()).length());
-        assertEquals(1001, AiExplain.clip(sb.toString(), AiExplain.DETAIL_DEEP).length());
-        assertTrue(AiExplain.clip(sb.toString()).endsWith("…"));
+        String raw = sb.toString();
+        String brief = AiExplain.clip(raw, AiExplain.DETAIL_BRIEF);
+        String std = AiExplain.clip(raw);
+        String deep = AiExplain.clip(raw, AiExplain.DETAIL_DEEP);
+        assertTrue("简明档要短于标准档：" + brief.length(), brief.length() < std.length());
+        assertTrue("详细档要长于标准档：" + deep.length(), deep.length() > std.length());
+        assertTrue("简明档不得超过上限", brief.length() <= AiExplain.textLimit(AiExplain.DETAIL_BRIEF));
+        assertTrue("标准档不得超过上限", std.length() <= AiExplain.textLimit(AiExplain.DETAIL_STANDARD));
+        assertTrue("截断处必须落在句号上，别把孩子留在半句话", std.endsWith("。"));
+        assertFalse("不再追加省略号", std.endsWith("…"));
         assertEquals("短文本原样返回", "三句话讲完", AiExplain.clip("  三句话讲完  "));
+    }
+
+    @Test
+    public void 正常四段讲解不会被本地截断() {
+        String text = "【结论】正确答案是 D，288。\n【拆解】减 199 可以先减 200 再补回 1。\n"
+                + "【看其他选项】A 少减了 1。\n【易错点】多减了要加回来。";
+        assertEquals(text, AiExplain.clip(text));
+    }
+
+    @Test
+    public void 已取消的两段会被清洗掉且保留其余四段() {
+        String old = "【结论】正确答案是 D，288。\n【拆解】减 199 可以先减 200。\n"
+                + "【看其他选项】A 少减了 1。\n【举个例子】623 减 198 等于 425。\n"
+                + "【易错点】多减了要加回来。\n【举一反三】变式：712 减 297。";
+        String tidy = AiExplain.tidy(old);
+        for (String tag : new String[]{"【结论】", "【拆解】", "【看其他选项】", "【易错点】"}) {
+            assertTrue("保留 " + tag + "：" + tidy, tidy.contains(tag));
+        }
+        assertFalse("举例段已取消：" + tidy, tidy.contains("623 减 198"));
+        assertFalse("举一反三段已取消：" + tidy, tidy.contains("712 减 297"));
+        assertTrue(tidy.endsWith("多减了要加回来。"));
+        assertEquals("清洗幂等", tidy, AiExplain.tidy(tidy));
+    }
+
+    @Test
+    public void 拆解里的读数废话会被清掉() {
+        String raw = "【拆解】487 是四百八十七，199 是一百九十九。减 199，可以先减 200，再补回 1。";
+        String tidy = AiExplain.tidy(raw);
+        assertFalse("不能再出现把数字读成中文：" + tidy, tidy.contains("四百八十七"));
+        assertFalse(tidy.contains("一百九十九"));
+        assertTrue("演算内容必须保留", tidy.contains("可以先减 200"));
+        assertTrue(tidy.startsWith("【拆解】减 199"));
+        assertEquals("清洗幂等", tidy, AiExplain.tidy(tidy));
+        assertFalse("不能留下孤立句号或连续标点", tidy.contains("【拆解】。"));
+    }
+
+    @Test
+    public void 清洗不误伤有效公式与讲解() {
+        String raw = "【拆解】$\\frac{1}{2}$ 是二分之一，287 加 1 等于 288。";
+        String tidy = AiExplain.tidy(raw);
+        assertTrue(tidy.contains("$\\frac{1}{2}$ 是二分之一"));
+        assertTrue(tidy.contains("287 加 1 等于 288"));
+    }
+
+    @Test
+    public void 旧缓存读出来也会清掉读数废话() {
+        AiExplain.putCache(ctx, "q-filler", "【拆解】487 是四百八十七。减 199 可以先减 200。");
+        String hit = AiExplain.cached(ctx, "q-filler");
+        assertNotNull(hit);
+        assertFalse("旧缓存不该再把废话显示出来：" + hit, hit.contains("四百八十七"));
+        assertTrue(hit.contains("可以先减 200"));
+    }
+
+    @Test
+    public void 识别模型侧token腰斩并去掉半句() {
+        String cut = "{\"choices\":[{\"finish_reason\":\"length\","
+                + "\"message\":{\"content\":\"【易错点】口诀是减整百，看差几，多减了就\"}}]}";
+        String ok = "{\"choices\":[{\"finish_reason\":\"stop\","
+                + "\"message\":{\"content\":\"【易错点】口诀是减整百，看差几，多减了就加回来。\"}}]}";
+        assertTrue(AiExplain.lengthCut(cut));
+        assertFalse(AiExplain.lengthCut(ok));
+        assertFalse(AiExplain.lengthCut("{}"));
+        assertFalse(AiExplain.lengthCut(null));
+        assertEquals("【易错点】口诀是减整百，看差几，多减了就加回来。", AiExplain.pickContent(ok));
+        assertEquals("没写完的最后一段整段丢掉", "【结论】正确答案是 D，288。",
+                AiExplain.dropHalfSentence("【结论】正确答案是 D，288。\n"
+                        + "【易错点】口诀是减整百，看差几，多减了就"));
+        assertEquals("完整的句子原样保留", "口诀是减整百，看差几，多减了就加回来。",
+                AiExplain.dropHalfSentence("口诀是减整百，看差几，多减了就加回来。"));
     }
 
     @Test
