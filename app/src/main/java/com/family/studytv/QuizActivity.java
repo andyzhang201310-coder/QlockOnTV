@@ -27,11 +27,13 @@ import android.text.style.ReplacementSpan;
 import android.util.DisplayMetrics;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.Space;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -147,6 +149,7 @@ public class QuizActivity extends Activity {
     private TextView tvClock;
     private TextView tvQuestion;
     private TextView tvFeedback;
+    private TextView tvQuizHint;
     private LinearLayout optionBox;
     private ScrollView quizScroll;
 
@@ -246,6 +249,7 @@ public class QuizActivity extends Activity {
         }
         tvQuestion = (TextView) findViewById(R.id.tvQuestion);
         tvFeedback = (TextView) findViewById(R.id.tvFeedback);
+        tvQuizHint = (TextView) findViewById(R.id.tvQuizHint);
         optionBox = (LinearLayout) findViewById(R.id.optionBox);
         quizScroll = (ScrollView) findViewById(R.id.quizScroll);
         aiRow = (LinearLayout) findViewById(R.id.aiRow);
@@ -399,9 +403,150 @@ public class QuizActivity extends Activity {
      * 字母徽标与悬挂缩进都按当前字号绘制，字号 / 配色一变必须重画，
      * 光改 textSize 或 textColor 会让徽标错位。
      */
+    // ---- 短答案两列布局（v1.10.1）------------------------------------------
+
+    /** 渲染后可读文字不超过这么长，才允许两列；长答案仍走原来的四行，避免挤成多行。 */
+    static final int COMPACT_MAX = 12;
+
+    /**
+     * 数学的分数、单位、字母公式这类短答案排成 2×2，四行太长还会把最后一项挤出首屏。
+     * 判据用 RichText 渲染后的长度：$\frac{17}{30}$ 原文 14 字符，屏上只是一个分数占位符。
+     */
+    static boolean useCompactGrid(List<String> options) {
+        if (options == null || options.size() < 2 || options.size() > 4) {
+            return false;
+        }
+        for (String s : options) {
+            if (s == null) {
+                return false;
+            }
+            CharSequence r = RichText.render(s, 24f);
+            String t = (r == null ? s : r.toString()).trim();
+            if (t.length() > COMPACT_MAX) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** 递归收集选项按钮：两列时 optionBox 的直接子 View 是行容器，不能按索引取。 */
+    private List<Button> optionButtons() {
+        List<Button> out = new ArrayList<Button>();
+        collectButtons(optionBox, out);
+        return out;
+    }
+
+    private static void collectButtons(View v, List<Button> out) {
+        if (v instanceof Button) {
+            out.add((Button) v);
+            return;
+        }
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) {
+                collectButtons(g.getChildAt(i), out);
+            }
+        }
+    }
+
+    private void buildOptionViews(List<String> options) {
+        optionBox.removeAllViews();
+        boolean grid = useCompactGrid(options);
+        int n = options.size();
+        int cols = grid ? 2 : 1;
+        for (int k = 0; k < n; k += cols) {
+            LinearLayout row = null;
+            if (grid) {
+                row = new LinearLayout(this);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                row.setBaselineAligned(false);
+                row.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT));
+                optionBox.addView(row);
+            }
+            int end = Math.min(n, k + cols);
+            for (int idx = k; idx < end; idx++) {
+                Button b = (Button) getLayoutInflater().inflate(
+                        R.layout.item_option, optionBox, false);
+                if (grid) {
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+                    lp.setMargins(idx == k ? 0 : px(b, 8f), px(b, 5f), 0, 0);
+                    b.setLayoutParams(lp);
+                }
+                setOptionText(b, idx, options.get(idx), null, null);
+                if (grid) {
+                    // 两列只有半屏宽，左右留白收紧，短答案不会被字母徽标挤到第二行
+                    b.setPadding(px(b, 16f), b.getPaddingTop(),
+                            px(b, 16f), b.getPaddingBottom());
+                }
+                final int choice = idx;
+                b.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        answer(choice);
+                    }
+                });
+                b.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                    @Override
+                    public void onFocusChange(View v, boolean hasFocus) {
+                        if (hasFocus) {
+                            ensureVisible(v);
+                        }
+                    }
+                });
+                if (grid) {
+                    row.addView(b);
+                } else {
+                    optionBox.addView(b);
+                }
+            }
+            if (grid && end - k == 1) {
+                Space sp = new Space(this);
+                sp.setLayoutParams(new LinearLayout.LayoutParams(0, 0, 1f));
+                row.addView(sp);
+            }
+        }
+        if (grid) {
+            bindGridFocus();
+        }
+    }
+
+    /** 遥控器四个方向要能按「行/列」走，不能全靠系统按位置猜。 */
+    private void bindGridFocus() {
+        List<Button> bs = optionButtons();
+        for (Button b : bs) {
+            if (b.getId() == View.NO_ID) {
+                b.setId(View.generateViewId());
+            }
+        }
+        for (int i = 0; i < bs.size(); i++) {
+            Button b = bs.get(i);
+            if (i % 2 == 0 && i + 1 < bs.size()) {
+                b.setNextFocusRightId(bs.get(i + 1).getId());
+            }
+            if (i % 2 == 1) {
+                b.setNextFocusLeftId(bs.get(i - 1).getId());
+            }
+            if (i + 2 < bs.size()) {
+                b.setNextFocusDownId(bs.get(i + 2).getId());
+            }
+            if (i - 2 >= 0) {
+                b.setNextFocusUpId(bs.get(i - 2).getId());
+            }
+        }
+    }
+
     private void setOptionText(Button b, int k, String text, String suffix, String role) {
         applyOptionFont(b);
         Theme.flatten(b);   // 去掉 Button 自带的 2dp 投影，浅色风格下圆角才不会浮灰边
+        // v1.10.1：真分数行被 RichText 抬到 2 倍字高，四个选项会把最后一项挤出首屏。
+        // 只在含公式时收紧额外行距和上下 padding；纯文本题的观感一点不动。
+        boolean math = RichText.hasMarkup(text);
+        int padV = px(b, math ? 3f : 8f);
+        b.setPadding(b.getPaddingLeft(), padV, b.getPaddingRight(), padV);
+        b.setLineSpacing(px(b, math ? 0f : 4f), 1f);
         String r = role == null ? "" : role;
         b.setTag(new String[]{text, suffix == null ? "" : suffix, r});
         b.setTextColor(optionTextColor(r));
@@ -412,12 +557,9 @@ public class QuizActivity extends Activity {
 
     /** 按当前配色与字号重画已显示的选项，不改题目、不改进度、不打断揭示 */
     private void repaintOptions() {
-        for (int k = 0; k < optionBox.getChildCount(); k++) {
-            View v = optionBox.getChildAt(k);
-            if (!(v instanceof Button)) {
-                continue;
-            }
-            Button b = (Button) v;
+        List<Button> bs = optionButtons();
+        for (int k = 0; k < bs.size(); k++) {
+            Button b = bs.get(k);
             Object tag = b.getTag();
             if (!(tag instanceof String[])) {
                 continue;
@@ -686,29 +828,10 @@ public class QuizActivity extends Activity {
         setRich(tvQuestion, it.q.q);
         applyQuestionFont();
 
-        optionBox.removeAllViews();
-        for (int k = 0; k < it.options.size(); k++) {
-            Button b = (Button) getLayoutInflater().inflate(R.layout.item_option, optionBox, false);
-            setOptionText(b, k, it.options.get(k), null, null);
-            final int choice = k;
-            b.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    answer(choice);
-                }
-            });
-            b.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if (hasFocus) {
-                        ensureVisible(v);
-                    }
-                }
-            });
-            optionBox.addView(b);
-        }
-        if (optionBox.getChildCount() > 0) {
-            optionBox.getChildAt(0).requestFocus();
+        buildOptionViews(it.options);
+        List<Button> first = optionButtons();
+        if (!first.isEmpty()) {
+            first.get(0).requestFocus();
         }
         scrollToTop();
     }
@@ -1171,12 +1294,9 @@ public class QuizActivity extends Activity {
     /** 揭示答案：正确项标绿并加文字，选错项标红，其余变暗，同时锁住点击 */
     private void revealAnswer(Item it, int choice) {
         Button correctView = null;
-        for (int k = 0; k < optionBox.getChildCount() && k < it.options.size(); k++) {
-            View v = optionBox.getChildAt(k);
-            if (!(v instanceof Button)) {
-                continue;
-            }
-            Button b = (Button) v;
+        List<Button> bs = optionButtons();
+        for (int k = 0; k < bs.size() && k < it.options.size(); k++) {
+            Button b = bs.get(k);
             if (k == it.answer) {
                 setOptionText(b, k, it.options.get(k), "    ← 正确答案", "ok");
                 correctView = b;
@@ -1202,12 +1322,21 @@ public class QuizActivity extends Activity {
         tvFeedback.setText(text == null ? ""
                 : RichText.render(text, tvFeedback.getTextSize()));
         // 未答题时反馈卡片不占位，四个短答案选项能同屏显示完整
-        tvFeedback.setVisibility(text == null || text.length() == 0 ? View.GONE : View.VISIBLE);
-        // 反馈条出现会挤压可视区，保证当前选项（尤其是最后一个）不被裁掉
+        boolean shown = text != null && text.length() > 0;
+        tvFeedback.setVisibility(shown ? View.VISIBLE : View.GONE);
+        // 反馈条 + AI 按钮一起出现会挤矮滚动区，收起底部操作提示把高度还给选项，
+        // 否则真分数题（行高翻倍）的最后一个选项分母会被裁掉。
+        if (tvQuizHint != null) {
+            tvQuizHint.setVisibility(shown ? View.GONE : View.VISIBLE);
+        }
+        // 保证当前选项（尤其是最后一个）不被裁掉
         if (tvFeedback.getVisibility() == View.VISIBLE) {
             View focus = getCurrentFocus();
-            if (focus == null && optionBox.getChildCount() > 0) {
-                focus = optionBox.getChildAt(optionBox.getChildCount() - 1);
+            if (focus == null) {
+                List<Button> bs = optionButtons();
+                if (!bs.isEmpty()) {
+                    focus = bs.get(bs.size() - 1);
+                }
             }
             ensureVisible(focus);
         }

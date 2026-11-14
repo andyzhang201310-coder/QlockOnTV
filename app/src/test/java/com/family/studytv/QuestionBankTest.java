@@ -1,11 +1,14 @@
 package com.family.studytv;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -639,5 +642,106 @@ public class QuestionBankTest {
             }
         }
         assertTrue("至少应检查到 50 道分数题（实际 " + checked + "）", checked >= 50);
+    }
+
+    // ---- v1.10.1：家长自定义题库也能自动拿到 LaTeX 题面 -------------------
+
+    private static String item(String id, String q, String... opts) throws Exception {
+        JSONObject o = new JSONObject();
+        o.put("id", id);
+        o.put("subject", "数学");
+        o.put("grade", "5");
+        o.put("q", q);
+        JSONArray arr = new JSONArray();
+        for (String s : opts) {
+            arr.put(s);
+        }
+        o.put("options", arr);
+        o.put("answer", 0);
+        o.put("difficulty", 3);
+        return o.toString();
+    }
+
+    private static String bank(int version, String... items) throws Exception {
+        JSONObject o = new JSONObject();
+        o.put("version", version);
+        o.put("name", "测试题库");
+        JSONArray arr = new JSONArray();
+        for (String it : items) {
+            arr.put(new JSONObject(it));
+        }
+        o.put("questions", arr);
+        o.put("count", items.length);
+        return o.toString();
+    }
+
+    @Test
+    public void toLegacyRevertsOnlyTheTwoFormulaShapes() {
+        assertEquals("6/8 + 1/8 = ?",
+                QuestionBank.toLegacy("$\\frac{6}{8}$ + $\\frac{1}{8}$ = ?"));
+        assertEquals("x/2 + 3 = 8", QuestionBank.toLegacy("$\\frac{x}{2}$ + 3 = 8"));
+        assertEquals("πr²", QuestionBank.toLegacy("π$r^{2}$"));
+        assertEquals("S = a³", QuestionBank.toLegacy("S = $a^{3}$"));
+        assertEquals("没有公式", QuestionBank.toLegacy("没有公式"));
+    }
+
+    @Test
+    public void pristineOldBankIsReplacedByBuiltinAsset() throws Exception {
+        String cur = bank(7,
+                item("m1", "6/8 + 1/8 = ?", "7/8", "7/16"),
+                item("m2", "πr²", "2πr", "πr²"));
+        String asset = bank(8,
+                item("m1", "$\\frac{6}{8}$ + $\\frac{1}{8}$ = ?", "$\\frac{7}{8}$", "$\\frac{7}{16}$"),
+                item("m2", "π$r^{2}$", "2πr", "π$r^{2}$"));
+        QuestionBank.Migration m = QuestionBank.migrateMathText(cur, asset);
+        assertTrue("整库无自定义痕迹应判为 pristine", m.pristine);
+        assertEquals("pristine 时直接用内置题库原文", asset, m.json);
+        assertTrue("应统计到迁移字段", m.changed > 0);
+    }
+
+    @Test
+    public void customBankKeepsParentEditsButMigratesOfficialQuestions() throws Exception {
+        String cur = bank(7,
+                item("m1", "6/8 + 1/8 = ?", "7/8", "7/16"),
+                item("m2", "家长自己改的题干", "选项一", "选项二"),
+                item("mine-1", "我加的题", "A", "B"));
+        String asset = bank(8,
+                item("m1", "$\\frac{6}{8}$ + $\\frac{1}{8}$ = ?", "$\\frac{7}{8}$", "$\\frac{7}{16}$"),
+                item("m2", "π$r^{2}$", "2πr", "π$r^{2}$"));
+        QuestionBank.Migration m = QuestionBank.migrateMathText(cur, asset);
+        assertFalse("有自定义题不该判为 pristine", m.pristine);
+        assertTrue("应发生迁移", m.changed > 0);
+        assertNotNull(m.json);
+        JSONObject out = new JSONObject(m.json);
+        assertEquals("version 要一起升，否则每次启动都重扫", 8, out.optInt("version"));
+        JSONArray qs = out.getJSONArray("questions");
+        assertEquals("三道题一道都不能少", 3, qs.length());
+        assertEquals("$\\frac{6}{8}$ + $\\frac{1}{8}$ = ?", qs.getJSONObject(0).getString("q"));
+        assertEquals("家长改过的题干必须保留", "家长自己改的题干", qs.getJSONObject(1).getString("q"));
+        assertEquals("家长改过的选项必须保留", "选项一",
+                qs.getJSONObject(1).getJSONArray("options").getString(0));
+        assertEquals("家长自己加的题必须保留", "我加的题", qs.getJSONObject(2).getString("q"));
+        assertEquals("家长自己加的题的选项也要保留", "A",
+                qs.getJSONObject(2).getJSONArray("options").getString(0));
+    }
+
+    @Test
+    public void migrationIsIdempotent() throws Exception {
+        String cur = bank(8, item("m1", "$\\frac{6}{8}$ = ?", "$\\frac{3}{4}$", "$\\frac{1}{2}$"));
+        QuestionBank.Migration m = QuestionBank.migrateMathText(cur, cur);
+        assertTrue(m.pristine);
+        assertEquals("已是新版时不该再改任何字段", 0, m.changed);
+    }
+
+    @Test
+    public void brokenCustomBankIsLeftAlone() {
+        QuestionBank.Migration m = QuestionBank.migrateMathText(
+                "{坏 JSON", "{\"version\":8,\"questions\":[]}");
+        assertNull("解析失败时绝不能写坏家长的题库", m.json);
+    }
+
+    @Test
+    public void versionReadsOnlyTheFileHeader() {
+        assertEquals("内置题库版本应能被 /api/state 轻量读出", 8, QuestionBank.get().version());
     }
 }

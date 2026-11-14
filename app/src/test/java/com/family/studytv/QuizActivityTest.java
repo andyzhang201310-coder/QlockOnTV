@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.robolectric.Shadows.shadowOf;
 
 import android.app.Dialog;
@@ -65,6 +66,26 @@ public class QuizActivityTest {
         return ((TextView) activity.findViewById(R.id.tvProgress)).getText().toString();
     }
 
+    /** 短答案排成两列后 optionBox 的直接子 View 可能是行容器，取按钮要递归。 */
+    private static java.util.List<Button> buttonsIn(View root) {
+        java.util.List<Button> out = new java.util.ArrayList<Button>();
+        collectButtons(root, out);
+        return out;
+    }
+
+    private static void collectButtons(View v, java.util.List<Button> out) {
+        if (v instanceof Button) {
+            out.add((Button) v);
+            return;
+        }
+        if (v instanceof android.view.ViewGroup) {
+            android.view.ViewGroup g = (android.view.ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) {
+                collectButtons(g.getChildAt(i), out);
+            }
+        }
+    }
+
     private String optionText(Button b) {
         return b.getText().toString().replaceFirst("^[A-F]\\s+", "").trim();
     }
@@ -73,8 +94,8 @@ public class QuizActivityTest {
     private java.util.List<String> shownOptions() {
         LinearLayout box = (LinearLayout) activity.findViewById(R.id.optionBox);
         java.util.List<String> out = new java.util.ArrayList<String>();
-        for (int i = 0; i < box.getChildCount(); i++) {
-            out.add(optionText((Button) box.getChildAt(i)));
+        for (Button b : buttonsIn(box)) {
+            out.add(optionText(b));
         }
         return out;
     }
@@ -113,18 +134,18 @@ public class QuizActivityTest {
         String qText = ((TextView) activity.findViewById(R.id.tvQuestion)).getText().toString();
 
         LinearLayout box = (LinearLayout) activity.findViewById(R.id.optionBox);
-        assertTrue("每题应有多个选项", box.getChildCount() >= 2);
+        java.util.List<Button> buttons = buttonsIn(box);
+        assertTrue("每题应有多个选项", buttons.size() >= 2);
 
         java.util.List<String> shown = new java.util.ArrayList<String>();
-        for (int i = 0; i < box.getChildCount(); i++) {
-            shown.add(optionText((Button) box.getChildAt(i)));
+        for (Button b : buttons) {
+            shown.add(optionText(b));
         }
         String right = correctTextOf(qText, shown);
         assertNotNull("题目应来自题库：" + qText, right);
 
         Button target = null;
-        for (int i = 0; i < box.getChildCount(); i++) {
-            Button b = (Button) box.getChildAt(i);
+        for (Button b : buttons) {
             if (optionText(b).equals(right) == correct) {
                 target = b;
                 break;
@@ -139,7 +160,7 @@ public class QuizActivityTest {
     public void savedFontScaleRefreshesLiveQuizImmediately() throws Exception {
         TextView question = (TextView) activity.findViewById(R.id.tvQuestion);
         LinearLayout box = (LinearLayout) activity.findViewById(R.id.optionBox);
-        Button first = (Button) box.getChildAt(0);
+        Button first = buttonsIn(box).get(0);
         float q0 = question.getTextSize();
         float o0 = first.getTextSize();
         String stem0 = question.getText().toString();
@@ -176,7 +197,7 @@ public class QuizActivityTest {
     public void savedEyeCareThemeRepaintsLiveQuizImmediately() {
         TextView question = (TextView) activity.findViewById(R.id.tvQuestion);
         LinearLayout box = (LinearLayout) activity.findViewById(R.id.optionBox);
-        Button first = (Button) box.getChildAt(0);
+        Button first = buttonsIn(box).get(0);
         String stem0 = question.getText().toString();
         Theme.Palette paper = Theme.of("paper");
         try {
@@ -233,8 +254,8 @@ public class QuizActivityTest {
         LinearLayout box = (LinearLayout) activity.findViewById(R.id.optionBox);
         boolean markedCorrect = false;
         boolean markedWrong = false;
-        for (int i = 0; i < box.getChildCount(); i++) {
-            String t = ((Button) box.getChildAt(i)).getText().toString();
+        for (Button b : buttonsIn(box)) {
+            String t = b.getText().toString();
             if (t.contains("← 正确答案")) {
                 markedCorrect = true;
                 assertTrue("标绿的应当是真实正确答案", t.contains(right));
@@ -253,7 +274,7 @@ public class QuizActivityTest {
         assertTrue(Prefs.isPending());
 
         // ② 揭示期间再点选项不生效（还在同一题）
-        ((Button) box.getChildAt(0)).performClick();
+        buttonsIn(box).get(0).performClick();
         assertEquals("揭示答案期间点击应被忽略", "第 3 / 5 题", progress());
 
         // ③ 等够时间 → 换一组新题，从第 1 题开始
@@ -441,9 +462,9 @@ public class QuizActivityTest {
         // v1.8.3：Material Button 自带 2dp elevation，深色底看不出来，
         // 换羊皮纸 / 豆沙绿 / 雾蓝灰后圆角外会浮出一圈灰边
         LinearLayout box = activity.findViewById(R.id.optionBox);
-        assertTrue("应已渲染出选项", box.getChildCount() > 0);
-        for (int i = 0; i < box.getChildCount(); i++) {
-            View v = box.getChildAt(i);
+        java.util.List<Button> bs = buttonsIn(box);
+        assertTrue("应已渲染出选项", bs.size() > 0);
+        for (Button v : bs) {
             assertEquals("选项不应有投影高度", 0f, v.getElevation(), 0.01f);
             assertNull("选项不应带按压抬升动画", v.getStateListAnimator());
         }
@@ -491,5 +512,66 @@ public class QuizActivityTest {
             assertNotNull("键盘上应有按键 " + c, v);
             v.performClick();
         }
+    }
+
+    // ---- v1.10.1：短答案两列布局 -----------------------------------------
+
+    @Test
+    public void compactGridAcceptsShortMathAnswers() {
+        assertTrue("LaTeX 分数原文虽长，屏上只是一个分数占位符",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList(
+                        "$\\frac{1}{15}$", "$\\frac{17}{30}$",
+                        "$\\frac{16}{15}$", "$\\frac{2}{15}$")));
+        assertTrue("普通短单位也应两列",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList(
+                        "4000 立方厘米", "400 立方厘米",
+                        "40000 立方厘米", "5000 立方厘米")));
+        assertTrue("判断题两个短选项排成一行两列",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList("对", "错")));
+        assertTrue("字母公式也算短答案",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList(
+                        "π$r^{2}$", "2πr", "πd", "2π$r^{2}$")));
+    }
+
+    @Test
+    public void compactGridRejectsLongAnswers() {
+        assertFalse("长诗句不能挤进半屏宽",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList(
+                        "鹅，鹅，鹅，曲项向天歌，白毛浮绿水", "白毛浮绿水",
+                        "红掌拨清波", "春眠不觉晓")));
+        assertFalse("只要有一个长选项就整体回退四行",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList(
+                        "$\\frac{1}{2}$", "$\\frac{1}{3}$", "$\\frac{1}{4}$",
+                        "以上答案都需要详细的文字说明才能判断")));
+    }
+
+    @Test
+    public void compactGridHandlesBoundaries() {
+        assertFalse(QuizActivity.useCompactGrid(null));
+        assertFalse("只有一个选项不排两列",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList("A")));
+        assertFalse("超过四个选项不排两列",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList(
+                        "1", "2", "3", "4", "5")));
+        assertTrue("恰好 12 字仍算短",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList(
+                        "123456789012", "A", "B", "C")));
+        assertFalse("13 字回退四行",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList(
+                        "1234567890123", "A", "B", "C")));
+        assertFalse("含 null 选项回退",
+                QuizActivity.useCompactGrid(java.util.Arrays.asList(
+                        "A", null, "C", "D")));
+    }
+
+    @Test
+    public void fractionQuestionsFromBankUseGrid() {
+        for (QuestionBank.Question q : QuestionBank.get().all()) {
+            if ("g5-math-237".equals(q.id)) {
+                assertTrue("题库里的分数题应走两列", QuizActivity.useCompactGrid(q.options));
+                return;
+            }
+        }
+        fail("题库里应有 g5-math-237");
     }
 }

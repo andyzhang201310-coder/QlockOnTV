@@ -1416,6 +1416,8 @@ public class HttpServer {
             o.put("countBySubjectGrade", subGrade);
             o.put("bankSize", QuestionBank.get().size());
             o.put("questionCount", QuestionBank.get().count());
+            o.put("bankVersion", QuestionBank.get().version());
+            o.put("bankCustom", Prefs.bankCustom());
             // 难度星级分布（1–5 星），后台题库页按星筛题/看分布用
             JSONObject byStar = new JSONObject();
             for (Map.Entry<Integer, Integer> e : QuestionBank.get().countByDifficulty().entrySet()) {

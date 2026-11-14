@@ -15,12 +15,17 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 题库：文件保存在 /data/data/包名/files/questions.json，首次运行从 assets 释放。
@@ -85,11 +90,25 @@ public final class QuestionBank {
                     return;
                 }
                 if (file.exists() && file.length() > 32) {
-                    if (Prefs.bankCustom()) {
+                    String cur = readFile(file);
+                    int assetVer = versionOf(asset);
+                    if (versionOf(cur) >= assetVer) {
                         return;
                     }
-                    String cur = readFile(file);
-                    if (versionOf(cur) >= versionOf(asset)) {
+                    if (Prefs.bankCustom()) {
+                        // 家长改过题库：整库覆盖会丢他自己的题，但也不能让内置题的
+                        // 排版修复永远到不了设备。只按 id 迁移「确认为官方旧版题面」的字段。
+                        Migration m = migrateMathText(cur, asset);
+                        if (m == null || m.json == null) {
+                            return;
+                        }
+                        try {
+                            atomicWrite(backup, cur);
+                        } catch (Throwable ignored) {
+                        }
+                        atomicWrite(file, m.json);
+                        cache = null;
+                        rawCache = null;
                         return;
                     }
                     try {
@@ -126,6 +145,169 @@ public final class QuestionBank {
             return ((JSONObject) root).optInt("version", 0);
         } catch (Throwable e) {
             return 0;
+        }
+    }
+
+    // ---- 自定义题库的题面迁移（v1.10.1）----------------------------------
+
+    /** migrateMathText 的结果：json 为 null 表示不该动设备文件 */
+    static final class Migration {
+        String json;
+        int changed;
+        boolean pristine;
+    }
+
+    /** 新版内置题库里只用了这两种公式：$\frac{a}{b}$ 与 $x^{2}$/$x^{3}$。 */
+    private static final Pattern RE_VERSION =
+            Pattern.compile("\"version\"\\s*:\\s*(\\d+)");
+
+    /** 只扫文件头，避免每次 /api/state 都全量 parse 4.5 MB 题库。 */
+    public int version() {
+        synchronized (lock) {
+            try {
+                String s = rawJson();
+                if (s == null) {
+                    return 0;
+                }
+                Matcher m = RE_VERSION.matcher(s.substring(0, Math.min(256, s.length())));
+                return m.find() ? Integer.parseInt(m.group(1)) : 0;
+            } catch (Throwable t) {
+                return 0;
+            }
+        }
+    }
+
+    private static final Pattern RE_LEGACY_FRAC =
+            Pattern.compile("\\$\\\\frac\\{([^{}]+)\\}\\{([^{}]+)\\}\\$");
+    private static final Pattern RE_LEGACY_SUP =
+            Pattern.compile("\\$([^{}$]+)\\^\\{([23])\\}\\$");
+
+    /** 把新版 LaTeX 题面降级回 v7 的斜杠写法，用来判断设备上的题是不是官方原文。 */
+    static String toLegacy(String latex) {
+        if (latex == null || latex.indexOf('$') < 0) {
+            return latex;
+        }
+        String s = RE_LEGACY_FRAC.matcher(latex).replaceAll("$1/$2");
+        Matcher m = RE_LEGACY_SUP.matcher(s);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String sup = "2".equals(m.group(2)) ? "\u00b2" : "\u00b3";
+            m.appendReplacement(sb, Matcher.quoteReplacement(m.group(1) + sup));
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    private static boolean sameMeta(JSONObject a, JSONObject b) {
+        if (a.length() != b.length()) {
+            return false;
+        }
+        Iterator<String> it = a.keys();
+        while (it.hasNext()) {
+            String k = it.next();
+            if ("q".equals(k) || "options".equals(k)) {
+                continue;
+            }
+            Object x = a.opt(k);
+            Object y = b.opt(k);
+            if (x == null ? y != null : !x.equals(y)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 家长改过题库时的升级路径：不整库覆盖，只把「设备题面 == 新版题面的旧式降级文本」
+     * 的字段换成 LaTeX 版。家长自己加的题、改过的题一律保持原样。
+     * 若整份题库其实就是官方旧版（没有任何自定义痕迹），直接用内置题库原文覆盖，
+     * 顺带把 name/note/version 也对齐，且不丢任何东西。
+     */
+    static Migration migrateMathText(String cur, String asset) {
+        Migration r = new Migration();
+        try {
+            JSONObject curDoc = new JSONObject(cur);
+            JSONObject assetDoc = new JSONObject(asset);
+            JSONArray curQs = curDoc.optJSONArray("questions");
+            JSONArray assetQs = assetDoc.optJSONArray("questions");
+            if (curQs == null || assetQs == null) {
+                return r;
+            }
+            Map<String, JSONObject> freshById = new HashMap<String, JSONObject>();
+            for (int i = 0; i < assetQs.length(); i++) {
+                JSONObject q = assetQs.optJSONObject(i);
+                if (q != null) {
+                    String id = q.optString("id", "");
+                    if (id.length() > 0) {
+                        freshById.put(id, q);
+                    }
+                }
+            }
+            r.pristine = curQs.length() == assetQs.length();
+            Set<String> seen = new HashSet<String>();
+            for (int i = 0; i < curQs.length(); i++) {
+                JSONObject q = curQs.optJSONObject(i);
+                if (q == null) {
+                    r.pristine = false;
+                    continue;
+                }
+                String id = q.optString("id", "");
+                seen.add(id);
+                JSONObject fresh = freshById.get(id);
+                if (fresh == null) {
+                    r.pristine = false;      // 家长自己加的题
+                    continue;
+                }
+                if (!sameMeta(q, fresh)) {
+                    r.pristine = false;
+                }
+                String src = q.optString("q", null);
+                String dst = fresh.optString("q", null);
+                if (src == null || dst == null) {
+                    r.pristine = false;
+                } else if (src.equals(dst)) {
+                    // 已经是新版题面
+                } else if (src.equals(toLegacy(dst))) {
+                    q.put("q", dst);
+                    r.changed++;
+                } else {
+                    r.pristine = false;      // 家长改过题干，保留
+                }
+                JSONArray so = q.optJSONArray("options");
+                JSONArray fo = fresh.optJSONArray("options");
+                if (so == null || fo == null || so.length() != fo.length()) {
+                    r.pristine = false;
+                    continue;
+                }
+                for (int j = 0; j < so.length(); j++) {
+                    String a = so.optString(j, null);
+                    String b = fo.optString(j, null);
+                    if (a == null || b == null) {
+                        r.pristine = false;
+                    } else if (a.equals(b)) {
+                        // 已经是新版选项
+                    } else if (a.equals(toLegacy(b))) {
+                        so.put(j, b);
+                        r.changed++;
+                    } else {
+                        r.pristine = false;  // 家长改过选项，保留
+                    }
+                }
+            }
+            if (seen.size() != freshById.size()) {
+                r.pristine = false;
+            }
+            if (r.pristine) {
+                r.json = asset;           // 与官方旧版完全一致，直接对齐内置题库
+                return r;
+            }
+            curDoc.put("version", assetDoc.optInt("version", 0));
+            r.json = curDoc.toString();  // 有自定义内容，只写回迁移过的题面
+            return r;
+        } catch (Throwable t) {
+            // 解析失败或内存不足时宁可不动，绝不能写坏家长的题库
+            r.json = null;
+            return r;
         }
     }
 

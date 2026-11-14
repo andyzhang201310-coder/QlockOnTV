@@ -55,21 +55,41 @@ public class QuizOptionLayoutTest {
         QuizActivity.running = false;
     }
 
+    /** 短答案两列时 optionBox 的直接子 View 是行容器，取按钮要递归。 */
+    private java.util.List<Button> buttons() {
+        java.util.List<Button> out = new java.util.ArrayList<Button>();
+        collect(optionBox(), out);
+        return out;
+    }
+
+    private static void collect(View v, java.util.List<Button> out) {
+        if (v instanceof Button) {
+            out.add((Button) v);
+            return;
+        }
+        if (v instanceof android.view.ViewGroup) {
+            android.view.ViewGroup g = (android.view.ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) {
+                collect(g.getChildAt(i), out);
+            }
+        }
+    }
+
     private LinearLayout optionBox() {
         return (LinearLayout) activity.findViewById(R.id.optionBox);
     }
 
     @Test
     public void optionHeightIsWrapContentNotWeightedSplit() {
-        LinearLayout box = optionBox();
-        assertTrue(box.getChildCount() >= 2);
-        for (int i = 0; i < box.getChildCount(); i++) {
-            View v = box.getChildAt(i);
-            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) v.getLayoutParams();
+        java.util.List<Button> bs = buttons();
+        assertTrue(bs.size() >= 2);
+        for (Button b : bs) {
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) b.getLayoutParams();
             assertEquals("选项不能再被 0dp + weight 强制平分固定高度",
                     LinearLayout.LayoutParams.WRAP_CONTENT, lp.height);
-            assertEquals("等分权重必须移除，否则长答案仍会被压缩", 0f, lp.weight, 0f);
-            Button b = (Button) v;
+            if (lp.weight > 0f) {
+                assertEquals("两列布局的权重只能用于宽度等分，不能拿来分高度", 0, lp.width);
+            }
             assertTrue("必须允许换行", b.getMaxLines() > 1);
             assertFalse("不能是单行变换", b.getTransformationMethod()
                     instanceof android.text.method.SingleLineTransformationMethod);
@@ -78,7 +98,7 @@ public class QuizOptionLayoutTest {
 
     @Test
     public void longAnswerRendersFullyAndKeepsHangingIndent() {
-        Button b = (Button) optionBox().getChildAt(0);
+        Button b = buttons().get(0);
         CharSequence t = QuizActivity.optionText(b, 0, LONG_IDIOM, null);
         b.setText(t);
 
@@ -95,9 +115,9 @@ public class QuizOptionLayoutTest {
      */
     @Test
     public void longAnswerIsFreeToGrow() {
-        LinearLayout box = optionBox();
-        Button shortOne = (Button) box.getChildAt(0);
-        Button longOne = (Button) box.getChildAt(1);
+        java.util.List<Button> bs = buttons();
+        Button shortOne = bs.get(0);
+        Button longOne = bs.get(1);
 
         shortOne.setText(QuizActivity.optionText(shortOne, 0, "忍受暂时的屈辱", null));
         longOne.setText(QuizActivity.optionText(longOne, 1, LONG_IDIOM, "    ← 正确答案"));
@@ -136,7 +156,7 @@ public class QuizOptionLayoutTest {
 
     @Test
     public void multiLineButtonSuppliesItsLayoutLineCount() {
-        Button b = (Button) optionBox().getChildAt(0);
+        Button b = buttons().get(0);
         b.setText(QuizActivity.optionText(b, 2, "第一行文字\n第二行文字\n第三行文字", null));
         b.measure(View.MeasureSpec.makeMeasureSpec(600, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
@@ -158,10 +178,9 @@ public class QuizOptionLayoutTest {
     @Test
     public void optionCardsAreCompactEnoughForOneScreen() {
         float d = activity.getResources().getDisplayMetrics().density;
-        LinearLayout box = optionBox();
-        assertTrue(box.getChildCount() >= 2);
-        for (int i = 0; i < box.getChildCount(); i++) {
-            Button b = (Button) box.getChildAt(i);
+        java.util.List<Button> bs = buttons();
+        assertTrue(bs.size() >= 2);
+        for (Button b : bs) {
             assertTrue("选项最小高度要收紧到 56dp 以内，否则四选项同屏放不下",
                     b.getMinHeight() <= Math.round(56 * d) + 1);
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) b.getLayoutParams();
