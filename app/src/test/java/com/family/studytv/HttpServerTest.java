@@ -7,6 +7,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
+import android.hardware.display.DisplayManager;
+import android.os.PowerManager;
+import android.view.Display;
 
 import org.junit.After;
 import org.json.JSONObject;
@@ -15,9 +18,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Calendar;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -493,6 +498,84 @@ public class HttpServerTest {
         } finally {
             QuizActivity.running = false;
             QuizActivity.foreground = false;
+        }
+    }
+
+    @Test
+    public void quizNowReportsExhaustedEvenAfterParentPass() throws Exception {
+        String cookie = login();
+        Context c = RuntimeEnvironment.getApplication().getApplicationContext();
+        // /api/test 先判电视是否唤醒，测试环境里显式把屏幕打开
+        PowerManager pm = (PowerManager) c.getSystemService(Context.POWER_SERVICE);
+        Shadows.shadowOf(pm).setIsInteractive(true);
+        DisplayManager dm = (DisplayManager) c.getSystemService(Context.DISPLAY_SERVICE);
+        Shadows.shadowOf(dm.getDisplay(Display.DEFAULT_DISPLAY)).setState(Display.STATE_ON);
+
+        JSONObject before = Rules.get(c);
+        try {
+            JSONObject cfg = Rules.defaults();
+            cfg.put("roundsLimitEnabled", true);
+            cfg.put("roundsPerDay", 3);
+            Rules.save(c, cfg);
+            Calendar cal = Calendar.getInstance();
+            String today = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH) + 1)
+                    + "-" + cal.get(Calendar.DAY_OF_MONTH);
+            c.getSharedPreferences("studytv", Context.MODE_PRIVATE).edit()
+                    .putString("rules_round_date", today)
+                    .putInt("rules_round_count", 3).apply();
+            Rules.grantLimitPass(c);
+
+            String[] r = request("POST", "/api/test", "{}", null, cookie);
+            assertEquals("200", r[0]);
+            JSONObject o = new JSONObject(r[1]);
+            assertTrue("用满时接口必须明确告诉后台没有弹题", o.optBoolean("limitReached"));
+            assertTrue(o.optBoolean("limitPassed"));
+            assertFalse("家长已放行，不该再锁屏", o.optBoolean("limit"));
+        } finally {
+            Rules.save(c, before);
+            c.getSharedPreferences("studytv", Context.MODE_PRIVATE).edit()
+                    .remove("rules_round_date").remove("rules_round_count")
+                    .remove("rules_limit_pass_date").apply();
+        }
+    }
+
+    @Test
+    public void stateOnlyReportsExhaustedWhenLimitSwitchIsOn() throws Exception {
+        String cookie = login();
+        Context c = RuntimeEnvironment.getApplication().getApplicationContext();
+        JSONObject before = Rules.get(c);
+        try {
+            JSONObject cfg = Rules.defaults();
+            cfg.put("roundsLimitEnabled", false);
+            cfg.put("roundsPerDay", 16);
+            Rules.save(c, cfg);
+            Calendar cal = Calendar.getInstance();
+            String today = cal.get(Calendar.YEAR) + "-" + (cal.get(Calendar.MONTH) + 1)
+                    + "-" + cal.get(Calendar.DAY_OF_MONTH);
+            c.getSharedPreferences("studytv", Context.MODE_PRIVATE).edit()
+                    .putString("rules_round_date", today)
+                    .putInt("rules_round_count", 23).apply();
+            Rules.grantLimitPass(c);   // 家长随手点过「立即解锁」
+
+            String[] r = request("GET", "/api/state", null, null, cookie);
+            assertEquals("200", r[0]);
+            JSONObject o = new JSONObject(r[1]);
+            assertEquals(23, o.optInt("roundsToday"));
+            assertFalse("上限没启用，不能报已用完", o.optBoolean("roundsLimitEnabled"));
+            assertFalse(o.optBoolean("limitReached"));
+            assertTrue("旧状态卡就是拿这个标记误判的", o.optBoolean("limitPassedToday"));
+
+            cfg.put("roundsLimitEnabled", true);
+            Rules.save(c, cfg);
+            r = request("GET", "/api/state", null, null, cookie);
+            o = new JSONObject(r[1]);
+            assertTrue(o.optBoolean("roundsLimitEnabled"));
+            assertTrue("启用上限且 23 > 16 才该报已用完", o.optBoolean("limitReached"));
+        } finally {
+            Rules.save(c, before);
+            c.getSharedPreferences("studytv", Context.MODE_PRIVATE).edit()
+                    .remove("rules_round_date").remove("rules_round_count")
+                    .remove("rules_limit_pass_date").apply();
         }
     }
 

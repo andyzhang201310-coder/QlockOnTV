@@ -715,6 +715,20 @@ public final class Rules {
                 && !limitPassedToday(c);
     }
 
+    /**
+     * 今日弹题额度是否已用满（只看开关与计数，<b>不看家长是否放行</b>）。
+     *
+     * <p>v1.10.3：家长「立即解锁」只解除「次数用完」的整屏锁，不解除额度本身。
+     * 旧代码把所有弹题入口的闸门都写成 {@link #limitLocked(Context)}，而它包含
+     * 「家长今天没放行」这个条件；家长一解锁它就变 false，于是补弹 / 开机补题 /
+     * 后台「立即弹一次」/ 桌面图标又继续出题并计轮数（真机上限 16 却弹到 23 轮）。
+     * 所有「今天还能不能出题」的判断一律走这里，锁屏与否只由 limitLocked 决定。
+     */
+    public static boolean quizExhausted(Context c) {
+        JSONObject cfg = get(c);
+        return cfg.optBoolean("roundsLimitEnabled", false) && limitReached(c, cfg);
+    }
+
     /** 家长手动放行：今天余下时间不再锁屏，也不再弹题；跨天自动恢复 */
     public static void grantLimitPass(Context c) {
         sp(c).edit().putString(KEY_LIMIT_PASS_DATE, today(System.currentTimeMillis())).apply();

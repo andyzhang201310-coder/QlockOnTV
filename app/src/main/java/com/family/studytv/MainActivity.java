@@ -130,13 +130,17 @@ public class MainActivity extends Activity {
     }
 
     private void gotoQuiz() {
-        // 今天次数已用完（每日轮数上限）：点图标进来也要撞锁屏页，不能直接进答题
-        if (Rules.limitLocked(this)) {
-            try {
-                startActivity(new Intent(this, LimitActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
-            } catch (Throwable ignored) {
+        // v1.10.3：额度用满是硬闸门；家长放行只解除锁屏页，不能因此又进答题页。
+        if (Rules.quizExhausted(this)) {
+            if (Rules.limitLocked(this)) {
+                // 未放行：点图标进来也要撞锁屏页，不能直接进答题
+                try {
+                    startActivity(new Intent(this, LimitActivity.class)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+                } catch (Throwable ignored) {
+                }
             }
+            // 已放行：直接退回桌面，不再跳答题页（守护服务也不会再弹）
             finish();
             return;
         }

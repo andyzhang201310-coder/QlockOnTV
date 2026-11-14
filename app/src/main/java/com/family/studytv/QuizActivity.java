@@ -257,6 +257,18 @@ public class QuizActivity extends Activity {
             finish();
             return;
         }
+        // v1.10.3：今日额度用满后，任何排队中的启动请求（延迟送达的 PendingIntent、
+        // 全屏通知、桌面图标）都直接作废。否则 onCreate 里的 setPending(true) 会让
+        // 已放行的答题页又被 ensureVisible 每 2 秒顶回前台，pending 永远清不掉。
+        if (!"practice".equals(Rules.get(this).optString("playMode", "round"))
+                && Rules.quizExhausted(this)) {
+            bailed = true;
+            foreground = false;
+            allowBringBack = false;
+            Prefs.setPending(false);
+            finish();
+            return;
+        }
         // v1.7.33 起不再加 FLAG_TURN_SCREEN_ON：能走到这里说明屏幕本来就亮着，
         // 加它只会在息屏场景把睡着的电视点亮。
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON

@@ -779,7 +779,7 @@
             <div class="ctl"><div class="stepper" data-key="wrongReviewSeconds" data-min="0" data-max="300"></div><span class="unit">秒</span></div></div>
           <div class="f"><div class="lbl"><b>学习页字号</b><small>电视上题干与选项文字一起缩放；保存后正在答题的页面立即生效，没答题时点「预览效果」弹出一题查看</small></div>
             <div class="ctl"><div class="stepper" data-key="fontScale" data-min="75" data-max="200" data-step="5"></div><span class="unit">%</span><button id="btnFontPreview" class="mini">预览效果</button></div></div>
-          <div class="f"><div class="lbl"><b>启用每日轮数上限</b><small>按「实际弹出答题页」计数，跨天自动清零。用满后电视会锁在「今天的次数已用完」整屏页，次日 0 点恢复；家长当天要放行，在首页点「立即解锁」即可</small></div>
+          <div class="f"><div class="lbl"><b>启用每日轮数上限</b><small>按「实际弹出答题页」计数，跨天自动清零。用满后电视会锁在「今天的次数已用完」整屏页，次日 0 点恢复；家长当天要放行，在首页点「立即解锁」即可。放行只解除锁屏，今日仍不再弹题；想继续用就调高上限或关掉本开关</small></div>
             <div class="ctl"><div class="switch" data-bool="roundsLimitEnabled"><i></i></div></div></div>
           <div class="f" data-when="roundsLimit"><div class="lbl"><b>每天最多弹题</b></div>
             <div class="ctl"><div class="stepper" data-key="roundsPerDay" data-min="1" data-max="100"></div><span class="unit">轮</span></div></div>
@@ -1384,9 +1384,20 @@
     }
     var modeName = ({ round: '按组闯关', streak: '连续答对', count: '累计答对', practice: '自由练习' })[state.playMode] || '按组闯关';
     $('stRules').textContent = modeName;
-    $('stRounds').textContent = (state.roundsToday || 0) + ' / ' + (state.roundsPerDay || 8) + ' 轮 · '
-      + (state.limitLocked ? '已用完 · 电视锁屏中' : (state.limitPassedToday && (state.roundsToday || 0) >= (state.roundsPerDay || 8)
-        ? '已用完 · 今日已放行' : (state.ruleAllowedNow ? '时段允许' : '时段停用')));
+    // v1.10.3：「已用完」必须以后端 limitReached 为准。旧版前端自己拿
+    // limitPassedToday && roundsToday >= roundsPerDay 猜，上限开关没启用时也会误报
+    // （roundsToday 是无论开关都累加的计数，roundsPerDay 只是配置默认值）。
+    var roundsTag;
+    if (!state.roundsLimitEnabled) {
+      roundsTag = '上限未启用';
+    } else if (state.limitLocked) {
+      roundsTag = '已用完 · 电视锁屏中';
+    } else if (state.limitReached) {
+      roundsTag = state.limitPassedToday ? '已用完 · 今日已放行（不再弹题）' : '已用完';
+    } else {
+      roundsTag = state.ruleAllowedNow ? '时段允许' : '时段停用';
+    }
+    $('stRounds').textContent = (state.roundsToday || 0) + ' / ' + (state.roundsPerDay || 8) + ' 轮 · ' + roundsTag;
     $('stWrong').textContent = (state.reviewDue || 0) + ' 题在库';
     $('stBank').textContent = state.questionCount + ' 题';
     var g = !!state.uninstallGuard;
@@ -1615,8 +1626,10 @@
         toast('电视正在待机，弹题已延后到下次唤醒（不会叫醒电视）', 4200);
         return loadState();
       }
-      if (r && r.limit) {
-        toast('今天次数已用完，电视上显示的是「今天的次数已用完」锁屏页', 4200);
+      if (r && (r.limitReached || r.limit)) {
+        toast(r.limitPassed
+          ? '今天次数已用完，家长已放行，今日不再弹题'
+          : '今天次数已用完，电视上显示的是「今天的次数已用完」锁屏页', 4200);
         return loadState();
       }
       toast('电视端已弹出题目');

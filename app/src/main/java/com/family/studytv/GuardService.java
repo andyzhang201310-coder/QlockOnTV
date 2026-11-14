@@ -280,6 +280,17 @@ public class GuardService extends Service {
             return;
         }
 
+        // 0.5) 额度已用满但家长今天已放行：今天既不锁屏、也不再弹题（v1.10.3）。
+        // 必须排在下面三条之前 —— pending 补弹 / 开机补题 / 到点欠账走的都是
+        // showSoon() → showQuiz()，不经过 checkDue() 的额度闸门；以前放行后就是
+        // 从这里漏出去继续出题并 noteRound()，把 16 轮上限弹成了 23 轮。
+        if (Rules.quizExhausted(this)) {
+            Prefs.setPending(false);
+            scheduleAlarm(this);
+            updateNotification();
+            return;
+        }
+
         // 1) 上次弹窗没答完（含直接关机逃避）→ 立刻补上；免打扰期间顺延到时段结束
         if (Prefs.isPending()) {
             if (quiet) {
@@ -391,6 +402,20 @@ public class GuardService extends Service {
             ensureFails = 0;
             return;
         }
+        // v1.10.3：今日额度用满。家长放行只解除锁屏页、不解除额度，所以这里不能
+        // 用 limitLocked()（放行后为 false）。必须排在「把答题页拉回前台」之前：
+        // 残留的答题页实例靠 pending 每 2 秒被 ensureVisible 顶回来，看起来就是还在弹题。
+        if (Rules.quizExhausted(this)) {
+            if (Prefs.isPending()) {
+                Prefs.setPending(false);   // 让 ensureVisible / bootstrap 都失去拉回依据
+            }
+            quizShowing = false;            // 别让「上一轮弹窗」的 60 秒闸门挡住锁屏页
+            QuizActivity.forceUnlock();     // 撤掉残留实例的 relaunch 重试并关掉它
+            if (!Rules.limitLocked(this)) {
+                return;                     // 家长已放行：今天彻底不弹题、不锁屏
+            }
+            // 未放行：继续往下走 showLimit() / 拉回被 HOME 压后台的锁屏页
+        }
         // v1.10.2：实例还在但已被 HOME 压到后台（连按主菜单时系统 app-switch 保护把
         // 拉回请求静默丢弃）。旧逻辑只看 running 就 return，于是后台一直显示
         // 「答题弹窗显示中」、电视上却是桌面，再也不会有人把界面拉回来。
@@ -429,10 +454,7 @@ public class GuardService extends Service {
             }
             return;
         }
-        // 今日弹题轮数用满：今天不再弹，跨天自动恢复（不改动 dueAt）
-        if (!Rules.roundsLeft(this, Rules.get(this))) {
-            return;
-        }
+        // 今日额度用满的硬闸门已在本函数开头统一处理（不改动 dueAt，跨天自动恢复）
         long due = Prefs.dueAt();
         if (due <= 0) {
             long raw = now + intervalMs();
@@ -463,10 +485,16 @@ public class GuardService extends Service {
             }
             return;
         }
-        // 今天次数已经用完：出题换成锁屏页（后台「立即弹一次」也照此处理）
-        if (Rules.limitLocked(this)) {
-            showLimit();
-            return;
+        // v1.10.3：额度用满是硬闸门，所有调用 showQuiz() 的入口（定时、补弹、开机补题、
+        // 后台「立即弹一次」）都收口在这里。家长放行只解除锁屏页，不解除额度；
+        // 旧代码只判 limitLocked()，放行后为 false，于是额度用满还继续出题并 noteRound()。
+        if (Rules.quizExhausted(this)) {
+            quizShowing = false;
+            Prefs.setPending(false);
+            if (Rules.limitLocked(this)) {
+                showLimit();     // 未放行 → 整屏锁住
+            }
+            return;              // 已放行 → 今天既不弹题也不锁屏
         }
         quizShowing = true;
         lastShowAt = System.currentTimeMillis();
@@ -557,7 +585,10 @@ public class GuardService extends Service {
         if (now - unlockedAt < 5000L) {
             return;
         }
-        if (limit ? !Rules.limitLocked(this) : !Prefs.isPending()) {
+        // v1.10.3：额度用满后残留的答题页不该再被拉回（未放行时应由锁屏页接管）；
+        // 家长放行只关掉锁屏页，不恢复弹题额度。
+        if (limit ? !Rules.limitLocked(this)
+                : (!Prefs.isPending() || Rules.quizExhausted(this))) {
             return;
         }
         if (now - lastEnsureAt < ENSURE_MIN_MS) {
@@ -674,9 +705,12 @@ public class GuardService extends Service {
     public static void applyUnlock(Context c) {
         long now = System.currentTimeMillis();
         Prefs.setPending(false);
-        // v1.8.1：如果电视上正锁着「今天的次数已用完」，这次放行同时记「今天已放行」，
-        // 否则 15 秒后轮询会把锁屏页又拉回来。
-        Rules.grantLimitPass(c);
+        // v1.10.3：只有「真启用了上限且今天已用满」才记「今日已放行」，避免 15 秒后
+        // 轮询又把锁屏页拉回来。旧版无条件写入：家长平时随手点一次解锁，后台就显示
+        // 「已用完 · 今日已放行」，可额度其实没启用、电视照常弹题（本次报障的直接诱因）。
+        if (Rules.quizExhausted(c)) {
+            Rules.grantLimitPass(c);
+        }
         long raw = now + Prefs.intervalMinutes() * 60000L;
         Prefs.setDueAtAlignedTo(raw, Rules.alignDue(c, raw));
         scheduleAlarm(c.getApplicationContext());

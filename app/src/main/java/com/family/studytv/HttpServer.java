@@ -1072,10 +1072,13 @@ public class HttpServer {
             Intent i = new Intent(ctx, GuardService.class);
             i.setAction(GuardService.ACTION_SHOW_NOW);
             GuardService.start(ctx, i);
-            // 今天次数已用完时，电视上弹出的会是锁屏页而不是题目，回一个标记让后台换个提示
+            // v1.10.3：额度用满时一律不再出题。未放行 → 锁屏页；已放行 → 今天彻底不弹。
+            // 两种情况都要让后台给出对应提示，不能再说「电视端已弹出题目」。
             JSONObject ok = new JSONObject();
             ok.put("ok", true);
             ok.put("limit", Rules.limitLocked(ctx));
+            ok.put("limitReached", Rules.quizExhausted(ctx));
+            ok.put("limitPassed", Rules.limitPassedToday(ctx));
             respondJson(socket, 200, ok.toString());
             return;
         }
@@ -1400,6 +1403,11 @@ public class HttpServer {
             o.put("calendarSyncStatus", Prefs.calendarSyncStatus());
             o.put("roundsToday", Rules.roundsToday(ctx));
             o.put("roundsPerDay", Rules.roundsPerDay(rules));
+            // v1.10.3：后台状态卡不能再自己拿 roundsToday >= roundsPerDay 猜「已用完」：
+            // 上限开关没开时 roundsToday 照样累加，会误报「已用完 · 今日已放行」。
+            // 由后端给出权威判定，前端只负责显示。
+            o.put("roundsLimitEnabled", rules.optBoolean("roundsLimitEnabled", false));
+            o.put("limitReached", Rules.quizExhausted(ctx));
             o.put("limitLocked", Rules.limitLocked(ctx));
             o.put("limitPassedToday", Rules.limitPassedToday(ctx));
             int reviewGap = Rules.reviewGap(rules);
