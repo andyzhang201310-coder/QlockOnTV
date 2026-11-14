@@ -1204,7 +1204,8 @@ public class QuizActivity extends Activity {
         if (w != null) {
             w.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             DisplayMetrics m = getResources().getDisplayMetrics();
-            w.setLayout((int) (m.widthPixels * 0.82f), WindowManager.LayoutParams.WRAP_CONTENT);
+            // 面板固定占屏高 70%、上下各留 15%：讲解再长也只在这块里翻页，不撑满屏幕
+            w.setLayout((int) (m.widthPixels * 0.82f), (int) (m.heightPixels * 0.70f));
             WindowManager.LayoutParams lp = w.getAttributes();
             lp.dimAmount = 0.62f;
             w.setAttributes(lp);
@@ -1330,8 +1331,8 @@ public class QuizActivity extends Activity {
     }
 
     /**
-     * 正文区高度贴着内容走，封顶屏幕的 60%：标准档四段尽量一屏看完，
-     * 详细档超出的部分在面板内滚动，并显示「按上下键翻看」，按钮永远留在屏幕上。
+     * 整块面板高度由窗口固定为屏高 70%，正文区用 weight 吃掉剩余空间；
+     * 这里只判断内容是否溢出，溢出才显示「按上下键翻看」。
      */
     private void fitAiScroll(final ScrollView scroll, final TextView body, final TextView more) {
         if (scroll == null || body == null) {
@@ -1340,19 +1341,12 @@ public class QuizActivity extends Activity {
         body.post(new Runnable() {
             @Override
             public void run() {
-                if (destroyed || body.getHeight() <= 0) {
+                if (destroyed || body.getHeight() <= 0 || scroll.getHeight() <= 0) {
                     return;
                 }
-                DisplayMetrics m = getResources().getDisplayMetrics();
-                int cap = (int) (m.heightPixels * 0.60f);
-                int want = Math.min(cap, Math.max(dpToPx(104), body.getHeight()));
-                android.view.ViewGroup.LayoutParams lp = scroll.getLayoutParams();
-                if (lp.height != want) {
-                    lp.height = want;
-                    scroll.setLayoutParams(lp);
-                }
                 if (more != null) {
-                    more.setVisibility(body.getHeight() > want + 2 ? View.VISIBLE : View.GONE);
+                    more.setVisibility(body.getHeight() > scroll.getHeight() + 2
+                            ? View.VISIBLE : View.GONE);
                 }
             }
         });

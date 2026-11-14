@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AI 错题讲解面板（v1.10.4）：题目与对错信息在上，分层讲解正文贴内容高度、超出可在面板内滚动，底部「继续下一题」。
-  宽度由代码按屏幕 82% 设定；正文字号走学习页同一套 20sp 观感，标准档约 200 字分 4 段，配遥控器上下键读完。
+  AI 错题讲解面板（v1.10.5）：题目与对错信息在上，六段讲解正文占屏高 42%、在面板内翻页，底部「继续下一题」。
+  窗口高度由代码固定为屏高 70%（宽 82%），上下各留 15%；正文区用 weight 吃掉剩余空间，
+  超长内容靠遥控器上下键在面板内翻页，标题与「继续下一题」始终完整可见。
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/aiPanelRoot"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:background="@drawable/bg_dialog"
     android:orientation="vertical"
     android:paddingLeft="34dp"
@@ -35,7 +36,8 @@
     <ScrollView
         android:id="@+id/aiScroll"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:layout_marginTop="14dp"
         android:overScrollMode="never"
         android:scrollbars="none">
@@ -56,9 +58,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="↓ 内容较长，按遥控器上下键翻看"
-        android:textColor="@color/textSecondary"
-        android:textSize="14sp"
+        android:text="↓ 还有内容 · 按遥控器上下键翻看"
+        android:textColor="@color/accent"
+        android:textSize="15sp"
         android:visibility="gone" />
 
     <LinearLayout

@@ -155,17 +155,27 @@ public class AiExplainTest {
         String p = AiExplain.buildPrompt("数学", 3, "12 × 4 = ?",
                 opts("44", "48", "52", "56"), 1, 0);
         assertTrue("要有年级与科目", p.contains("3年级数学"));
+        assertTrue("要以科任老师身份讲", p.contains("数学科任老师"));
+        assertTrue("数学课按数量关系→分步演算讲", p.contains("数量关系"));
+        assertTrue("不能写成通用 AI 助手", p.contains("不要写成通用 AI 助手"));
         assertTrue("要有题干", p.contains("12 × 4 = ?"));
         assertTrue("正确答案要标出来", p.contains("正确答案：B. 48"));
         assertTrue("必须告诉模型孩子选了什么", p.contains("孩子选了：A. 44"));
-        assertTrue("要按步骤拆开讲，不能只给一句翻译", p.contains("【拆开看】"));
-        assertTrue("要举同类型的新例子", p.contains("【换个例子】"));
-        assertTrue("要点破错误选项", p.contains("【为什么会选错】"));
-        assertTrue("标准档要有字数区间", p.contains("200–260 字"));
-        assertTrue("四段一段都不能少", p.contains("每一段都必须写出来"));
+        assertTrue("结论段不许复述题目", p.contains("禁止把题目复述一遍"));
+        assertTrue("要逐词拆开讲", p.contains("【拆解】"));
+        assertTrue("要逐个分析其余选项", p.contains("【看其他选项】"));
+        assertTrue("要举例", p.contains("【举个例子】"));
+        assertTrue("要讲易错点", p.contains("【易错点】"));
+        assertTrue("要举一反三", p.contains("【举一反三】"));
+        assertTrue("数学题要盯进位退位", p.contains("进位退位"));
         assertTrue("错因段要点名孩子选的那个选项", p.contains("「44」"));
-        assertTrue("错因必须排在举例前面，防止模型写满字数漏掉",
-                p.indexOf("【为什么会选错】") < p.indexOf("【换个例子】"));
+        assertTrue("标准档要有字数区间", p.contains("280–360 字"));
+        assertTrue("除举例外六段一段都不能少", p.contains("每一段都必须写出来"));
+        assertTrue("段序：结论在最前", p.indexOf("【结论】") < p.indexOf("【拆解】"));
+        assertTrue("段序：拆解在其他选项之前",
+                p.indexOf("【拆解】") < p.indexOf("【看其他选项】"));
+        assertTrue("段序：易错点在举一反三之前",
+                p.indexOf("【易错点】") < p.indexOf("【举一反三】"));
     }
 
     @Test
@@ -193,31 +203,67 @@ public class AiExplainTest {
     }
 
     @Test
-    public void 简明档只讲结论和错因() {
+    public void 简明档六段结构不打折只是更短() {
         String p = AiExplain.buildPrompt("英语", 1, "She is eighteen. 的中文意思是？",
                 opts("喝点果汁吧", "她十八岁了"), 1, 0, AiExplain.DETAIL_BRIEF);
-        assertTrue(p.contains("【先看答案】"));
-        assertTrue(p.contains("【为什么会选错】"));
-        assertFalse("简明档不要拆词举例", p.contains("【拆开看】"));
-        assertFalse(p.contains("【换个例子】"));
-        assertTrue(p.contains("60–90 字"));
+        String[] tags = {"【结论】", "【拆解】", "【看其他选项】", "【举个例子】",
+                "【易错点】", "【举一反三】"};
+        for (String t : tags) {
+            assertTrue("简明档也要有 " + t, p.contains(t));
+        }
+        assertTrue(p.contains("130–170 字"));
         assertTrue(p.contains("「喝点果汁吧」"));
+        assertTrue("英语题要盯时态单复数", p.contains("时态"));
     }
 
     @Test
-    public void 详细档多一道小练习且字数更长() {
+    public void 详细档字数更长() {
         String p = AiExplain.buildPrompt("数学", 2, "8 ÷ 2 = ?",
                 opts("3", "4"), 1, 0, AiExplain.DETAIL_DEEP);
-        assertTrue(p.contains("【再练一次】"));
-        assertTrue(p.contains("280–360 字"));
+        assertTrue(p.contains("400–500 字"));
+        assertTrue(p.contains("【举一反三】"));
     }
 
     @Test
-    public void 选对时不用为什么会选错这个标签() {
+    public void 选对时看其他选项不点名孩子选项() {
         String p = AiExplain.buildPrompt("语文", 2, "「明」的部首是什么？",
                 opts("日", "月"), 0, 0);
-        assertTrue(p.contains("【容易混的地方】"));
-        assertFalse(p.contains("【为什么会选错】"));
+        assertTrue(p.contains("【看其他选项】"));
+        assertFalse(p.contains("孩子选了"));
+        assertFalse(p.contains("要重点讲"));
+    }
+
+    @Test
+    public void 简单识记题允许整段跳过举例() {
+        String p = AiExplain.buildPrompt("语文", 1, "「木」字有几画？",
+                opts("3", "4"), 1, 0);
+        assertTrue(p.contains("数笔画"));
+        assertTrue(p.contains("认首字母"));
+        assertTrue(p.contains("整段省略"));
+        assertTrue(p.contains("其余五段照写"));
+    }
+
+    @Test
+    public void 英语题易错点按学科给提示() {
+        String p = AiExplain.buildPrompt("英语", 3, "He ___ a boy.",
+                opts("is", "are"), 0, 1);
+        assertTrue(p.contains("单复数"));
+        assertTrue(p.contains("介词"));
+        assertTrue(p.contains("He is a boy."));
+        assertTrue("英语课按认单词→拼句子→语法讲", p.contains("先带学生认单词"));
+        assertTrue(p.contains("不要自称 AI"));
+        assertFalse("英语题不该给数学的进位提示", p.contains("进位退位"));
+    }
+
+    @Test
+    public void 以对应学科科任老师身份讲题() {
+        String p = AiExplain.buildPrompt("语文", 0, "「春眠不觉晓」的作者是谁？",
+                opts("孟浩然", "李白"), 0, 1);
+        assertTrue(p.contains("小学语文老师"));
+        assertTrue(p.contains("语文科任老师"));
+        assertTrue("语文课按字词→句意→作者朝代讲", p.contains("先讲字音字形字义"));
+        assertTrue(p.contains("正在教室里"));
+        assertFalse(p.contains("0年级"));
     }
 
     @Test
@@ -230,9 +276,9 @@ public class AiExplainTest {
 
     @Test
     public void 按档位放大token与截断上限() throws Exception {
-        assertEquals(320, AiExplain.maxTokens(AiExplain.DETAIL_BRIEF));
-        assertEquals(900, AiExplain.maxTokens(AiExplain.DETAIL_STANDARD));
-        assertEquals(1300, AiExplain.maxTokens(AiExplain.DETAIL_DEEP));
+        assertEquals(500, AiExplain.maxTokens(AiExplain.DETAIL_BRIEF));
+        assertEquals(1300, AiExplain.maxTokens(AiExplain.DETAIL_STANDARD));
+        assertEquals(1800, AiExplain.maxTokens(AiExplain.DETAIL_DEEP));
         assertTrue("详细档不能被标准档的长度腰斩",
                 AiExplain.textLimit(AiExplain.DETAIL_DEEP) > AiExplain.textLimit(AiExplain.DETAIL_STANDARD));
         assertEquals(AiExplain.DETAIL_DEEP,
@@ -259,12 +305,12 @@ public class AiExplainTest {
     @Test
     public void 超长讲解按档位截断() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 1500; i++) {
             sb.append('讲');
         }
-        assertEquals(161, AiExplain.clip(sb.toString(), AiExplain.DETAIL_BRIEF).length());
-        assertEquals(521, AiExplain.clip(sb.toString()).length());
-        assertEquals(801, AiExplain.clip(sb.toString(), AiExplain.DETAIL_DEEP).length());
+        assertEquals(281, AiExplain.clip(sb.toString(), AiExplain.DETAIL_BRIEF).length());
+        assertEquals(621, AiExplain.clip(sb.toString()).length());
+        assertEquals(1001, AiExplain.clip(sb.toString(), AiExplain.DETAIL_DEEP).length());
         assertTrue(AiExplain.clip(sb.toString()).endsWith("…"));
         assertEquals("短文本原样返回", "三句话讲完", AiExplain.clip("  三句话讲完  "));
     }

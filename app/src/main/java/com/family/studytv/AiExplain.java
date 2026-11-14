@@ -53,8 +53,11 @@ public final class AiExplain {
     public static final int DETAIL_DEEP = 3;
 
     private static final String SYS_PROMPT =
-            "你是一位耐心的小学老师，讲题用孩子听得懂的口语，句子短、分步骤、有例子，"
-                    + "会把知识点拆开讲明白，用户要求的每一段都必须写全，不写空泛的夸奖和安慰，"
+            "你是这道题对应学科的科任老师，正在教室里给刚答错的学生当面讲评。"
+                    + "全程用本学科老师的专业视角和课堂口吻，像在黑板前一步步把道理讲明白；"
+                    + "不要通用助手腔，不写「作为 AI」「我来帮你分析」「希望对你有帮助」。"
+                    + "讲题用孩子听得懂的口语，句子短、分步骤、有例子，会把知识点拆开讲明白，"
+                    + "不把题目原文复述一遍，要求的每一段都写全，不写空泛的夸奖和安慰，"
                     + "不使用「本题考查」这类书面语。";
 
     private AiExplain() {
@@ -94,7 +97,7 @@ public final class AiExplain {
     /**
      * 组 prompt：只给模型「题目 / 四个选项 / 正确答案 / 孩子选了哪个」，
      * 其余判断都交给模型 —— 题库里没有解析原文，硬凑反而会编。
-     * v1.10.4 起按「讲解详细程度」生成分层讲解，默认标准档。
+     * v1.10.5 起按六段结构生成分层讲解，默认标准档；简单识记题可跳过举例段。
      */
     public static String buildPrompt(String subject, int grade, String question,
                                      List<String> options, int answerIdx, int chosenIdx) {
@@ -110,7 +113,19 @@ public final class AiExplain {
                 && chosenIdx != answerIdx;
         StringBuilder sb = new StringBuilder();
         String who = grade > 0 ? "小学" + grade + "年级" : "小学";
-        sb.append("你是").append(who).append(subject).append("老师，正在给一个刚答错题的孩子讲这道题。\n\n");
+        String subj = subject == null ? "" : subject;
+        String view = subj.contains("英语")
+                ? "先带学生认单词、再拼句子、最后点语法（时态、单复数、介词、人称）"
+                : subj.contains("数学")
+                ? "先说清数量关系，再一步一步算给看，最后落到运算里的坑"
+                : "先讲字音字形字义，再讲句子或诗句的意思，最后落到作者、朝代和写法";
+        String pit = subj.contains("英语") ? "英语题盯单复数、时态、介词、人称、冠词"
+                : subj.contains("数学") ? "数学题盯进位退位、单位、运算顺序、符号"
+                : "语文题盯多音字、形近字、笔画笔顺、作者朝代";
+        sb.append("你是").append(who).append(subj).append("老师，也就是这个班的")
+                .append(subj).append("科任老师，正在教室里给刚答错这道题的学生当面讲评。\n");
+        sb.append("请用").append(subj).append("老师上课的口吻，按本学科的思路讲：")
+                .append(view).append("。不要写成通用 AI 助手，不要自称 AI。\n\n");
         sb.append("题目：").append(question).append("\n");
         if (options != null) {
             for (int i = 0; i < options.size(); i++) {
@@ -125,37 +140,38 @@ public final class AiExplain {
             sb.append("孩子选了：").append(letter(chosenIdx)).append(". ")
                     .append(options.get(chosenIdx)).append("\n");
         }
-        sb.append("\n请按下面的步骤讲，用孩子听得懂的口语，句子要短，每一步单独一段：\n");
-        sb.append("【先看答案】一句话说清正确答案到底是什么意思，别绕弯、别复述题目。\n");
-        if (lv >= DETAIL_STANDARD) {
-            sb.append("【拆开看】把题里的关键词、数字、句型一个一个讲明白：英语题逐词说意思")
-                    .append("并讲清句子怎么拼，数学题说清每一步怎么算，语文题说清字或词为什么这样用。\n");
-        }
-        // 错因放在举例之前：万一模型写满字数收尾，最该讲的这一段也一定在
+        sb.append("\n请按下面六段讲，全程保持科任老师的身份和课堂口吻，句子要短，每段单独一段：\n");
+        sb.append("【结论】直接说正确答案是什么、是什么意思，一句话给结果；")
+                .append("禁止把题目复述一遍，禁止写「这道题问的是…」。\n");
+        sb.append("【拆解】把知识点一个一个拆开讲：")
+                .append("英语题逐个词说意思（如 He is a boy. → He 他、is 是、a 一个、boy 男孩，")
+                .append("合起来「他是个男孩」）并讲清句子怎么拼；")
+                .append("数学题说清每个数字的含义和每一步怎么算；")
+                .append("语文题说清字的音形义、笔画笔顺或诗句字词为什么这么用。\n");
+        sb.append("【看其他选项】除正确答案外，把其余每个选项按字母逐个点名，")
+                .append("说清它是什么意思、对应哪句英文／哪个算法／哪个作者，为什么不对；");
         if (wrong) {
-            sb.append("【为什么会选错】必须点名孩子选的那一项「")
-                    .append(options.get(chosenIdx))
-                    .append("」，说清它其实是什么意思、对应哪个作者／哪句英文／哪个算法，")
-                    .append("再点出和正确答案最容易混在哪，不要只说「这个不对」。\n");
+            sb.append("其中孩子选的「").append(options.get(chosenIdx))
+                    .append("」要重点讲，说清最容易混在哪。\n");
         } else {
-            sb.append("【容易混的地方】说清其他选项分别是什么意思、最容易和正确答案混在哪。\n");
+            sb.append("点出最容易和正确答案混的那个。\n");
         }
-        if (lv >= DETAIL_STANDARD) {
-            sb.append("【换个例子】换掉数字或词，举一个同类型的新例子，带着孩子一起说出答案，别抄原题；")
-                    .append("结尾给一句好记的小口诀或反问。\n");
-        }
-        if (lv == DETAIL_DEEP) {
-            sb.append("【再练一次】再出一个更小的问题让孩子自己想，紧接着给出答案。\n");
-        }
-        sb.append("上面每一段都必须写出来，不许合并、不许省略，每段都以【】里的标签开头，")
-                .append("不要另写标题，不要复述题目原文，不要写「小朋友」「别着急」这类空泛安慰。\n");
+        sb.append("【举个例子】换掉数字或词，举一个同类型的例子，带着孩子一起说出答案，别抄原题。")
+                .append("但数笔画、认首字母、背作者朝代这类一眼看出答案的简单识记题，")
+                .append("这一段整段省略（连标签都不写），其余五段照写。\n");
+        sb.append("【易错点】点出这道题真正的坑，").append(pit)
+                .append("；最后给一句能记住的判断口诀。\n");
+        sb.append("【举一反三】给一条下次也能用的规律，再出一个变式小问题让孩子自己想，")
+                .append("紧接着给出答案；这一段是让孩子自己练，不要重复【举个例子】那道题。\n");
+        sb.append("除【举个例子】在简单题可省略外，其余每一段都必须写出来，不许合并、不许省略；")
+                .append("每段都以【】里的标签开头，不要另写标题，")
+                .append("不要写「小朋友」「别着急」这类空泛安慰。\n");
         if (lv == DETAIL_BRIEF) {
-            sb.append("只写【先看答案】和").append(wrong ? "【为什么会选错】" : "【容易混的地方】")
-                    .append("两段，总字数 60–90 字。");
+            sb.append("每段一两句话，总字数 130–170 字。");
         } else if (lv == DETAIL_DEEP) {
-            sb.append("总字数 280–360 字。");
+            sb.append("每段讲透，总字数 400–500 字。");
         } else {
-            sb.append("总字数 200–260 字。");
+            sb.append("总字数 280–360 字。");
         }
         return sb.toString();
     }
@@ -173,13 +189,13 @@ public final class AiExplain {
     /** 中文一字约 1～1.5 token，按档位留足余量，别让讲解被 max_tokens 腰斩 */
     static int maxTokens(int detail) {
         int lv = detailLevelValue(detail);
-        return lv == DETAIL_BRIEF ? 320 : (lv == DETAIL_DEEP ? 1300 : 900);
+        return lv == DETAIL_BRIEF ? 500 : (lv == DETAIL_DEEP ? 1800 : 1300);
     }
 
     /** 面板兜底截断长度（正文可滚动，这里只挡模型跑飞） */
     static int textLimit(int detail) {
         int lv = detailLevelValue(detail);
-        return lv == DETAIL_BRIEF ? 160 : (lv == DETAIL_DEEP ? 800 : 520);
+        return lv == DETAIL_BRIEF ? 280 : (lv == DETAIL_DEEP ? 1000 : 620);
     }
 
     static String letter(int i) {

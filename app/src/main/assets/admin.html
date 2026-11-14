@@ -1098,7 +1098,7 @@
       <div class="panel">
         <h2>AI 错题讲解</h2>
         <p class="desc">
-          答错后电视右下角出现「AI 讲解 · 5」并倒计时 5 秒：按遥控器 OK 就看讲解，看完点「继续下一题」；不按则自动进下一组。
+          答错后电视右下角出现「AI 讲解 · 5」并倒计时 5 秒：按遥控器 OK 就看讲解，看完点「继续下一题」；不按则自动进下一组。AI 以<b>对应学科的科任老师</b>身份、用本学科的课堂思路讲题，不是通用助手腔。
           <b>开启后，题目、四个选项和孩子的错误选项会发往你填写的大模型服务</b>，因此默认关闭，Key 只存在电视本机。
         </p>
         <div class="body">
@@ -1121,10 +1121,10 @@
             </div>
             <div class="f"><div class="lbl"><b>请求超时</b><small>模型太慢会自动放弃，答题流程不会卡住</small></div>
               <div class="ctl"><div class="stepper" data-key="aiTimeoutSeconds" data-min="5" data-max="60"></div><span class="unit">秒</span></div></div>
-            <div class="f"><div class="lbl"><b>讲解详细程度</b><small>标准：先说答案 → 逐词逐句拆开讲 → 点破错因 → 换个新例子，约 230 字分 4 段；详细再加一道小练习（正文可按上下键翻看）；简明只讲结论和错因。改档后建议清空缓存，否则同一道错题仍读旧讲解</small></div>
+            <div class="f"><div class="lbl"><b>讲解详细程度</b><small>六段结构：结论（直接给结果，不复述题目）→ 拆解（英语逐词、数学分步、语文字词）→ 逐个分析其余选项 → 举例（数笔画、认首字母等简单识记题自动跳过）→ 易错点（单复数、时态、介词、进位、形近字等）→ 举一反三。面板固定占屏高 70%、上下留白，按遥控器上下键翻看。改档后建议清空缓存，否则同一道错题仍读旧讲解</small></div>
               <div class="ctl"><select id="aiDetail">
-                <option value="1">简明 · 约 80 字</option><option value="2" selected>标准 · 约 200 字</option>
-                <option value="3">详细 · 约 300 字</option>
+                <option value="1">简明 · 约 150 字</option><option value="2" selected>标准 · 约 320 字</option>
+                <option value="3">详细 · 约 450 字</option>
               </select></div></div>
             <div class="f"><div class="lbl"><b>连通与缓存</b><small id="aiTestHint">填完先点「测试连通」，通了再去电视上答错一题看效果。同一道题第二次直接读本机缓存，不再请求模型。</small></div>
               <div class="ctl"><button id="btnAiTest" class="mini" type="button" style="max-width:none">测试连通</button>
