@@ -29,8 +29,14 @@ import org.json.JSONObject;
  */
 public class LimitActivity extends Activity {
 
-    /** 供守护服务判断锁屏页是否已经在屏幕上（同一进程静态标记） */
+    /** 供守护服务判断锁屏页实例是否还在（同一进程静态标记，不代表在屏幕上） */
     public static volatile boolean running = false;
+
+    /** 锁屏页是否真的在前台可见；按 HOME 被压后台时 running 仍为 true */
+    public static volatile boolean foreground = false;
+
+    /** 守护服务可否把被切到后台的锁屏页拉回前台（家长操作 / 已放行时为 false） */
+    public static volatile boolean allowBringBack = false;
 
     /** 当前显示中的锁屏页，供手机后台「立即解锁」远程关闭 */
     private static volatile LimitActivity active = null;
@@ -47,6 +53,8 @@ public class LimitActivity extends Activity {
     private static final int GESTURE_UP_COUNT = 5;
     private static final long GESTURE_GAP_MS = 800;
     private static final long RELAUNCH_MS = 1200;
+    /** HOME 后系统 app-switch 保护会静默丢弃启动请求，失败后每 2 秒重试 */
+    private static final long RELAUNCH_RETRY_MS = 2000;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -57,23 +65,25 @@ public class LimitActivity extends Activity {
     private int upHits = 0;
     private long lastUpAt = 0;
 
-    /** 孩子按 HOME 逃到桌面时把自己拉回来；电视睡着了就等下次唤醒 */
+    /**
+     * 孩子按 HOME 逃到桌面时把自己拉回来；电视睡着了就等下次唤醒。
+     * v1.10.2：连按主菜单时系统的 app-switch 保护会静默丢弃后台切前台请求，
+     * 单次尝试收不到异常，必须持续重试直到 onResume 真正把回调撤掉。
+     */
     private final Runnable relaunch = new Runnable() {
         @Override
         public void run() {
-            if (released || managing || isFinishing()) {
+            if (!allowBringBack || foreground || released || managing || isFinishing()) {
                 return;
             }
             if (!DeviceAwake.isAwake(LimitActivity.this)) {
+                handler.removeCallbacks(relaunch);
+                handler.postDelayed(relaunch, RELAUNCH_RETRY_MS * 3);
                 return;
             }
-            try {
-                startActivity(new Intent(LimitActivity.this, LimitActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                                | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                                | Intent.FLAG_ACTIVITY_SINGLE_TOP));
-            } catch (Throwable ignored) {
-            }
+            GuardService.ensureVisible(LimitActivity.this, true);
+            handler.removeCallbacks(relaunch);
+            handler.postDelayed(relaunch, RELAUNCH_RETRY_MS);
         }
     };
 
@@ -82,6 +92,8 @@ public class LimitActivity extends Activity {
         super.onCreate(savedInstanceState);
         if (!DeviceAwake.isAwake(this)) {
             bailed = true;
+            foreground = false;
+            allowBringBack = false;
             finish();
             return;
         }
@@ -122,6 +134,8 @@ public class LimitActivity extends Activity {
         if (bailed) {
             return;
         }
+        foreground = true;
+        allowBringBack = false;
         managing = false;
         upHits = 0;
         handler.removeCallbacks(relaunch);
@@ -137,8 +151,10 @@ public class LimitActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (!released && !managing && !isFinishing()) {
-            handler.removeCallbacks(relaunch);
+        foreground = false;
+        allowBringBack = !released && !managing && !isFinishing();
+        handler.removeCallbacks(relaunch);
+        if (allowBringBack) {
             handler.postDelayed(relaunch, RELAUNCH_MS);
         }
     }
@@ -146,6 +162,8 @@ public class LimitActivity extends Activity {
     @Override
     protected void onDestroy() {
         running = false;
+        foreground = false;
+        allowBringBack = false;
         if (active == this) {
             active = null;
         }
@@ -185,6 +203,7 @@ public class LimitActivity extends Activity {
                 }
                 a.released = true;
                 a.managing = false;
+                allowBringBack = false;
                 a.handler.removeCallbacksAndMessages(null);
                 a.finish();
             }

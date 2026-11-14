@@ -1367,6 +1367,11 @@ public class HttpServer {
             o.put("url", LanUtils.url());
             o.put("pending", Prefs.isPending());
             o.put("quizRunning", QuizActivity.running);
+            // running 只表示 Activity 实例还在；按 HOME 被压到后台时它仍是 true。
+            // 后台状态卡改用 foreground 判断「电视上是否真的有弹窗」。
+            o.put("quizForeground", QuizActivity.foreground);
+            o.put("limitRunning", LimitActivity.running);
+            o.put("limitForeground", LimitActivity.foreground);
             o.put("dueAt", Prefs.dueAt());
             o.put("lastPassAt", Prefs.lastPassAt());
             // v1.7.33：电视醒着才弹题，待机时暂缓到下次唤醒

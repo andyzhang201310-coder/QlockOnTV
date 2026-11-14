@@ -57,8 +57,21 @@ import java.util.Set;
  */
 public class QuizActivity extends Activity {
 
-    /** 供守护服务判断当前是否正在答题（同一进程内静态标记） */
+    /** 供守护服务判断当前是否正在答题（同一进程内静态标记，只表示实例还在） */
     public static volatile boolean running = false;
+
+    /**
+     * 答题页是否真的在前台可见（onResume / onPause 维护）。
+     * running 只说明 Activity 实例还活着：按 HOME 被压到后台时它依旧是 true，
+     * 后台状态卡和守护服务不能再拿它当「电视上正显示弹窗」用。
+     */
+    public static volatile boolean foreground = false;
+
+    /**
+     * 守护服务可否把被切到后台的答题页拉回前台。
+     * 家长在看管理页、自由练习、已通关、Activity 正在结束时都是 false。
+     */
+    public static volatile boolean allowBringBack = false;
 
     /** 当前显示在屏幕上的答题页，供手机后台「立即解锁」远程关闭 */
     private static volatile QuizActivity active = null;
@@ -80,6 +93,10 @@ public class QuizActivity extends Activity {
     private static final int GESTURE_UP_COUNT = 5;
     /** 相邻两次上键的最大间隔，超时即作废重新数（必须"连按"才有效） */
     private static final long GESTURE_GAP_MS = 800;
+
+    /** 按 HOME 后先等 1.2 秒再拉回；失败后每 2 秒重试，直到真正回到前台 */
+    private static final long RELAUNCH_MS = 1200;
+    private static final long RELAUNCH_RETRY_MS = 2000;
 
     private static final String[] LETTERS = {"A", "B", "C", "D", "E", "F"};
 
@@ -191,25 +208,30 @@ public class QuizActivity extends Activity {
         return v < 10 ? "0" + v : String.valueOf(v);
     }
 
-    /** 小孩按 HOME 逃到桌面时把自己拉回来 */
+    /**
+     * 小孩按 HOME 逃到桌面时把自己拉回来。
+     *
+     * <p>v1.10.2：连按遥控器主菜单时，系统会在每次 HOME 后刷新 5 秒的 app-switch
+     * 保护窗口，把应用发起的切前台请求**静默丢弃**（logcat: "Activity start request
+     * from ... stopped"），startActivity 不抛异常，原来的单次尝试就永远失效了。
+     * 现在改为走守护服务的统一通道并持续重试，直到 onResume 真正把回调撤掉。
+     */
     private final Runnable relaunch = new Runnable() {
         @Override
         public void run() {
-            if (passed || managing || isFinishing() || "practice".equals(playMode)) {
-                return;   // 自由练习允许孩子自己退出，不再拉回
+            if (!allowBringBack || foreground || passed || managing || isFinishing()
+                    || "practice".equals(playMode)) {
+                return;   // 已回到前台 / 家长管理 / 自由练习 / 已通关：不再拉回
             }
-            // 屏幕熄了就不用拉回来，避免反复点亮屏幕
             if (!screenOn()) {
+                // 屏幕熄了先别点亮电视，但保持低频轮询，唤醒后能自动补回来
+                handler.removeCallbacks(relaunch);
+                handler.postDelayed(relaunch, RELAUNCH_RETRY_MS * 3);
                 return;
             }
-            try {
-                Intent i = new Intent(QuizActivity.this, QuizActivity.class);
-                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                        | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                        | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(i);
-            } catch (Throwable ignored) {
-            }
+            GuardService.ensureVisible(QuizActivity.this, false);
+            handler.removeCallbacks(relaunch);
+            handler.postDelayed(relaunch, RELAUNCH_RETRY_MS);
         }
     };
 
@@ -230,6 +252,8 @@ public class QuizActivity extends Activity {
         // 直接退出，绝不点亮面板。
         if (!DeviceAwake.isAwake(this)) {
             bailed = true;
+            foreground = false;
+            allowBringBack = false;
             finish();
             return;
         }
@@ -672,6 +696,9 @@ public class QuizActivity extends Activity {
         if (bailed) {
             return;
         }
+        // 真的回到前台了：撤掉所有拉回重试，状态卡也据此显示「答题弹窗显示中」
+        foreground = true;
+        allowBringBack = false;
         // 从管理页回来，恢复「离开就拉回」的约束
         managing = false;
         upHits = 0;
@@ -688,14 +715,18 @@ public class QuizActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        // 实例还在但已经不在屏幕上：此时 running 仍是 true，只有 foreground 能说明真相
+        foreground = false;
         // AI 面板是独立窗口，不会随 Activity 一起隐藏：先正常关掉（onDismiss 里推进题目），
         // 免得孩子按 HOME 逃出去后，回来还对着一条已经作废的题目对话框
         if (aiPanel != null && aiPanel.isShowing()) {
             aiPanel.dismiss();
         }
-        if (!passed && !managing && !isFinishing()) {
-            handler.removeCallbacks(relaunch);
-            handler.postDelayed(relaunch, 1200);
+        allowBringBack = !passed && !managing && !isFinishing()
+                && !"practice".equals(playMode);
+        handler.removeCallbacks(relaunch);
+        if (allowBringBack) {
+            handler.postDelayed(relaunch, RELAUNCH_MS);
         }
     }
 
@@ -708,6 +739,8 @@ public class QuizActivity extends Activity {
             aiPanel.dismiss();   // destroyed 已置位，onDismiss 不会再动题目
         }
         running = false;
+        foreground = false;
+        allowBringBack = false;
         if (rulesReceiverRegistered) {
             try {
                 unregisterReceiver(rulesReceiver);
@@ -1374,6 +1407,7 @@ public class QuizActivity extends Activity {
         }
         passed = true;
         running = false;
+        allowBringBack = false;
         long now = System.currentTimeMillis();
         Prefs.setPending(false);
         Prefs.setLastPassAt(now);
@@ -1464,6 +1498,7 @@ public class QuizActivity extends Activity {
                 }
                 a.passed = true;
                 a.managing = false;
+                allowBringBack = false;
                 a.handler.removeCallbacksAndMessages(null);
                 a.finish();
             }

@@ -44,6 +44,13 @@ public class GuardService extends Service {
     private static final int REQ_ALARM = 100;
     private static final int REQ_SHOW = 101;
     private static final int REQ_LIMIT = 103;
+    private static final int REQ_FRONT_QUIZ = 104;
+    private static final int REQ_FRONT_LIMIT = 105;
+
+    /** 同一次「被压后台」里两次拉回尝试的最小间隔，避免 Activity 重试与 15 秒轮询撞车 */
+    private static final long ENSURE_MIN_MS = 1200L;
+    /** 连续这么多次仍回不到前台，就发全屏通知（由 systemui 拉起，不受 app-switch 保护限制） */
+    private static final int ENSURE_NOTIFY_AFTER = 3;
 
     private static GuardService alive;
 
@@ -51,6 +58,9 @@ public class GuardService extends Service {
     private HttpServer server;
     private volatile boolean quizShowing = false;
     private long lastShowAt = 0L;
+    /** 拉回前台的限频与失败计数；界面回到前台时清零 */
+    private long lastEnsureAt = 0L;
+    private int ensureFails = 0;
     /** 每日轮数用完的锁屏页是否刚拉起过，避免 15 秒轮询反复重排界面 */
     private volatile boolean limitShowing = false;
     private long lastLimitAt = 0L;
@@ -376,10 +386,24 @@ public class GuardService extends Service {
             return;
         }
         long now = System.currentTimeMillis();
-        // quizShowing 卡住（界面没成功拉起）时，60 秒后重试
-        if (QuizActivity.running || LimitActivity.running) {
+        if (QuizActivity.foreground || LimitActivity.foreground) {
+            // 界面真的在屏幕上：本轮无需任何动作，拉回计数也归零
+            ensureFails = 0;
             return;
         }
+        // v1.10.2：实例还在但已被 HOME 压到后台（连按主菜单时系统 app-switch 保护把
+        // 拉回请求静默丢弃）。旧逻辑只看 running 就 return，于是后台一直显示
+        // 「答题弹窗显示中」、电视上却是桌面，再也不会有人把界面拉回来。
+        boolean limitHidden = LimitActivity.running && LimitActivity.allowBringBack
+                && Rules.limitLocked(this);
+        if ((QuizActivity.running && QuizActivity.allowBringBack) || limitHidden) {
+            ensureVisible(this, limitHidden);
+            return;
+        }
+        if (QuizActivity.running || LimitActivity.running) {
+            return;   // 家长管理页 / 自由练习 / 已通关：允许暂时离开
+        }
+        // quizShowing 卡住（界面没成功拉起）时，60 秒后重试
         if (quizShowing && now - lastShowAt < 60000L) {
             return;
         }
@@ -424,6 +448,10 @@ public class GuardService extends Service {
 
     private void showQuiz() {
         if (QuizActivity.running) {
+            // 后台「立即弹一次」撞上被 HOME 压后台的界面：不用重新出题，带回来即可
+            if (!QuizActivity.foreground && QuizActivity.allowBringBack) {
+                ensureVisible(this, false);
+            }
             return;
         }
         // 兜底闸门：showSoon / 开机补题 / 后台「立即弹一次」都会走到这里，
@@ -467,6 +495,9 @@ public class GuardService extends Service {
      */
     private void showLimit() {
         if (LimitActivity.running) {
+            if (!LimitActivity.foreground && LimitActivity.allowBringBack) {
+                ensureVisible(this, true);
+            }
             return;
         }
         if (!awake(this)) {
@@ -493,27 +524,100 @@ public class GuardService extends Service {
         updateNotification();
     }
 
+    // ------------------------------------------------------------------ 被 HOME 压后台后的自愈
+
+    /**
+     * 把被遥控器主菜单（HOME）压到后台、但实例还活着的答题页 / 锁屏页重新带回前台。
+     *
+     * <p>v1.10.2 修复「后台显示答题弹窗显示中、电视上却没有弹窗」：连按 HOME 会不断刷新
+     * 系统 5 秒的 app-switch 保护窗口，应用从后台发起的 startActivity 被静默丢弃
+     * （logcat: "Activity start request from ... stopped"），不抛异常也不会自动重试。
+     * 答题页自己的 relaunch 每 2 秒重试，服务轮询再兜一次底；连续多次仍回不来时发全屏通知，
+     * 它由 systemui 拉起，不受该保护限制。
+     *
+     * <p>这里只把已有界面「带回来」：不重新出题、不重复计每日轮数、不改动 pending。
+     */
+    public static void ensureVisible(Context c, boolean limit) {
+        GuardService s = alive;
+        if (s != null) {
+            s.ensureVisibleNow(limit);
+        } else {
+            // 服务刚被系统回收的极小概率窗口：至少把启动请求发出去
+            launchBringFront(c, limit);
+        }
+    }
+
+    private void ensureVisibleNow(boolean limit) {
+        // 待机时绝不点亮电视；唤醒后由 wakeTick / relaunch 继续补
+        if (!awake(this)) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        // 家长刚点了「立即解锁」、或本轮已答完 / 已放行：别把已经关掉的界面又拉回来
+        if (now - unlockedAt < 5000L) {
+            return;
+        }
+        if (limit ? !Rules.limitLocked(this) : !Prefs.isPending()) {
+            return;
+        }
+        if (now - lastEnsureAt < ENSURE_MIN_MS) {
+            return;
+        }
+        lastEnsureAt = now;
+        launchBringFront(this, limit);
+        ensureFails++;
+        if (ensureFails >= ENSURE_NOTIFY_AFTER) {
+            postFullScreenFallback(limit);
+            ensureFails = 0;
+        }
+    }
+
+    /** 供测试校验：拉回用的 Intent 必须能把已有 task 提到前台且不新建实例 */
+    static Intent frontIntent(Context c, boolean limit) {
+        Intent i = new Intent(c, limit ? LimitActivity.class : QuizActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                | Intent.FLAG_ACTIVITY_SINGLE_TOP
+                | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        return i;
+    }
+
+    private static void launchBringFront(Context c, boolean limit) {
+        Intent i = frontIntent(c, limit);
+        if (!sendAllowBackgroundStart(c, i,
+                limit ? REQ_FRONT_LIMIT : REQ_FRONT_QUIZ)) {
+            try {
+                c.startActivity(i);
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
     /**
      * Android 10 起后台启动 Activity 受 BAL 限制，Android 14/15 收紧到连 targetSdk&lt;29 也拦
      * （实测 Android 15 上 startActivity 被静默 abort，不抛异常）。
      * API 34+ 用 PendingIntent + ActivityOptions 显式 opt-in 是官方给的合法通道；
      * 低版本没有这个限制，继续走 startActivity。
      */
-    private boolean launchViaPendingIntent(Intent i, int requestCode) {
+    private static boolean sendAllowBackgroundStart(Context c, Intent i, int requestCode) {
         if (Build.VERSION.SDK_INT < 34) {
             return false;
         }
         try {
-            PendingIntent pi = PendingIntent.getActivity(this, requestCode, i,
+            PendingIntent pi = PendingIntent.getActivity(c, requestCode, i,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
             ActivityOptions opts = ActivityOptions.makeBasic();
             opts.setPendingIntentBackgroundActivityStartMode(
                     ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED);
-            pi.send(this, 0, null, null, null, null, opts.toBundle());
+            pi.send(c, 0, null, null, null, null, opts.toBundle());
             return true;
         } catch (Throwable e) {
             return false;
         }
+    }
+
+    private boolean launchViaPendingIntent(Intent i, int requestCode) {
+        return sendAllowBackgroundStart(this, i, requestCode);
     }
 
     /**
@@ -547,6 +651,7 @@ public class GuardService extends Service {
 
     private void onQuizPassed() {
         quizShowing = false;
+        ensureFails = 0;
         Prefs.setPending(false);
         long now = System.currentTimeMillis();
         Prefs.setLastPassAt(now);
@@ -582,6 +687,7 @@ public class GuardService extends Service {
             s.limitShowing = false;
             s.lastShowAt = now;
             s.unlockedAt = now;
+            s.ensureFails = 0;
             try {
                 s.updateNotification();
             } catch (Throwable ignored) {

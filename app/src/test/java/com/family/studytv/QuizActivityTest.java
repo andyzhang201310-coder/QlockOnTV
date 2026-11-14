@@ -44,7 +44,10 @@ public class QuizActivityTest {
 
     @Before
     public void setUp() {
+        // v1.10.2：前台状态新增了静态标记，逐用例复位，避免跨测试类串状态
         QuizActivity.running = false;
+        QuizActivity.foreground = false;
+        QuizActivity.allowBringBack = false;
         Prefs.setQuizCount(5);
         Prefs.setSubjects("语文,数学,英语");
         QuestionBank.resetForTest();
@@ -60,6 +63,8 @@ public class QuizActivityTest {
         } catch (Throwable ignored) {
         }
         QuizActivity.running = false;
+        QuizActivity.foreground = false;
+        QuizActivity.allowBringBack = false;
     }
 
     private String progress() {

@@ -1349,9 +1349,19 @@
     var on = !!state.enabled;
     // ---- 运行状态
     $('stEnabled').innerHTML = on ? '<span class="badge on">拦截中</span>' : '<span class="badge off">已暂停</span>';
-    $('stQuiz').innerHTML = state.quizRunning
-      ? '<span style="color:var(--accent)">答题弹窗显示中</span>'
-      : '<span style="color:var(--sub)">未弹出</span>';
+    // quizRunning 只表示答题页实例还在；连续按主菜单(HOME)会把它压到后台，
+    // 此时电视上其实没有弹窗，状态卡要如实显示并说明正在自动拉回。
+    if (state.quizForeground) {
+      $('stQuiz').innerHTML = '<span style="color:var(--accent)">答题弹窗显示中</span>';
+    } else if (state.quizRunning) {
+      $('stQuiz').innerHTML = '<span style="color:var(--red)" title="按了主菜单后系统暂时拦住了切回前台，应用正在重试">答题页被切到后台，正在拉回</span>';
+    } else if (state.limitForeground) {
+      $('stQuiz').innerHTML = '<span style="color:var(--accent)">次数用尽锁屏中</span>';
+    } else if (state.limitRunning) {
+      $('stQuiz').innerHTML = '<span style="color:var(--red)">锁屏页被切到后台，正在拉回</span>';
+    } else {
+      $('stQuiz').innerHTML = '<span style="color:var(--sub)">未弹出</span>';
+    }
     if (!state.autoQuiz) {
       $('stAuto').innerHTML = '<span class="badge off">已关闭</span>';
     } else if (state.quietEnabled && state.inQuiet) {

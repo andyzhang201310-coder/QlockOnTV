@@ -476,6 +476,26 @@ public class HttpServerTest {
         }
     }
 
+    @Test
+    public void stateTellsHiddenQuizApartFromVisibleOne() throws Exception {
+        String cookie = login();
+        // 连按主菜单后：Activity 实例还在（旧状态卡会误报「答题弹窗显示中」），
+        // 但电视上其实是桌面。接口必须把两种状态分开，前端才能如实显示。
+        QuizActivity.running = true;
+        QuizActivity.foreground = false;
+        LimitActivity.foreground = false;
+        try {
+            String[] r = request("GET", "/api/state", null, null, cookie);
+            assertEquals("200", r[0]);
+            assertTrue(r[1].contains("\"quizRunning\":true"));
+            assertTrue(r[1].contains("\"quizForeground\":false"));
+            assertTrue(r[1].contains("\"limitForeground\":false"));
+        } finally {
+            QuizActivity.running = false;
+            QuizActivity.foreground = false;
+        }
+    }
+
     // ---------------------------------------------------------------- 自动弹窗 / 免打扰
 
     /** v1.7.25：护眼配色经 /api/settings 保存、/api/state 回显，非法值回落默认 */
