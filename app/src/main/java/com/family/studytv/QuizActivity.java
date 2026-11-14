@@ -151,6 +151,7 @@ public class QuizActivity extends Activity {
     private TextView tvFeedback;
     private TextView tvQuizHint;
     private LinearLayout optionBox;
+    private View optionTopSpace;
     private ScrollView quizScroll;
 
     // ---- AI 错题讲解（v1.9.0）
@@ -251,6 +252,7 @@ public class QuizActivity extends Activity {
         tvFeedback = (TextView) findViewById(R.id.tvFeedback);
         tvQuizHint = (TextView) findViewById(R.id.tvQuizHint);
         optionBox = (LinearLayout) findViewById(R.id.optionBox);
+        optionTopSpace = findViewById(R.id.optionTopSpace);
         quizScroll = (ScrollView) findViewById(R.id.quizScroll);
         aiRow = (LinearLayout) findViewById(R.id.aiRow);
         btnAi = (Button) findViewById(R.id.btnAi);
@@ -331,6 +333,7 @@ public class QuizActivity extends Activity {
         tvQuestion.setText("今天想做几年级的题？");
         applyQuestionFont();
         feedback(0, "");
+        setOptionTopWeight(0f);
         optionBox.removeAllViews();
         final List<Integer> levels = allowedLevels();
         for (int k = 0; k < levels.size(); k++) {
@@ -449,9 +452,24 @@ public class QuizActivity extends Activity {
         }
     }
 
+    /** 两列布局把选项组往下带一点，上/下留白按 0.7:1 分；内容超一屏时 weight 自动让位。 */
+    private void setOptionTopWeight(float w) {
+        if (optionTopSpace == null || optionTopSpace.getLayoutParams() == null) {
+            return;
+        }
+        LinearLayout.LayoutParams lp =
+                (LinearLayout.LayoutParams) optionTopSpace.getLayoutParams();
+        if (lp.weight == w) {
+            return;
+        }
+        lp.weight = w;
+        optionTopSpace.setLayoutParams(lp);
+    }
+
     private void buildOptionViews(List<String> options) {
         optionBox.removeAllViews();
         boolean grid = useCompactGrid(options);
+        setOptionTopWeight(grid ? 0.7f : 0f);
         int n = options.size();
         int cols = grid ? 2 : 1;
         for (int k = 0; k < n; k += cols) {
@@ -466,13 +484,17 @@ public class QuizActivity extends Activity {
                 optionBox.addView(row);
             }
             int end = Math.min(n, k + cols);
+            int rowIndex = k / cols;
             for (int idx = k; idx < end; idx++) {
                 Button b = (Button) getLayoutInflater().inflate(
                         R.layout.item_option, optionBox, false);
                 if (grid) {
                     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                             0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-                    lp.setMargins(idx == k ? 0 : px(b, 8f), px(b, 5f), 0, 0);
+                    // 两行之间要留够呼吸空间，5dp 会让上下两排卡片几乎贴在一起；
+                    // 第一行与题干仍保持 5dp，不然题目和答案会被拉开。
+                    int top = px(b, rowIndex > 0 ? 16f : 5f);
+                    lp.setMargins(idx == k ? 0 : px(b, 8f), top, 0, 0);
                     b.setLayoutParams(lp);
                 }
                 setOptionText(b, idx, options.get(idx), null, null);

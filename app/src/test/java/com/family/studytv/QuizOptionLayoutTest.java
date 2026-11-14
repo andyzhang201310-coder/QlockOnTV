@@ -180,12 +180,22 @@ public class QuizOptionLayoutTest {
         float d = activity.getResources().getDisplayMetrics().density;
         java.util.List<Button> bs = buttons();
         assertTrue(bs.size() >= 2);
-        for (Button b : bs) {
+        // 两列布局时 optionBox 的直接子 View 是行容器；四行布局时就是 Button。
+        // 四行必须保持 5dp 才放得下四项；两列只有两行，第二行起刻意留 16dp 呼吸空间。
+        boolean grid = optionBox().getChildCount() > 0
+                && !(optionBox().getChildAt(0) instanceof Button);
+        for (int i = 0; i < bs.size(); i++) {
+            Button b = bs.get(i);
             assertTrue("选项最小高度要收紧到 56dp 以内，否则四选项同屏放不下",
                     b.getMinHeight() <= Math.round(56 * d) + 1);
             LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) b.getLayoutParams();
-            assertTrue("选项之间的间距要收紧到 5dp 以内",
-                    lp.topMargin <= Math.round(5 * d) + 1);
+            int limitDp = grid && i >= 2 ? 16 : 5;
+            assertTrue("第 " + i + " 项间距要收紧到 " + limitDp + "dp 以内",
+                    lp.topMargin <= Math.round(limitDp * d) + 1);
+            if (grid && i == 2) {
+                assertTrue("两列的第二行要明显拉开，别和第一排贴在一起",
+                        lp.topMargin > Math.round(5 * d));
+            }
         }
     }
 

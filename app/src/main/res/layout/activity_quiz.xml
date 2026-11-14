@@ -122,6 +122,14 @@
                 android:layout_marginBottom="10dp"
                 android:text="题目" />
 
+            <!-- 两列只占两行时，上方也留一段弹性空间，别让选项全挤在题干正下方；
+                 长答案内容超一屏时 weight 自动让位，不影响滚动 -->
+            <Space
+                android:id="@+id/optionTopSpace"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0" />
+
             <!-- 选项高度 wrap_content：长答案自动换行撑高，短答案由 minHeight 保底 -->
             <LinearLayout
                 android:id="@+id/optionBox"
