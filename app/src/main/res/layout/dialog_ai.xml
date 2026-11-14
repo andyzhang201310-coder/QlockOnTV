@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AI 错题讲解面板（v1.9.0）：题目与对错信息在上，讲解正文固定高度可滚，底部「继续下一题」。
-  宽度由代码按屏幕 82% 设定；正文字号走学习页同一套 20sp 观感，一篇 90 字的讲解三行内看得完。
+  AI 错题讲解面板（v1.10.4）：题目与对错信息在上，分层讲解正文贴内容高度、超出可在面板内滚动，底部「继续下一题」。
+  宽度由代码按屏幕 82% 设定；正文字号走学习页同一套 20sp 观感，标准档约 200 字分 4 段，配遥控器上下键读完。
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/aiPanelRoot"
@@ -50,6 +50,16 @@
             android:textColor="@color/textPrimary"
             android:textSize="20sp" />
     </ScrollView>
+
+    <TextView
+        android:id="@+id/tvAiMore"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="↓ 内容较长，按遥控器上下键翻看"
+        android:textColor="@color/textSecondary"
+        android:textSize="14sp"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="match_parent"

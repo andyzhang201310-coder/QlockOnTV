@@ -65,6 +65,14 @@ public class RulesTest {
         assertEquals(48, d.optJSONArray("weekSlots").optString(0).length());
         assertTrue(d.optBoolean("allDay"));
         assertFalse(d.optBoolean("reviewEnabled"));
+        assertEquals("AI 讲解默认标准档", 2, d.optInt("aiDetail"));
+    }
+
+    @Test
+    public void aiDetailIsClampedToThreeLevels() throws Exception {
+        assertEquals(1, Rules.sanitize(new JSONObject().put("aiDetail", -5)).optInt("aiDetail"));
+        assertEquals(3, Rules.sanitize(new JSONObject().put("aiDetail", 99)).optInt("aiDetail"));
+        assertEquals(2, Rules.sanitize(new JSONObject().put("aiDetail", "oops")).optInt("aiDetail"));
     }
 
     @Test

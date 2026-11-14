@@ -1121,6 +1121,11 @@
             </div>
             <div class="f"><div class="lbl"><b>请求超时</b><small>模型太慢会自动放弃，答题流程不会卡住</small></div>
               <div class="ctl"><div class="stepper" data-key="aiTimeoutSeconds" data-min="5" data-max="60"></div><span class="unit">秒</span></div></div>
+            <div class="f"><div class="lbl"><b>讲解详细程度</b><small>标准：先说答案 → 逐词逐句拆开讲 → 点破错因 → 换个新例子，约 230 字分 4 段；详细再加一道小练习（正文可按上下键翻看）；简明只讲结论和错因。改档后建议清空缓存，否则同一道错题仍读旧讲解</small></div>
+              <div class="ctl"><select id="aiDetail">
+                <option value="1">简明 · 约 80 字</option><option value="2" selected>标准 · 约 200 字</option>
+                <option value="3">详细 · 约 300 字</option>
+              </select></div></div>
             <div class="f"><div class="lbl"><b>连通与缓存</b><small id="aiTestHint">填完先点「测试连通」，通了再去电视上答错一题看效果。同一道题第二次直接读本机缓存，不再请求模型。</small></div>
               <div class="ctl"><button id="btnAiTest" class="mini" type="button" style="max-width:none">测试连通</button>
                 <button id="btnAiClear" class="mini" type="button" style="max-width:none">清空缓存</button></div></div>
@@ -2424,10 +2429,11 @@
         syncBool(); conditional(); changed();
       };
     });
-    ['playMode', 'passRatio', 'scheduleMode'].forEach(function (id) {
+    ['playMode', 'passRatio', 'scheduleMode', 'aiDetail'].forEach(function (id) {
       $(id).onchange = function () {
         if (!cfg) { return; }
-        cfg[id] = id === 'passRatio' ? parseFloat($(id).value) : $(id).value;
+        cfg[id] = id === 'passRatio' ? parseFloat($(id).value)
+          : id === 'aiDetail' ? parseInt($(id).value, 10) : $(id).value;
         conditional(); changed();
       };
     });
@@ -2501,6 +2507,7 @@
     if (!cfg) { return; }
     $('playMode').value = cfg.playMode || 'round';
     $('scheduleMode').value = cfg.scheduleMode || 'control';
+    $('aiDetail').value = String(cfg.aiDetail || 2);
     var opts = Array.prototype.map.call($('passRatio').options, function (o) { return +o.value; });
     var best = opts[0], r = +cfg.passRatio || 1;
     opts.forEach(function (v) { if (Math.abs(v - r) < Math.abs(best - r)) { best = v; } });

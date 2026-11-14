@@ -113,6 +113,7 @@ public final class Rules {
             o.put("aiApiKey", "");
             o.put("aiModel", "deepseek-chat");
             o.put("aiTimeoutSeconds", 20);
+            o.put("aiDetail", 2);   // AI 讲解详细程度：1 简明 / 2 标准 / 3 详细
         } catch (Throwable ignored) {
         }
         return o;
@@ -268,6 +269,7 @@ public final class Rules {
             aiText(o, in, "aiModel", 80);
             aiText(o, in, "aiApiKey", 300);
             num(o, in, "aiTimeoutSeconds", 5, 60);
+            num(o, in, "aiDetail", 1, 3);
         } catch (Throwable ignored) {
         }
         return o;

@@ -158,7 +158,14 @@ public class AiExplainTest {
         assertTrue("要有题干", p.contains("12 × 4 = ?"));
         assertTrue("正确答案要标出来", p.contains("正确答案：B. 48"));
         assertTrue("必须告诉模型孩子选了什么", p.contains("孩子选了：A. 44"));
-        assertTrue("要限制长度，电视屏幕放不下长文", p.contains("90 字"));
+        assertTrue("要按步骤拆开讲，不能只给一句翻译", p.contains("【拆开看】"));
+        assertTrue("要举同类型的新例子", p.contains("【换个例子】"));
+        assertTrue("要点破错误选项", p.contains("【为什么会选错】"));
+        assertTrue("标准档要有字数区间", p.contains("200–260 字"));
+        assertTrue("四段一段都不能少", p.contains("每一段都必须写出来"));
+        assertTrue("错因段要点名孩子选的那个选项", p.contains("「44」"));
+        assertTrue("错因必须排在举例前面，防止模型写满字数漏掉",
+                p.indexOf("【为什么会选错】") < p.indexOf("【换个例子】"));
     }
 
     @Test
@@ -185,6 +192,53 @@ public class AiExplainTest {
         assertEquals("?", AiExplain.letter(-1));
     }
 
+    @Test
+    public void 简明档只讲结论和错因() {
+        String p = AiExplain.buildPrompt("英语", 1, "She is eighteen. 的中文意思是？",
+                opts("喝点果汁吧", "她十八岁了"), 1, 0, AiExplain.DETAIL_BRIEF);
+        assertTrue(p.contains("【先看答案】"));
+        assertTrue(p.contains("【为什么会选错】"));
+        assertFalse("简明档不要拆词举例", p.contains("【拆开看】"));
+        assertFalse(p.contains("【换个例子】"));
+        assertTrue(p.contains("60–90 字"));
+        assertTrue(p.contains("「喝点果汁吧」"));
+    }
+
+    @Test
+    public void 详细档多一道小练习且字数更长() {
+        String p = AiExplain.buildPrompt("数学", 2, "8 ÷ 2 = ?",
+                opts("3", "4"), 1, 0, AiExplain.DETAIL_DEEP);
+        assertTrue(p.contains("【再练一次】"));
+        assertTrue(p.contains("280–360 字"));
+    }
+
+    @Test
+    public void 选对时不用为什么会选错这个标签() {
+        String p = AiExplain.buildPrompt("语文", 2, "「明」的部首是什么？",
+                opts("日", "月"), 0, 0);
+        assertTrue(p.contains("【容易混的地方】"));
+        assertFalse(p.contains("【为什么会选错】"));
+    }
+
+    @Test
+    public void 非法档位回落标准档() {
+        assertEquals(AiExplain.DETAIL_STANDARD, AiExplain.detailLevelValue(0));
+        assertEquals(AiExplain.DETAIL_STANDARD, AiExplain.detailLevelValue(9));
+        assertEquals(AiExplain.DETAIL_STANDARD, AiExplain.detailLevel(null));
+        assertEquals(AiExplain.DETAIL_DEEP, AiExplain.detailLevelValue(AiExplain.DETAIL_DEEP));
+    }
+
+    @Test
+    public void 按档位放大token与截断上限() throws Exception {
+        assertEquals(320, AiExplain.maxTokens(AiExplain.DETAIL_BRIEF));
+        assertEquals(900, AiExplain.maxTokens(AiExplain.DETAIL_STANDARD));
+        assertEquals(1300, AiExplain.maxTokens(AiExplain.DETAIL_DEEP));
+        assertTrue("详细档不能被标准档的长度腰斩",
+                AiExplain.textLimit(AiExplain.DETAIL_DEEP) > AiExplain.textLimit(AiExplain.DETAIL_STANDARD));
+        assertEquals(AiExplain.DETAIL_DEEP,
+                AiExplain.detailLevel(new JSONObject().put("aiDetail", 3)));
+    }
+
     // ------------------------------------------------------------------ 响应解析
 
     @Test
@@ -203,14 +257,15 @@ public class AiExplainTest {
     }
 
     @Test
-    public void 超长讲解被截断() {
+    public void 超长讲解按档位截断() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 400; i++) {
+        for (int i = 0; i < 1000; i++) {
             sb.append('讲');
         }
-        String out = AiExplain.clip(sb.toString());
-        assertEquals(301, out.length());
-        assertTrue(out.endsWith("…"));
+        assertEquals(161, AiExplain.clip(sb.toString(), AiExplain.DETAIL_BRIEF).length());
+        assertEquals(521, AiExplain.clip(sb.toString()).length());
+        assertEquals(801, AiExplain.clip(sb.toString(), AiExplain.DETAIL_DEEP).length());
+        assertTrue(AiExplain.clip(sb.toString()).endsWith("…"));
         assertEquals("短文本原样返回", "三句话讲完", AiExplain.clip("  三句话讲完  "));
     }
 

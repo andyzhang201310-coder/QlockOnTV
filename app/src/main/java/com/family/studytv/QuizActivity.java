@@ -1255,6 +1255,31 @@ public class QuizActivity extends Activity {
                 }
             }
         });
+        // 分层讲解可能一屏放不下：遥控器上下键直接翻正文，别让焦点困在「继续下一题」上
+        final ScrollView scroll = (ScrollView) root.findViewById(R.id.aiScroll);
+        d.setOnKeyListener(new DialogInterface.OnKeyListener() {
+            @Override
+            public boolean onKey(DialogInterface dlg, int keyCode, KeyEvent event) {
+                if (event.getAction() != KeyEvent.ACTION_DOWN
+                        || (keyCode != KeyEvent.KEYCODE_DPAD_UP
+                        && keyCode != KeyEvent.KEYCODE_DPAD_DOWN)) {
+                    return false;
+                }
+                if (scroll == null || body == null || body.getHeight() <= scroll.getHeight()) {
+                    return false;
+                }
+                int step = Math.max(1, scroll.getHeight() - dpToPx(24));
+                int max = body.getHeight() - scroll.getHeight();
+                int y = scroll.getScrollY()
+                        + (keyCode == KeyEvent.KEYCODE_DPAD_DOWN ? step : -step);
+                y = Math.max(0, Math.min(max, y));
+                if (y == scroll.getScrollY()) {
+                    return false;   // 已经到顶/到底，把按键还给焦点系统
+                }
+                scroll.scrollTo(0, y);
+                return true;
+            }
+        });
         d.setCancelable(true);
         d.show();
         close.requestFocus();
@@ -1279,8 +1304,9 @@ public class QuizActivity extends Activity {
         body.setText("正在想怎么讲给你听…");
         retry.setVisibility(View.GONE);
         final ScrollView scroll = (ScrollView) d.findViewById(R.id.aiScroll);
+        final TextView more = (TextView) d.findViewById(R.id.tvAiMore);
         String prompt = AiExplain.buildPrompt(it.q.subject, it.q.grade, it.q.q,
-                it.options, it.answer, choice);
+                it.options, it.answer, choice, AiExplain.detailLevel(cfg));
         AiExplain.explain(this, cfg, it.q.id, prompt, new AiExplain.Listener() {
             @Override
             public void onResult(String text, String error) {
@@ -1291,23 +1317,23 @@ public class QuizActivity extends Activity {
                     body.setTextColor(theme.text);
                     body.setText(RichText.render(text, body.getTextSize()));
                     retry.setVisibility(View.GONE);
-                    fitAiScroll(scroll, body);
+                    fitAiScroll(scroll, body, more);
                     return;
                 }
                 body.setTextColor(theme.warn);
                 body.setText(error == null || error.length() == 0
                         ? "这次没拿到讲解，可以点「重试」" : error);
                 retry.setVisibility(View.VISIBLE);
-                fitAiScroll(scroll, body);
+                fitAiScroll(scroll, body, more);
             }
         });
     }
 
     /**
-     * 正文区高度贴着内容走，但封顶屏幕的 42%：90 字的讲解不会在大面板里留半屏空白，
-     * 模型话痨时也不会把「继续下一题」按钮顶到屏幕外面。
+     * 正文区高度贴着内容走，封顶屏幕的 60%：标准档四段尽量一屏看完，
+     * 详细档超出的部分在面板内滚动，并显示「按上下键翻看」，按钮永远留在屏幕上。
      */
-    private void fitAiScroll(final ScrollView scroll, final TextView body) {
+    private void fitAiScroll(final ScrollView scroll, final TextView body, final TextView more) {
         if (scroll == null || body == null) {
             return;
         }
@@ -1318,12 +1344,15 @@ public class QuizActivity extends Activity {
                     return;
                 }
                 DisplayMetrics m = getResources().getDisplayMetrics();
-                int cap = (int) (m.heightPixels * 0.42f);
+                int cap = (int) (m.heightPixels * 0.60f);
                 int want = Math.min(cap, Math.max(dpToPx(104), body.getHeight()));
                 android.view.ViewGroup.LayoutParams lp = scroll.getLayoutParams();
                 if (lp.height != want) {
                     lp.height = want;
                     scroll.setLayoutParams(lp);
+                }
+                if (more != null) {
+                    more.setVisibility(body.getHeight() > want + 2 ? View.VISIBLE : View.GONE);
                 }
             }
         });

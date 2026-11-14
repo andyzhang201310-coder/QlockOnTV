@@ -47,11 +47,15 @@ public final class AiExplain {
     private static final int CACHE_TRIM_TO = 380;
     private static final String CACHE_FILE = "ai_cache.json";
 
-    /** 讲给孩子听的话超过这个长度就截断，避免把面板撑爆 */
-    private static final int TEXT_MAX = 300;
+    /** 讲解详细程度：1 简明 / 2 标准 / 3 详细（与后台 aiDetail 一致） */
+    public static final int DETAIL_BRIEF = 1;
+    public static final int DETAIL_STANDARD = 2;
+    public static final int DETAIL_DEEP = 3;
 
     private static final String SYS_PROMPT =
-            "你是一位耐心的小学老师，讲题口语化、简短、以鼓励为主。";
+            "你是一位耐心的小学老师，讲题用孩子听得懂的口语，句子短、分步骤、有例子，"
+                    + "会把知识点拆开讲明白，用户要求的每一段都必须写全，不写空泛的夸奖和安慰，"
+                    + "不使用「本题考查」这类书面语。";
 
     private AiExplain() {
     }
@@ -90,9 +94,20 @@ public final class AiExplain {
     /**
      * 组 prompt：只给模型「题目 / 四个选项 / 正确答案 / 孩子选了哪个」，
      * 其余判断都交给模型 —— 题库里没有解析原文，硬凑反而会编。
+     * v1.10.4 起按「讲解详细程度」生成分层讲解，默认标准档。
      */
     public static String buildPrompt(String subject, int grade, String question,
                                      List<String> options, int answerIdx, int chosenIdx) {
+        return buildPrompt(subject, grade, question, options, answerIdx, chosenIdx,
+                DETAIL_STANDARD);
+    }
+
+    public static String buildPrompt(String subject, int grade, String question,
+                                     List<String> options, int answerIdx, int chosenIdx,
+                                     int detail) {
+        int lv = detailLevelValue(detail);
+        boolean wrong = options != null && chosenIdx >= 0 && chosenIdx < options.size()
+                && chosenIdx != answerIdx;
         StringBuilder sb = new StringBuilder();
         String who = grade > 0 ? "小学" + grade + "年级" : "小学";
         sb.append("你是").append(who).append(subject).append("老师，正在给一个刚答错题的孩子讲这道题。\n\n");
@@ -106,16 +121,65 @@ public final class AiExplain {
             sb.append("\n正确答案：").append(letter(answerIdx)).append(". ")
                     .append(options.get(answerIdx)).append("\n");
         }
-        if (options != null && chosenIdx >= 0 && chosenIdx < options.size()
-                && chosenIdx != answerIdx) {
+        if (wrong) {
             sb.append("孩子选了：").append(letter(chosenIdx)).append(". ")
                     .append(options.get(chosenIdx)).append("\n");
         }
-        sb.append("\n请用孩子能听懂的口语讲清楚两件事：\n");
-        sb.append("1) 正确答案为什么对，能举个小例子就举一个；\n");
-        sb.append("2) 孩子选的那个为什么不对，点出最容易混淆的地方。\n");
-        sb.append("不要重复题目原文，不要用「本题考查」这类书面语，总字数不超过 90 字。");
+        sb.append("\n请按下面的步骤讲，用孩子听得懂的口语，句子要短，每一步单独一段：\n");
+        sb.append("【先看答案】一句话说清正确答案到底是什么意思，别绕弯、别复述题目。\n");
+        if (lv >= DETAIL_STANDARD) {
+            sb.append("【拆开看】把题里的关键词、数字、句型一个一个讲明白：英语题逐词说意思")
+                    .append("并讲清句子怎么拼，数学题说清每一步怎么算，语文题说清字或词为什么这样用。\n");
+        }
+        // 错因放在举例之前：万一模型写满字数收尾，最该讲的这一段也一定在
+        if (wrong) {
+            sb.append("【为什么会选错】必须点名孩子选的那一项「")
+                    .append(options.get(chosenIdx))
+                    .append("」，说清它其实是什么意思、对应哪个作者／哪句英文／哪个算法，")
+                    .append("再点出和正确答案最容易混在哪，不要只说「这个不对」。\n");
+        } else {
+            sb.append("【容易混的地方】说清其他选项分别是什么意思、最容易和正确答案混在哪。\n");
+        }
+        if (lv >= DETAIL_STANDARD) {
+            sb.append("【换个例子】换掉数字或词，举一个同类型的新例子，带着孩子一起说出答案，别抄原题；")
+                    .append("结尾给一句好记的小口诀或反问。\n");
+        }
+        if (lv == DETAIL_DEEP) {
+            sb.append("【再练一次】再出一个更小的问题让孩子自己想，紧接着给出答案。\n");
+        }
+        sb.append("上面每一段都必须写出来，不许合并、不许省略，每段都以【】里的标签开头，")
+                .append("不要另写标题，不要复述题目原文，不要写「小朋友」「别着急」这类空泛安慰。\n");
+        if (lv == DETAIL_BRIEF) {
+            sb.append("只写【先看答案】和").append(wrong ? "【为什么会选错】" : "【容易混的地方】")
+                    .append("两段，总字数 60–90 字。");
+        } else if (lv == DETAIL_DEEP) {
+            sb.append("总字数 280–360 字。");
+        } else {
+            sb.append("总字数 200–260 字。");
+        }
         return sb.toString();
+    }
+
+    /** 后台配置里的讲解档位，缺字段或越界一律回落标准档 */
+    public static int detailLevel(JSONObject cfg) {
+        return detailLevelValue(cfg == null ? DETAIL_STANDARD
+                : cfg.optInt("aiDetail", DETAIL_STANDARD));
+    }
+
+    static int detailLevelValue(int v) {
+        return v < DETAIL_BRIEF || v > DETAIL_DEEP ? DETAIL_STANDARD : v;
+    }
+
+    /** 中文一字约 1～1.5 token，按档位留足余量，别让讲解被 max_tokens 腰斩 */
+    static int maxTokens(int detail) {
+        int lv = detailLevelValue(detail);
+        return lv == DETAIL_BRIEF ? 320 : (lv == DETAIL_DEEP ? 1300 : 900);
+    }
+
+    /** 面板兜底截断长度（正文可滚动，这里只挡模型跑飞） */
+    static int textLimit(int detail) {
+        int lv = detailLevelValue(detail);
+        return lv == DETAIL_BRIEF ? 160 : (lv == DETAIL_DEEP ? 800 : 520);
     }
 
     static String letter(int i) {
@@ -323,7 +387,7 @@ public final class AiExplain {
             msgs.put(msg("user", prompt == null ? "" : prompt));
             body.put("messages", msgs);
             body.put("temperature", 0.3);
-            body.put("max_tokens", 400);
+            body.put("max_tokens", maxTokens(detailLevel(cfg)));
             body.put("stream", false);
             byte[] data = body.toString().getBytes(Charset.forName("UTF-8"));
 
@@ -355,7 +419,7 @@ public final class AiExplain {
                 r.error = "模型返回了空内容，换个模型试试";
                 return r;
             }
-            r.text = clip(text);
+            r.text = clip(text, detailLevel(cfg));
             return r;
         } catch (SocketTimeoutException e) {
             r.error = "等太久了：模型没在 "
@@ -452,11 +516,16 @@ public final class AiExplain {
     }
 
     static String clip(String text) {
+        return clip(text, DETAIL_STANDARD);
+    }
+
+    static String clip(String text, int detail) {
         String t = text == null ? "" : text.trim();
-        if (t.length() <= TEXT_MAX) {
+        int max = textLimit(detail);
+        if (t.length() <= max) {
             return t;
         }
-        return t.substring(0, TEXT_MAX) + "…";
+        return t.substring(0, max) + "…";
     }
 
     static byte[] readAll(InputStream in) throws Exception {
