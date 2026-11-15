@@ -165,14 +165,15 @@ def main():
         return
     doc['questions'] = merged
     doc['count'] = len(merged)
-    doc['version'] = 9
+    # v1.10.8 起题库已升到 10；重跑本脚本只能往上带，不能把版本降回去
+    doc['version'] = max(9, int(doc.get('version', 9)))
     doc['note'] = doc.get('note', '') + (
         ' v9 追加「小学必备词汇」分类 %d 题：取自《一本·小学英语必备词汇》'
         '索引全部词条，一词一题考中文词义，grade=0 表示全年级通用，'
         '可在后台「答题范围」单独勾选。' % len(items))
     with io.open(BANK, 'w', encoding='utf-8') as f:
         json.dump(doc, f, ensure_ascii=False, separators=(',', ':'))
-    print('\n已写入 %s (version=9, count=%d)' % (BANK, len(merged)))
+    print('\n已写入 %s (version=%d, count=%d)' % (BANK, doc['version'], len(merged)))
 
 
 if __name__ == '__main__':

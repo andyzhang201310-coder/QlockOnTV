@@ -241,7 +241,7 @@ adb shell am start -n com.family.studytv/.MainActivity
 
 ## 题库与出题
 
-内置 **25578 题**：原有 24704 题覆盖 1–6 年级 × 语文 / 数学 / 英语，v1.10.7 追加 874 道「小学必备词汇」分类题。每题带 `grade` 与 `difficulty`（1–5 星）。
+内置 **25164 题**：原有 24704 题覆盖 1–6 年级 × 语文 / 数学 / 英语，v1.10.7 追加 874 道「小学必备词汇」分类题，v1.10.8 下架 414 道过于简单的「选单词首字母」题。每题带 `grade` 与 `difficulty`（1–5 星）。
 
 - **语文**：拼音、声调、笔画、部首、同音字、多音字、成语释义、近反义词、古诗接句；统编版 1–6 年级古诗词与文言文的作者 / 朝代 / 名句出处 / 寓意，其中 108 首改为「诗名 · 作者 · 朝代」复合题且问法轮换；另有形近字辨析、错别字辨析、词义字义辨析、歇后语谚语、文言字词、诗词鉴赏、文学常识。
 - **数学**：口算、公式、单位换算、奥数应用；面积体积、和差和倍差倍、等差数列、追及相遇、流水行船、植树方阵、鸡兔同笼、工程浓度利润、比例尺、统计与可能性、位置与方向、时间与人民币。
@@ -251,7 +251,9 @@ adb shell am start -n com.family.studytv/.MainActivity
 
 **小学必备词汇（v1.10.7）**：取自《一本·小学英语必备词汇》扫描版索引的全部 **874 个词条**（含短语、节日、国家名），一词一题考中文词义，题干统一为 `【单词词义】「apple」的中文意思是？`，四个选项取自真实词汇释义，优先用原书同一课 / 同一话题的词做干扰项。中文释义 480 条复用现有英语题的正确答案，另 394 条人工校订在 `tools/vocab_mean.txt`。这批题的 `subject` 是独立分类，**后台「答题范围」的科目行会自动多出第 4 个芯片，可单独勾选**；`grade=0` 表示不分年级，选任何年级都能抽到。AI 讲解会把该分类按英语科任老师的路径处理。
 
-生成链路可复现：`tools/vocab_index.json`（索引 OCR 词表 + 原书页码）、`tools/vocab_mean.txt`（校订释义）、`tools/build_vocab_bank.py --apply`（合并进 `assets/questions.json`，幂等，先删旧的 `vocab-` 题再重建）。内置题库 `version` 升到 9；家长改过题库时 `QuestionBank.migrateMathText()` 会按 id 只追加缺失的内置新题，不碰家长自己的增删改。
+生成链路可复现：`tools/vocab_index.json`（索引 OCR 词表 + 原书页码）、`tools/vocab_mean.txt`（校订释义）、`tools/build_vocab_bank.py --apply`（合并进 `assets/questions.json`，幂等，先删旧的 `vocab-` 题再重建）。家长改过题库时 `QuestionBank.migrateMathText()` 会按 id 只追加缺失的内置新题，不碰家长自己的增删改。
+
+**下架首字母题（v1.10.8）**：删掉全部 **414 道**「单词「plate」的第一个字母是？」「「zoo」以哪个字母开头？」这类只需认一个字母的题（英语 1/2/3/4/6 年级分别 76/75/76/70/117 道），题库 `version` 升到 **10**。「字母表顺序」「大写字母对应的小写」「数学字母公式」等 16 道正常知识点保留。判定口径在 `tools/remove_first_letter.py`（可复现、幂等）与 `QuestionBank.isRetiredFirstLetter()` 中保持一致：只认官方基础库 `g[1-6]-english-*` 的 id，家长自己加的题一律不碰。设备端 `bankCustom=true` 时，`migrateMathText()` 会按同一口径把旧题库里的这 414 题一并清掉，同时补进新增题。若重跑 `make_full_bank.py`，需接着执行一次 `python tools/remove_first_letter.py --apply`。
 
 **年级筛选**：
 
@@ -411,7 +413,7 @@ Sony 的现实情况：Bravia 通常已登录 Google 账号，`dpm set-device-ow
 
 ```
 app/src/main/
-├── assets/          questions.json（25578 题）/ logo.png / login.html / admin.html
+├── assets/          questions.json（25164 题）/ logo.png / login.html / admin.html
 ├── java/com/family/studytv/
 │   ├── App / Prefs                    启动释放题库、全部可配置项
 │   ├── Rules / CalendarPlan / QuietHours   规则配置、日类型与时段判定（纯逻辑）

@@ -182,6 +182,41 @@ public final class QuestionBank {
     private static final Pattern RE_LEGACY_SUP =
             Pattern.compile("\\$([^{}$]+)\\^\\{([23])\\}\\$");
 
+    /** v1.10.8 下架的「选单词首字母」题：只需认字母，过于简单。 */
+    private static final Pattern RE_RETIRED_FIRST = Pattern.compile(
+            "第一个字母|首字母|开头字母|以哪个字母开头|以什么字母开头");
+    private static final Pattern RE_RETIRED_ID =
+            Pattern.compile("g[1-6]-english-\\d+");
+
+    /**
+     * 判断设备题库里的一道题是不是已下架的首字母题。
+     * 只认官方基础库的 id，家长自己加的题（哪怕题干相似）一律不碰；
+     * 字母表顺序、大小写对应、数学字母公式等正常知识点也不在范围内。
+     */
+    static boolean isRetiredFirstLetter(JSONObject q) {
+        if (q == null || !RE_RETIRED_ID.matcher(q.optString("id", "")).matches()) {
+            return false;
+        }
+        if (!RE_RETIRED_FIRST.matcher(q.optString("q", "")).find()) {
+            return false;
+        }
+        JSONArray opts = q.optJSONArray("options");
+        if (opts == null || opts.length() < 2) {
+            return false;
+        }
+        for (int i = 0; i < opts.length(); i++) {
+            String o = opts.optString(i, "");
+            if (o.length() != 1) {
+                return false;
+            }
+            char c = o.charAt(0);
+            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** 把新版 LaTeX 题面降级回 v7 的斜杠写法，用来判断设备上的题是不是官方原文。 */
     static String toLegacy(String latex) {
         if (latex == null || latex.indexOf('$') < 0) {
@@ -245,12 +280,21 @@ public final class QuestionBank {
             }
             r.pristine = curQs.length() == assetQs.length();
             Set<String> seen = new HashSet<String>();
+            JSONArray kept = new JSONArray();
+            int removed = 0;
             for (int i = 0; i < curQs.length(); i++) {
                 JSONObject q = curQs.optJSONObject(i);
                 if (q == null) {
                     r.pristine = false;
                     continue;
                 }
+                // v1.10.8：官方基础库的首字母题整批下架；家长自定义题原样保留
+                if (isRetiredFirstLetter(q)) {
+                    removed++;
+                    r.pristine = false;
+                    continue;
+                }
+                kept.put(q);
                 String id = q.optString("id", "");
                 seen.add(id);
                 JSONObject fresh = freshById.get(id);
@@ -307,13 +351,20 @@ public final class QuestionBank {
                 }
                 String id = q.optString("id", "");
                 if (id.length() > 0 && !seen.contains(id)) {
-                    curQs.put(q);
+                    kept.put(q);
                     appended++;
                 }
             }
             if (appended > 0) {
                 r.changed += appended;
                 r.pristine = false;
+            }
+            if (removed > 0 || appended > 0) {
+                curDoc.put("questions", kept);
+                if (curDoc.has("count")) {
+                    curDoc.put("count", kept.length());
+                }
+                r.changed += removed;
             }
             if (r.pristine) {
                 r.json = asset;           // 与官方旧版完全一致，直接对齐内置题库

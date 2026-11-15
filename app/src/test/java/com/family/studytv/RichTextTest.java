@@ -18,7 +18,7 @@ import org.robolectric.annotation.Config;
 /**
  * v1.9.1 公式渲染：LaTeX 片段转屏上文字。
  *
- * <p>最重要的一条是「纯文本必须原样透传」—— 题库 25578 道题里绝大多数没有 LaTeX，
+ * <p>最重要的一条是「纯文本必须原样透传」—— 题库 25164 道题里绝大多数没有 LaTeX，
  * 渲染器一旦对普通文本动了一个字符，就是把现有 18000 道数学题的观感改坏。
  */
 @RunWith(RobolectricTestRunner.class)

@@ -39,15 +39,16 @@ public class QuestionBankTest {
     public void seedBankLoadsAllThreeSubjects() {
         QuestionBank bank = QuestionBank.get();
         bank.ensureSeeded();
-        assertEquals("内置题库 = 原有 18000 题 + v5 + v6 复合诗词题 + v7 扩充题 + v9 词汇题",
-                25578, bank.count());
+        assertEquals("内置题库 = 原有 18000 题 + v5 + v6 + v7 + v9 词汇题 − v10 下架的首字母题",
+                25164, bank.count());
         assertEquals(Integer.valueOf(7940), bank.countBySubject().get("语文"));
         assertEquals(Integer.valueOf(8229), bank.countBySubject().get("数学"));
-        assertEquals(Integer.valueOf(8535), bank.countBySubject().get("英语"));
+        assertEquals(Integer.valueOf(8121), bank.countBySubject().get("英语"));
         assertEquals(Integer.valueOf(874), bank.countBySubject().get("小学必备词汇"));
         assertTrue("每个年级至少还有原有的 3000 题", bank.countByGrade().get(3) >= 3000);
 
-        // 原有题库必须逐题保留：每个年级、每个学科恰好 1000 题（id 不以 ext- 开头）
+        // 原有题库逐题保留：语文/数学每个年级仍 1000 题；
+        // 英语因 v1.10.8 下架 414 道首字母题，各年级按实际减少（5 年级没有这类题）
         int[][] perGradeSubject = new int[7][3];
         int extra = 0;
         for (QuestionBank.Question q : bank.all()) {
@@ -65,10 +66,11 @@ public class QuestionBankTest {
             perGradeSubject[q.grade][idx]++;
         }
         assertEquals("v5 追加题里未被复合题替换的部分", 990, extra);
+        int[] enExpected = {0, 924, 925, 924, 930, 1000, 883};
         for (int g = 1; g <= 6; g++) {
             for (int s = 0; s < 3; s++) {
-                assertEquals("原有题库 年级 " + g + " 学科序号 " + s + " 应仍有 1000 题",
-                        1000, perGradeSubject[g][s]);
+                assertEquals("原有题库 年级 " + g + " 学科序号 " + s + " 题量",
+                        s == 2 ? enExpected[g] : 1000, perGradeSubject[g][s]);
             }
         }
     }
@@ -619,8 +621,8 @@ public class QuestionBankTest {
     @Test
     public void latexBankVersionBumped() {
         QuestionBank bank = QuestionBank.get();
-        assertEquals("题库内容变更（v9 追加小学必备词汇）必须同步 bump version",
-                9, QuestionBank.versionOf(bank.exportJson()));
+        assertEquals("题库内容变更（v10 下架首字母题）必须同步 bump version",
+                10, QuestionBank.versionOf(bank.exportJson()));
     }
 
     /** 真拿题库里一道分数题喂给 RichText：渲染结果里不能再有 $ 或 \frac 原文 */
@@ -743,6 +745,6 @@ public class QuestionBankTest {
 
     @Test
     public void versionReadsOnlyTheFileHeader() {
-        assertEquals("内置题库版本应能被 /api/state 轻量读出", 9, QuestionBank.get().version());
+        assertEquals("内置题库版本应能被 /api/state 轻量读出", 10, QuestionBank.get().version());
     }
 }
