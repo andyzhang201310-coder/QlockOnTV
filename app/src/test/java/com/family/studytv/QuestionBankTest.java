@@ -39,11 +39,12 @@ public class QuestionBankTest {
     public void seedBankLoadsAllThreeSubjects() {
         QuestionBank bank = QuestionBank.get();
         bank.ensureSeeded();
-        assertEquals("内置题库 = 原有 18000 题 + v5 + v6 复合诗词题 + v7 扩充题",
-                24704, bank.count());
+        assertEquals("内置题库 = 原有 18000 题 + v5 + v6 复合诗词题 + v7 扩充题 + v9 词汇题",
+                25578, bank.count());
         assertEquals(Integer.valueOf(7940), bank.countBySubject().get("语文"));
         assertEquals(Integer.valueOf(8229), bank.countBySubject().get("数学"));
         assertEquals(Integer.valueOf(8535), bank.countBySubject().get("英语"));
+        assertEquals(Integer.valueOf(874), bank.countBySubject().get("小学必备词汇"));
         assertTrue("每个年级至少还有原有的 3000 题", bank.countByGrade().get(3) >= 3000);
 
         // 原有题库必须逐题保留：每个年级、每个学科恰好 1000 题（id 不以 ext- 开头）
@@ -618,8 +619,8 @@ public class QuestionBankTest {
     @Test
     public void latexBankVersionBumped() {
         QuestionBank bank = QuestionBank.get();
-        assertEquals("题库内容（数学分数 LaTeX 化）变更必须同步 bump version",
-                8, QuestionBank.versionOf(bank.exportJson()));
+        assertEquals("题库内容变更（v9 追加小学必备词汇）必须同步 bump version",
+                9, QuestionBank.versionOf(bank.exportJson()));
     }
 
     /** 真拿题库里一道分数题喂给 RichText：渲染结果里不能再有 $ 或 \frac 原文 */
@@ -742,6 +743,6 @@ public class QuestionBankTest {
 
     @Test
     public void versionReadsOnlyTheFileHeader() {
-        assertEquals("内置题库版本应能被 /api/state 轻量读出", 8, QuestionBank.get().version());
+        assertEquals("内置题库版本应能被 /api/state 轻量读出", 9, QuestionBank.get().version());
     }
 }

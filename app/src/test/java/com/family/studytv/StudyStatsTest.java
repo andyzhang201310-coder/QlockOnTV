@@ -80,7 +80,7 @@ public class StudyStatsTest {
                 other.put(q.subject, m == null ? 1 : m + 1);
             }
         }
-        assertEquals(3, perSubject.size());
+        assertEquals("三科 + 小学必备词汇，共 4 个出题分类", 4, perSubject.size());
         // 「其他」兜底桶要足够小，否则统计页的题型划分就失去意义
         for (String s : perSubject.keySet()) {
             int o = other.containsKey(s) ? other.get(s) : 0;

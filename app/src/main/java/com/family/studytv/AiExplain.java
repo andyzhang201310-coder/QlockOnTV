@@ -117,6 +117,11 @@ public final class AiExplain {
         StringBuilder sb = new StringBuilder();
         String who = grade > 0 ? "小学" + grade + "年级" : "小学";
         String subj = subject == null ? "" : subject;
+        // 「小学必备词汇」这类词汇分类本质上是英语课，讲题按英语科任老师的路径走，
+        // 否则会说成「小学必备词汇老师」并落到语文的讲法上。
+        if (subj.contains("词汇") || subj.contains("单词")) {
+            subj = "英语";
+        }
         String view = subj.contains("英语")
                 ? "先带学生认单词、再拼句子、最后点语法（时态、单复数、介词、人称）"
                 : subj.contains("数学")

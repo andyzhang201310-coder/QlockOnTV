@@ -297,6 +297,24 @@ public final class QuestionBank {
             if (seen.size() != freshById.size()) {
                 r.pristine = false;
             }
+            // v1.10.7：家长改过题库时也要能收到内置题库新增的分类题（如「小学必备词汇」）。
+            // 只按 id 追加设备里完全没有的官方题，家长自己加/改/删的题一律不碰。
+            int appended = 0;
+            for (int i = 0; i < assetQs.length(); i++) {
+                JSONObject q = assetQs.optJSONObject(i);
+                if (q == null) {
+                    continue;
+                }
+                String id = q.optString("id", "");
+                if (id.length() > 0 && !seen.contains(id)) {
+                    curQs.put(q);
+                    appended++;
+                }
+            }
+            if (appended > 0) {
+                r.changed += appended;
+                r.pristine = false;
+            }
             if (r.pristine) {
                 r.json = asset;           // 与官方旧版完全一致，直接对齐内置题库
                 return r;

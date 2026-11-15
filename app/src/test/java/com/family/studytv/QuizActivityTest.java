@@ -49,7 +49,9 @@ public class QuizActivityTest {
         QuizActivity.foreground = false;
         QuizActivity.allowBringBack = false;
         Prefs.setQuizCount(5);
-        Prefs.setSubjects("语文,数学,英语");
+        // 黑盒流程测试按题干文字反查题库答案；数学分数题渲染后都变成同一个
+        // 占位符，几十道题无法区分。这里只放开无 LaTeX 的两科，把抽题范围固定住。
+        Prefs.setSubjects("语文,英语");
         QuestionBank.resetForTest();
         QuestionBank.get().ensureSeeded();
         controller = Robolectric.buildActivity(QuizActivity.class).setup();
@@ -116,7 +118,7 @@ public class QuizActivityTest {
 
     private String correctTextOf(String questionText, java.util.List<String> shown) {
         for (QuestionBank.Question q : QuestionBank.get().all()) {
-            if (!rendered(q.q).equals(questionText)) {
+            if (!rendered(q.q).trim().equals(questionText.trim())) {
                 continue;
             }
             // 复合诗词题的题干是复用的（「下列「诗句 — 作者 — 朝代」搭配正确的是？」），
@@ -124,13 +126,13 @@ public class QuizActivityTest {
             if (shown != null) {
                 java.util.List<String> opts = new java.util.ArrayList<String>();
                 for (String o : q.options) {
-                    opts.add(rendered(o));
+                    opts.add(rendered(o).trim());
                 }
                 if (opts.size() != shown.size() || !opts.containsAll(shown)) {
                     continue;
                 }
             }
-            return rendered(q.options.get(q.answer));
+            return rendered(q.options.get(q.answer)).trim();
         }
         return null;
     }
